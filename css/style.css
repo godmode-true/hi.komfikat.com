@@ -4,6 +4,14 @@
   --content-max-width: 36rem;
   --page-gutter: clamp(1rem, 4vw, 1.5rem);
   --page-space-block: clamp(1rem, 5vw, 2.5rem);
+  --button-padding-inline: 0.88rem;
+  --button-padding-top: 0.34rem;
+  --button-padding-bottom: 0.34rem;
+  --button-radius: 999px;
+  --button-border-color: #1f1f1f;
+  --button-bg: #e7dfcf;
+  --button-bg-hover: #ddd2bf;
+  --button-text: #56483d;
 }
 
 /* Base reset */
@@ -15,6 +23,7 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body,
@@ -98,6 +107,56 @@ a {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
+}
+
+/* Blocks */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: var(--button-padding-top) var(--button-padding-inline) var(--button-padding-bottom);
+  border: 0;
+  border-radius: var(--button-radius);
+  background-color: var(--button-bg);
+  appearance: none;
+  -webkit-appearance: none;
+  color: var(--button-text);
+  font-size: 1.12rem;
+  line-height: 1;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    0 1px 2px rgba(86, 72, 61, 0.08);
+  cursor: pointer;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.action-button__label {
+  display: block;
+  line-height: 0.72;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  transform: translateY(0.08rem);
+}
+
+.action-button:hover {
+  background-color: var(--button-bg-hover);
+}
+
+.action-button:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 1px rgba(86, 72, 61, 0.1);
 }
 
 @media (prefers-reduced-motion: reduce) {
