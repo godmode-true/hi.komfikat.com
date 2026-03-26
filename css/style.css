@@ -533,6 +533,7 @@ a {
 
 @media (hover: hover) and (pointer: fine) {
   .profile__logo-link::after,
+  .action-button--subscribe::after,
   .action-button--icon-only::after,
   .theme-toggle::after {
     content: attr(data-tooltip);
@@ -608,6 +609,18 @@ a {
   .profile__logo-link:focus-visible::after {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
+  }
+
+  .action-button--subscribe::after {
+    top: 50%;
+    left: calc(100% + 0.6rem);
+    transform: translateY(-50%) translateX(-0.18rem);
+  }
+
+  .action-button--subscribe:hover::after,
+  .action-button--subscribe:focus-visible::after {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
   }
 
   .action-button--icon-only::after,
@@ -697,6 +710,7 @@ a {
   }
 
   :root[data-theme="dark"] .action-button--icon-only::after,
+  :root[data-theme="dark"] .action-button--subscribe::after,
   :root[data-theme="dark"] .theme-toggle::after {
     border-color: rgba(214, 186, 160, 0.22);
     background-color: rgba(43, 35, 30, 0.96);
@@ -732,6 +746,10 @@ a {
   width: var(--top-control-height);
   min-width: var(--top-control-height);
   padding-inline: 0;
+}
+
+.action-button--subscribe {
+  position: relative;
 }
 
 .action-button__label {
