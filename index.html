@@ -51,11 +51,7 @@
     <main class="page">
       <div class="container">
         <header class="top-bar" aria-label="Page actions">
-          <button
-            class="action-button action-button--subscribe"
-            type="button"
-            data-tooltip="Get new releases and cozy updates!"
-          >
+          <button class="action-button action-button--subscribe" type="button">
             <span class="action-button__icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path
@@ -81,7 +77,7 @@
               class="action-button action-button--icon-only"
               type="button"
               aria-label="Share"
-              data-tooltip="Share this page"
+              data-tooltip="Share with a friend"
             >
               <span class="action-button__icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -153,16 +149,21 @@
         </header>
 
         <section class="profile stack" aria-label="Brand profile">
-          <a
-            class="profile__logo-link"
-            href="https://komfikat.com"
-            aria-label="Visit the main Komfi Kat website"
-            data-tooltip="Click to visit komfikat.com"
+          <button
+            class="profile__story-trigger"
+            type="button"
+            aria-label="Open Komfi Kat stories"
+            data-tooltip="Click to see what’s new!"
+            data-story-open
           >
-            <div class="profile__logo-frame">
-              <img class="profile__logo" src="img/logo.png" alt="Komfi Kat logo" />
-            </div>
-          </a>
+            <span class="profile__story-ring" aria-hidden="true">
+              <span class="profile__story-core">
+                <span class="profile__logo-frame">
+                  <img class="profile__logo" src="img/logo.png" alt="" />
+                </span>
+              </span>
+            </span>
+          </button>
           <div class="profile__copy stack">
             <h1 class="profile__title">Komfi Kat</h1>
             <p class="profile__tagline">Cozy &amp; Relaxing Coloring Books</p>
@@ -337,6 +338,101 @@
             </li>
           </ul>
         </section>
+
+        <dialog class="story-viewer" data-story-viewer aria-labelledby="story-viewer-title">
+          <form class="story-viewer__backdrop" method="dialog">
+            <button class="story-viewer__backdrop-dismiss" value="cancel" aria-label="Close stories"></button>
+          </form>
+
+          <div class="story-viewer__surface">
+            <div class="story-viewer__progress" data-story-progress aria-hidden="true"></div>
+
+            <div class="story-viewer__header">
+              <div class="story-viewer__brand">
+                <span class="story-viewer__brand-mark" aria-hidden="true">
+                  <img src="img/logo.png" alt="" />
+                </span>
+                <div class="story-viewer__brand-copy">
+                  <p class="story-viewer__eyebrow">Komfi Kat</p>
+                  <h2 class="story-viewer__title" id="story-viewer-title" data-story-title>Komfi Kat Updates</h2>
+                </div>
+              </div>
+
+              <div class="story-viewer__header-actions">
+                <button
+                  class="story-viewer__control"
+                  type="button"
+                  aria-label="Pause stories"
+                  data-story-toggle-playback
+                >
+                  <svg
+                    class="story-viewer__control-icon story-viewer__control-icon--pause"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M9 7.25V16.75" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" />
+                    <path d="M15 7.25V16.75" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" />
+                  </svg>
+                  <svg
+                    class="story-viewer__control-icon story-viewer__control-icon--play"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M9.4 7.6L16.35 12L9.4 16.4V7.6Z"
+                      fill="currentColor"
+                      stroke="currentColor"
+                      stroke-width="0.6"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+
+                <button class="story-viewer__close" type="button" aria-label="Close stories" data-story-close>
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7 7L17 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                    <path d="M17 7L7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="story-viewer__card">
+              <div class="story-viewer__media">
+                <button
+                  class="story-viewer__nav story-viewer__nav--prev"
+                  type="button"
+                  aria-label="Previous story"
+                  data-story-prev
+                ></button>
+                <div class="story-viewer__media-frame" data-story-frame>
+                  <img class="story-viewer__image" src="img/logo.png" alt="" data-story-image draggable="false" />
+                </div>
+                <button
+                  class="story-viewer__nav story-viewer__nav--next"
+                  type="button"
+                  aria-label="Next story"
+                  data-story-next
+                ></button>
+              </div>
+            </div>
+
+            <div class="story-viewer__body">
+              <p class="story-viewer__meta" data-story-meta>Instagram reel</p>
+              <p class="story-viewer__description" data-story-description>
+                Cozy peeks, new releases, and little Komfi Kat moments.
+              </p>
+            </div>
+
+            <div class="story-viewer__footer">
+              <button class="story-viewer__cta" type="button" data-story-cta>Open on Instagram</button>
+            </div>
+          </div>
+        </dialog>
       </div>
     </main>
   </body>
