@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Komfi Kat favicon">
+  <rect width="200" height="200" rx="36" fill="#fdfcf3" />
+  <path
+    d="M59 133C84 109 102 92 117 74C127 62 141 56 153 56C167 56 178 67 178 82C178 98 170 113 150 132L120 160L54 94C43 83 37 72 37 61C37 47 48 37 61 37C72 37 82 43 90 52C95 57 99 63 102 69"
+    fill="none"
+    stroke="#fb7f90"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="16"
+  />
+</svg>
