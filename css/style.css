@@ -18,6 +18,8 @@
   --profile-logo-ring: #d9ccb5;
   --profile-text: #46382f;
   --profile-subtext: #7a6759;
+  --social-link-size: 2.4rem;
+  --social-link-bg: #f4ecdc;
   --surface-shadow-soft: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 10px 24px rgba(122, 103, 89, 0.08);
   --surface-shadow-hover: inset 0 1px 0 rgba(255, 255, 255, 0.78), 0 14px 28px rgba(122, 103, 89, 0.14);
   --surface-shadow-pressed: inset 0 1px 1px rgba(86, 72, 61, 0.1);
@@ -196,6 +198,39 @@ a {
   white-space: nowrap;
 }
 
+.social-links {
+  margin-top: clamp(0.7rem, 3vw, 1rem);
+}
+
+.social-links__list {
+  justify-content: center;
+  gap: 0.65rem;
+}
+
+.social-links__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--social-link-size);
+  height: var(--social-link-size);
+  border-radius: 50%;
+  background-color: var(--social-link-bg);
+  box-shadow: var(--surface-shadow-soft);
+  transition:
+    background-color 130ms ease,
+    box-shadow 130ms ease;
+}
+
+.social-links__link:focus-visible {
+  outline: 2px solid rgba(122, 103, 89, 0.5);
+  outline-offset: 0.22rem;
+}
+
+.social-links__icon {
+  width: 1.12rem;
+  height: 1.12rem;
+}
+
 @media (hover: hover) and (pointer: fine) {
   .profile__logo-link::after {
     content: attr(data-tooltip);
@@ -228,6 +263,12 @@ a {
 
   .profile__logo-link:hover .profile__logo-frame,
   .profile__logo-link:focus-visible .profile__logo-frame {
+    box-shadow: var(--surface-shadow-hover);
+  }
+
+  .social-links__link:hover,
+  .social-links__link:focus-visible {
+    background-color: #efe5d2;
     box-shadow: var(--surface-shadow-hover);
   }
 }
