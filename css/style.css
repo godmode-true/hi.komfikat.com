@@ -400,6 +400,11 @@ a {
   max-height: 70%;
 }
 
+.link-card__brand-icon--website {
+  max-width: 78%;
+  max-height: 78%;
+}
+
 .link-card__title {
   font-size: var(--link-card-title-size);
   line-height: 0.88;
@@ -418,6 +423,20 @@ a {
   border: 1.5px solid rgba(31, 31, 31, 0.18);
   background: linear-gradient(180deg, #fffefb 0%, #f8f3ea 100%);
   color: #2e251f;
+}
+
+.link-card--website {
+  border: 1.5px solid rgba(176, 147, 122, 0.22);
+  background: linear-gradient(180deg, #f8efde 0%, #f4e7d2 100%);
+  color: var(--profile-text);
+}
+
+.link-card--website .link-card__badge {
+  background-color: #fff8ef;
+}
+
+.link-card--website .link-card__subtitle {
+  color: var(--profile-subtext);
 }
 
 .link-card--amazon .link-card__badge {
@@ -457,6 +476,20 @@ a {
   border-color: rgba(214, 188, 159, 0.26);
   background: linear-gradient(180deg, #efe4d3 0%, #e7dac7 100%);
   color: #2f261f;
+}
+
+:root[data-theme="dark"] .link-card--website {
+  border-color: rgba(214, 188, 159, 0.22);
+  background: linear-gradient(180deg, #5b493f 0%, #4d3d35 100%);
+  color: #f4e8d8;
+}
+
+:root[data-theme="dark"] .link-card--website .link-card__badge {
+  background-color: #6a574c;
+}
+
+:root[data-theme="dark"] .link-card--website .link-card__subtitle {
+  color: #d7bfab;
 }
 
 :root[data-theme="dark"] .link-card--amazon .link-card__subtitle {
