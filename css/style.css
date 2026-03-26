@@ -15,6 +15,8 @@
   --button-bg: #e7dfcf;
   --button-bg-hover: #ddd2bf;
   --button-text: #56483d;
+  --top-control-bg-hover: #ebe2d3;
+  --top-control-shadow-hover: inset 0 1px 0 rgba(255, 255, 255, 0.78), 0 10px 20px rgba(122, 103, 89, 0.1);
   --logo-size: clamp(5.75rem, 24vw, 7rem);
   --profile-space: clamp(1.5rem, 8vw, 2.5rem);
   --profile-logo-bg: #f3ead8;
@@ -47,6 +49,8 @@
   --button-bg: #4a3d35;
   --button-bg-hover: #59483f;
   --button-text: #f3e7d7;
+  --top-control-bg-hover: #55463d;
+  --top-control-shadow-hover: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 10px 20px rgba(0, 0, 0, 0.24);
   --profile-logo-bg: #3c312b;
   --profile-logo-ring: #756456;
   --profile-text: #f5ead9;
@@ -396,6 +400,11 @@ a {
   max-height: 70%;
 }
 
+.link-card__brand-icon--website {
+  max-width: 78%;
+  max-height: 78%;
+}
+
 .link-card__title {
   font-size: var(--link-card-title-size);
   line-height: 0.88;
@@ -414,6 +423,20 @@ a {
   border: 1.5px solid rgba(31, 31, 31, 0.18);
   background: linear-gradient(180deg, #fffefb 0%, #f8f3ea 100%);
   color: #2e251f;
+}
+
+.link-card--website {
+  border: 1.5px solid rgba(176, 147, 122, 0.22);
+  background: linear-gradient(180deg, #f8efde 0%, #f4e7d2 100%);
+  color: var(--profile-text);
+}
+
+.link-card--website .link-card__badge {
+  background-color: #fff8ef;
+}
+
+.link-card--website .link-card__subtitle {
+  color: var(--profile-subtext);
 }
 
 .link-card--amazon .link-card__badge {
@@ -453,6 +476,20 @@ a {
   border-color: rgba(214, 188, 159, 0.26);
   background: linear-gradient(180deg, #efe4d3 0%, #e7dac7 100%);
   color: #2f261f;
+}
+
+:root[data-theme="dark"] .link-card--website {
+  border-color: rgba(214, 188, 159, 0.22);
+  background: linear-gradient(180deg, #5b493f 0%, #4d3d35 100%);
+  color: #f4e8d8;
+}
+
+:root[data-theme="dark"] .link-card--website .link-card__badge {
+  background-color: #6a574c;
+}
+
+:root[data-theme="dark"] .link-card--website .link-card__subtitle {
+  color: #d7bfab;
 }
 
 :root[data-theme="dark"] .link-card--amazon .link-card__subtitle {
@@ -533,6 +570,7 @@ a {
 
 @media (hover: hover) and (pointer: fine) {
   .profile__logo-link::after,
+  .action-button--subscribe::after,
   .action-button--icon-only::after,
   .theme-toggle::after {
     content: attr(data-tooltip);
@@ -610,6 +648,18 @@ a {
     transform: translateX(-50%) translateY(0);
   }
 
+  .action-button--subscribe::after {
+    top: 50%;
+    left: calc(100% + 0.6rem);
+    transform: translateY(-50%) translateX(-0.18rem);
+  }
+
+  .action-button--subscribe:hover::after,
+  .action-button--subscribe:focus-visible::after {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+
   .action-button--icon-only::after,
   .theme-toggle::after {
     top: 50%;
@@ -666,8 +716,8 @@ a {
 
   .theme-toggle:hover,
   .theme-toggle:focus-visible {
-    background-color: var(--button-bg-hover);
-    box-shadow: var(--surface-shadow-hover);
+    background-color: var(--top-control-bg-hover);
+    box-shadow: var(--top-control-shadow-hover);
   }
 
   :root[data-theme="dark"] .social-links__link:hover,
@@ -687,7 +737,7 @@ a {
 
   :root[data-theme="dark"] .theme-toggle:hover,
   :root[data-theme="dark"] .theme-toggle:focus-visible {
-    background-color: var(--button-bg-hover);
+    background-color: var(--top-control-bg-hover);
   }
 
   :root[data-theme="dark"] .profile__logo-link::after {
@@ -697,6 +747,7 @@ a {
   }
 
   :root[data-theme="dark"] .action-button--icon-only::after,
+  :root[data-theme="dark"] .action-button--subscribe::after,
   :root[data-theme="dark"] .theme-toggle::after {
     border-color: rgba(214, 186, 160, 0.22);
     background-color: rgba(43, 35, 30, 0.96);
@@ -732,6 +783,10 @@ a {
   width: var(--top-control-height);
   min-width: var(--top-control-height);
   padding-inline: 0;
+}
+
+.action-button--subscribe {
+  position: relative;
 }
 
 .action-button__label {
@@ -782,17 +837,15 @@ a {
       pointer !important;
   }
 
-  .link-card--disabled,
-  .link-card--disabled * {
-    cursor:
-      url("../img/cursors/cursor-default.svg") 17 3,
-      auto !important;
+  [aria-disabled="true"],
+  [aria-disabled="true"] * {
+    cursor: not-allowed !important;
   }
 
   .action-button:hover,
   .action-button:focus-visible {
-    background-color: var(--button-bg-hover);
-    box-shadow: var(--surface-shadow-hover);
+    background-color: var(--top-control-bg-hover);
+    box-shadow: var(--top-control-shadow-hover);
   }
 }
 
