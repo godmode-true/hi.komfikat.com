@@ -1,7 +1,9 @@
 const root = document.documentElement;
 const body = document.body;
 const themeToggle = document.querySelector("[data-theme-toggle]");
+const shareButton = document.querySelector("[data-share-page]");
 const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+const canonicalLink = document.querySelector('link[rel="canonical"]');
 const storyTrigger = document.querySelector("[data-story-open]");
 const storyViewer = document.querySelector("[data-story-viewer]");
 const storyTitle = document.querySelector("[data-story-title]");
@@ -59,6 +61,56 @@ const storyNavHoldDelay = 140;
 let storyNavHoldTimer = 0;
 let storyNavHoldTriggered = false;
 let activeStoryNavTarget = null;
+let shareTooltipTimeout = 0;
+
+async function copyText(text) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return true;
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  textarea.style.pointerEvents = "none";
+  document.body.append(textarea);
+  textarea.select();
+
+  let didCopy = false;
+
+  try {
+    didCopy = document.execCommand("copy");
+  } catch {
+    didCopy = false;
+  }
+
+  textarea.remove();
+  return didCopy;
+}
+
+function resetShareButtonState() {
+  if (!shareButton) {
+    return;
+  }
+
+  shareButton.setAttribute("data-tooltip", "Share with a friend");
+  shareButton.setAttribute("aria-label", "Share");
+}
+
+function showShareCopiedState() {
+  if (!shareButton) {
+    return;
+  }
+
+  window.clearTimeout(shareTooltipTimeout);
+  shareButton.setAttribute("data-tooltip", "Link copied!");
+  shareButton.setAttribute("aria-label", "Link copied!");
+  shareTooltipTimeout = window.setTimeout(() => {
+    resetShareButtonState();
+  }, 1800);
+}
 
 function getSeenStorySignature() {
   try {
@@ -349,6 +401,17 @@ if (themeToggle) {
   });
 } else {
   updateThemeColor();
+}
+
+if (shareButton) {
+  shareButton.addEventListener("click", async () => {
+    const shareUrl = canonicalLink?.href || window.location.href;
+    const didCopy = await copyText(shareUrl);
+
+    if (didCopy) {
+      showShareCopiedState();
+    }
+  });
 }
 
 if (storyTrigger && storyViewer && stories.length) {
