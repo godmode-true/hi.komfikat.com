@@ -71,7 +71,7 @@
             <span class="action-button__label">SUBSCRIBE</span>
           </button>
           <div class="top-bar__actions cluster">
-            <button class="action-button" type="button">
+            <button class="action-button action-button--icon-only" type="button" aria-label="Share" title="Share">
               <span class="action-button__icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path
@@ -97,7 +97,6 @@
                   />
                 </svg>
               </span>
-              <span class="action-button__label">SHARE</span>
             </button>
 
             <button
@@ -108,7 +107,12 @@
               title="Switch to dark mode"
               data-theme-toggle
             >
-              <svg class="theme-toggle__icon theme-toggle__icon--sun" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <svg
+                class="theme-toggle__icon theme-toggle__icon--sun"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
                 <circle cx="12" cy="12" r="3.6" stroke="currentColor" stroke-width="1.8" />
                 <path d="M12 3.5V6.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
                 <path d="M12 17.9V20.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
@@ -119,7 +123,12 @@
                 <path d="M6 18L7.8 16.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
                 <path d="M16.2 7.8L18 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
               </svg>
-              <svg class="theme-toggle__icon theme-toggle__icon--moon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <svg
+                class="theme-toggle__icon theme-toggle__icon--moon"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
                 <path
                   d="M15.25 4.95C14.35 4.6 13.37 4.4 12.35 4.4C7.97 4.4 4.42 7.95 4.42 12.33C4.42 16.71 7.97 20.26 12.35 20.26C15.95 20.26 19 17.86 19.98 14.58C19.22 14.93 18.37 15.12 17.48 15.12C14.15 15.12 11.45 12.42 11.45 9.09C11.45 7.52 12.05 6.1 13.04 5.04"
                   stroke="currentColor"
@@ -175,6 +184,41 @@
               <a class="social-links__link" href="#" aria-label="Pinterest">
                 <img class="social-links__icon" src="img/socials/pinterest.svg" alt="" />
               </a>
+            </li>
+          </ul>
+        </section>
+
+        <section class="link-section" aria-label="Shop links">
+          <ul class="link-list stack">
+            <li>
+              <a
+                class="link-card link-card--etsy"
+                href="https://komfikatcoloring.etsy.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Shop on Etsy for digital coloring books"
+              >
+                <span class="link-card__badge" aria-hidden="true">
+                  <img class="link-card__brand-icon link-card__brand-icon--etsy" src="img/icons/etsy.svg" alt="" />
+                </span>
+                <span class="link-card__content">
+                  <span class="link-card__title">Shop on Etsy</span>
+                  <span class="link-card__subtitle">Digital Coloring Books</span>
+                </span>
+                <span class="link-card__spacer" aria-hidden="true"></span>
+              </a>
+            </li>
+            <li>
+              <div class="link-card link-card--amazon link-card--disabled" aria-label="Amazon coming soon" aria-disabled="true">
+                <span class="link-card__badge" aria-hidden="true">
+                  <img class="link-card__brand-icon link-card__brand-icon--amazon" src="img/icons/amazon.svg" alt="" />
+                </span>
+                <span class="link-card__content">
+                  <span class="link-card__title">Coming Soon on Amazon</span>
+                  <span class="link-card__subtitle">Physical Coloring Books</span>
+                </span>
+                <span class="link-card__spacer" aria-hidden="true"></span>
+              </div>
             </li>
           </ul>
         </section>
