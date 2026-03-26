@@ -316,12 +316,7 @@ a {
 .social-links__icon {
   width: 1.24rem;
   height: 1.24rem;
-  filter: brightness(0);
-}
-
-:root[data-theme="dark"] .social-links__icon {
-  filter: brightness(0) saturate(100%) invert(95%) sepia(16%) saturate(441%) hue-rotate(323deg) brightness(101%)
-    contrast(93%);
+  color: var(--profile-text);
 }
 
 .link-section {
