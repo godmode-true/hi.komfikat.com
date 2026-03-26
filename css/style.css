@@ -23,6 +23,7 @@
   --scrollbar-track: #f4eddf;
   --scrollbar-thumb: #d8c8b2;
   --scrollbar-thumb-hover: #cbb79d;
+  --caret-color: #c98d67;
   --surface-shadow-soft: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 10px 24px rgba(122, 103, 89, 0.08);
   --surface-shadow-hover: inset 0 1px 0 rgba(255, 255, 255, 0.78), 0 14px 28px rgba(122, 103, 89, 0.14);
   --surface-shadow-pressed: inset 0 1px 1px rgba(86, 72, 61, 0.1);
@@ -100,6 +101,12 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   background-color: var(--page-bg);
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  caret-color: var(--caret-color);
 }
 
 img,
@@ -255,6 +262,46 @@ a {
 }
 
 @media (hover: hover) and (pointer: fine) {
+  body {
+    cursor:
+      url("../img/cursors/cursor-default.svg") 17 3,
+      auto;
+  }
+
+  :where(
+    a,
+    button,
+    [role="button"],
+    summary,
+    input[type="button"],
+    input[type="submit"],
+    input[type="reset"],
+    select,
+    label,
+    .profile__logo-link,
+    .social-links__link,
+    .action-button
+  ),
+  :where(
+      a,
+      button,
+      [role="button"],
+      summary,
+      input[type="button"],
+      input[type="submit"],
+      input[type="reset"],
+      select,
+      label,
+      .profile__logo-link,
+      .social-links__link,
+      .action-button
+    )
+    * {
+    cursor:
+      url("../img/cursors/cursor-pointer.svg") 17 3,
+      pointer;
+  }
+
   .profile__logo-link::after {
     content: attr(data-tooltip);
     position: absolute;
@@ -312,7 +359,6 @@ a {
   font-size: 1.12rem;
   line-height: 1;
   box-shadow: var(--surface-shadow-soft);
-  cursor: pointer;
   transition:
     background-color 130ms ease,
     color 130ms ease,
@@ -352,6 +398,17 @@ a {
 }
 
 @media (hover: hover) and (pointer: fine) {
+  .action-button,
+  .action-button *,
+  .profile__logo-link,
+  .profile__logo-link *,
+  .social-links__link,
+  .social-links__link * {
+    cursor:
+      url("../img/cursors/cursor-pointer.svg") 17 3,
+      pointer !important;
+  }
+
   .action-button:hover,
   .action-button:focus-visible {
     background-color: var(--button-bg-hover);
