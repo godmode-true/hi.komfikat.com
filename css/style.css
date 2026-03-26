@@ -183,7 +183,7 @@ a {
 
 .profile__title {
   color: var(--profile-text);
-  font-size: clamp(3rem, 12vw, 4.75rem);
+  font-size: clamp(2.6rem, 10vw, 4rem);
   font-weight: 700;
   line-height: 0.85;
 }
