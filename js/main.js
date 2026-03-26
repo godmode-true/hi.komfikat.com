@@ -22,9 +22,10 @@ function setTheme(theme) {
 
   if (themeToggle) {
     const isDark = theme === "dark";
+    const tooltipText = isDark ? "Switch to light mode" : "Switch to dark mode";
     themeToggle.setAttribute("aria-pressed", String(isDark));
-    themeToggle.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
-    themeToggle.setAttribute("title", isDark ? "Switch to light mode" : "Switch to dark mode");
+    themeToggle.setAttribute("aria-label", tooltipText);
+    themeToggle.setAttribute("data-tooltip", tooltipText);
   }
 
   updateThemeColor();
