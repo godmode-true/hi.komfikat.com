@@ -95,6 +95,7 @@ function resetShareButtonState() {
     return;
   }
 
+  shareButton.dataset.shareState = "";
   shareButton.setAttribute("data-tooltip", "Share with a friend");
   shareButton.setAttribute("aria-label", "Share");
 }
@@ -105,6 +106,7 @@ function showShareCopiedState() {
   }
 
   window.clearTimeout(shareTooltipTimeout);
+  shareButton.dataset.shareState = "copied";
   shareButton.setAttribute("data-tooltip", "Link copied!");
   shareButton.setAttribute("aria-label", "Link copied!");
   shareTooltipTimeout = window.setTimeout(() => {
