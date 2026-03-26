@@ -1217,6 +1217,33 @@ a {
   }
 }
 
+@media (hover: none), (pointer: coarse) {
+  .action-button--icon-only[data-share-state="copied"][data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: 50%;
+    right: calc(100% + 0.6rem);
+    padding: 0.45rem 0.8rem 0.35rem;
+    border: 1px solid rgba(201, 141, 103, 0.25);
+    border-radius: 999px;
+    background-color: rgba(255, 252, 243, 0.96);
+    color: var(--profile-text);
+    font-size: 1rem;
+    line-height: 0.9;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    box-shadow: 0 12px 24px rgba(122, 103, 89, 0.12);
+    pointer-events: none;
+    transform: translateY(-50%);
+  }
+
+  :root[data-theme="dark"] .action-button--icon-only[data-share-state="copied"][data-tooltip]::after {
+    border-color: rgba(214, 186, 160, 0.22);
+    background-color: rgba(43, 35, 30, 0.96);
+    color: #f5ead9;
+  }
+}
+
 .action-button {
   display: inline-flex;
   align-items: center;
