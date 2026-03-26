@@ -15,6 +15,8 @@
   --button-bg: #e7dfcf;
   --button-bg-hover: #ddd2bf;
   --button-text: #56483d;
+  --top-control-bg-hover: #ebe2d3;
+  --top-control-shadow-hover: inset 0 1px 0 rgba(255, 255, 255, 0.78), 0 10px 20px rgba(122, 103, 89, 0.1);
   --logo-size: clamp(5.75rem, 24vw, 7rem);
   --profile-space: clamp(1.5rem, 8vw, 2.5rem);
   --profile-logo-bg: #f3ead8;
@@ -47,6 +49,8 @@
   --button-bg: #4a3d35;
   --button-bg-hover: #59483f;
   --button-text: #f3e7d7;
+  --top-control-bg-hover: #55463d;
+  --top-control-shadow-hover: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 10px 20px rgba(0, 0, 0, 0.24);
   --profile-logo-bg: #3c312b;
   --profile-logo-ring: #756456;
   --profile-text: #f5ead9;
@@ -679,8 +683,8 @@ a {
 
   .theme-toggle:hover,
   .theme-toggle:focus-visible {
-    background-color: var(--button-bg-hover);
-    box-shadow: var(--surface-shadow-hover);
+    background-color: var(--top-control-bg-hover);
+    box-shadow: var(--top-control-shadow-hover);
   }
 
   :root[data-theme="dark"] .social-links__link:hover,
@@ -700,7 +704,7 @@ a {
 
   :root[data-theme="dark"] .theme-toggle:hover,
   :root[data-theme="dark"] .theme-toggle:focus-visible {
-    background-color: var(--button-bg-hover);
+    background-color: var(--top-control-bg-hover);
   }
 
   :root[data-theme="dark"] .profile__logo-link::after {
@@ -800,17 +804,15 @@ a {
       pointer !important;
   }
 
-  .link-card--disabled,
-  .link-card--disabled * {
-    cursor:
-      url("../img/cursors/cursor-default.svg") 17 3,
-      auto !important;
+  [aria-disabled="true"],
+  [aria-disabled="true"] * {
+    cursor: not-allowed !important;
   }
 
   .action-button:hover,
   .action-button:focus-visible {
-    background-color: var(--button-bg-hover);
-    box-shadow: var(--surface-shadow-hover);
+    background-color: var(--top-control-bg-hover);
+    box-shadow: var(--top-control-shadow-hover);
   }
 }
 
