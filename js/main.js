@@ -8,6 +8,7 @@ const metaDescription = document.querySelector('meta[name="description"]');
 const storyTrigger = document.querySelector("[data-story-open]");
 const storyViewer = document.querySelector("[data-story-viewer]");
 const storyTitle = document.querySelector("[data-story-title]");
+const storyEyebrow = document.querySelector("[data-story-eyebrow]");
 const storyMeta = document.querySelector("[data-story-meta]");
 const storyDescription = document.querySelector("[data-story-description]");
 const storyImage = document.querySelector("[data-story-image]");
@@ -25,7 +26,8 @@ const storyViewedKey = "komfi-story-viewed-signature";
 // Recommended story artwork size: 1080 x 1350 px.
 const stories = [
   {
-    title: "New Cozy Peeks",
+    eyebrow: "Komfi Kat",
+    title: "Mar 27, 2026",
     meta: "Instagram Story",
     description: "Fresh little peeks at new coloring pages, cute scenes, and what Komfi Kat is making next.",
     ctaLabel: "Visit Instagram",
@@ -33,11 +35,25 @@ const stories = [
     image: "img/stories/placeholder-white.svg",
     imageAlt: "White story placeholder",
     imageFit: "cover",
+    layout: "caption",
+  },
+  {
+    eyebrow: "Komfi Kat",
+    title: "Apr 3, 2026",
+    meta: "",
+    description: "",
+    ctaLabel: "Open Reel on Instagram",
+    url: "https://www.instagram.com/komfikat/",
+    image: "img/stories/placeholder-white.svg",
+    imageAlt: "White story placeholder",
+    imageFit: "cover",
+    layout: "full",
   },
 ];
 
 const storySignature = JSON.stringify(
-  stories.map(({ title, meta, description, ctaLabel, url, image, imageAlt, imageFit }) => ({
+  stories.map(({ eyebrow, title, meta, description, ctaLabel, url, image, imageAlt, imageFit, layout }) => ({
+    eyebrow,
     title,
     meta,
     description,
@@ -46,6 +62,7 @@ const storySignature = JSON.stringify(
     image,
     imageAlt,
     imageFit: imageFit || "cover",
+    layout: layout || "caption",
   })),
 );
 
@@ -226,12 +243,18 @@ function renderStory(index) {
   activeStoryIndex = index;
   sessionViewedStories.add(index);
 
+  if (storyEyebrow) {
+    storyEyebrow.textContent = story.eyebrow || "Komfi Kat";
+  }
+
   storyTitle.textContent = story.title;
   storyMeta.textContent = story.meta;
   storyDescription.textContent = story.description;
   storyImage.src = story.image;
   storyImage.alt = story.imageAlt;
   storyImage.style.objectFit = story.imageFit || "cover";
+  storySurface?.setAttribute("data-story-layout", story.layout || "caption");
+  storyMeta.parentElement.hidden = (story.layout || "caption") === "full";
 
   if (story.url) {
     storyCta.hidden = false;
