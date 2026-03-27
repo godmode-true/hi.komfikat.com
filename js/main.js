@@ -20,10 +20,13 @@ const storyNext = document.querySelector("[data-story-next]");
 const storyClose = document.querySelector("[data-story-close]");
 const storyPlaybackToggle = document.querySelector("[data-story-toggle-playback]");
 const storySurface = document.querySelector(".story-viewer__surface");
+const storyMobileHint = document.querySelector(".profile__story-mobile-hint");
 const storageKey = "komfi-theme";
-const storyViewedKey = "komfi-story-viewed-signature";
+const storyViewedKey = "komfi-story-viewed-signature-v2";
 
 // Recommended story artwork size: 1080 x 1350 px.
+// Story date format: "Mar 27, 2026" (US short month + day + year).
+// Month abbreviations: Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec.
 const stories = [
   {
     eyebrow: "Komfi Kat",
@@ -36,6 +39,18 @@ const stories = [
     imageAlt: "White story placeholder",
     imageFit: "cover",
     layout: "caption",
+  },
+  {
+    eyebrow: "Komfi Kat",
+    title: "Apr 3, 2026",
+    meta: "",
+    description: "",
+    ctaLabel: "Open Reel on Instagram",
+    url: "https://www.instagram.com/komfikat/",
+    image: "img/stories/placeholder-white.svg",
+    imageAlt: "White story placeholder",
+    imageFit: "cover",
+    layout: "full",
   },
   {
     eyebrow: "Komfi Kat",
@@ -80,6 +95,8 @@ let storyNavHoldTimer = 0;
 let storyNavHoldTriggered = false;
 let activeStoryNavTarget = null;
 let shareTooltipTimeout = 0;
+let storyHintTimeout = 0;
+let storyHintCleanupTimeout = 0;
 
 async function copyText(text) {
   if (navigator.clipboard?.writeText) {
@@ -152,19 +169,57 @@ function hasSeenCurrentStories() {
   return getSeenStorySignature() === storySignature;
 }
 
+function isTouchLikeDevice() {
+  return window.matchMedia("(hover: none), (pointer: coarse)").matches;
+}
+
+function hideStoryHint() {
+  if (!storyTrigger || !storyMobileHint) {
+    return;
+  }
+
+  window.clearTimeout(storyHintTimeout);
+  window.clearTimeout(storyHintCleanupTimeout);
+
+  if (!storyMobileHint.dataset.storyHint) {
+    return;
+  }
+
+  storyMobileHint.dataset.storyHint = "closing";
+  storyHintCleanupTimeout = window.setTimeout(() => {
+    delete storyMobileHint.dataset.storyHint;
+  }, 220);
+}
+
+function showStoryHint() {
+  if (!storyTrigger || !storyMobileHint || hasSeenCurrentStories() || !isTouchLikeDevice()) {
+    return;
+  }
+
+  window.clearTimeout(storyHintCleanupTimeout);
+  storyMobileHint.dataset.storyHint = "visible";
+
+  window.clearTimeout(storyHintTimeout);
+  storyHintTimeout = window.setTimeout(() => {
+    hideStoryHint();
+  }, 3000);
+}
+
 function updateStoryTriggerState() {
   if (!storyTrigger) {
     return;
   }
 
   const hasSeenStories = hasSeenCurrentStories();
-  storyTrigger.style.setProperty("--story-trigger-count", String(Math.max(stories.length, 1)));
-  storyTrigger.dataset.storyCount = String(stories.length);
   storyTrigger.dataset.storyState = hasSeenStories ? "viewed" : "new";
   storyTrigger.setAttribute(
     "aria-label",
     hasSeenStories ? "Rewatch Komfi Kat stories" : "Open Komfi Kat stories with new updates",
   );
+
+  if (hasSeenStories) {
+    hideStoryHint();
+  }
 }
 
 function markCurrentStoriesSeen() {
@@ -468,8 +523,12 @@ if (shareButton) {
 
 if (storyTrigger && storyViewer && stories.length) {
   updateStoryTriggerState();
+  window.setTimeout(() => {
+    showStoryHint();
+  }, 420);
 
   storyTrigger.addEventListener("click", () => {
+    hideStoryHint();
     openStories(0);
   });
 
