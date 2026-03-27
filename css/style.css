@@ -133,6 +133,7 @@ ol {
 html,
 body {
   min-height: 100%;
+  overscroll-behavior: none;
 }
 
 body {
@@ -148,6 +149,7 @@ body {
 
 body.story-viewer-is-open {
   overflow: hidden;
+  overscroll-behavior: none;
 }
 
 input,
@@ -576,23 +578,25 @@ a {
 }
 
 .story-viewer {
+  --story-viewer-pad-top: max(env(safe-area-inset-top), 1rem);
+  --story-viewer-pad-right: max(env(safe-area-inset-right), 1rem);
+  --story-viewer-pad-bottom: max(env(safe-area-inset-bottom), 1rem);
+  --story-viewer-pad-left: max(env(safe-area-inset-left), 1rem);
   position: fixed;
   inset: 0;
-  width: 100%;
-  height: 100%;
+  width: 100dvw;
+  height: 100dvh;
   max-width: none;
   max-height: none;
   margin: 0;
-  padding:
-    max(env(safe-area-inset-top), 0.75rem)
-    max(env(safe-area-inset-right), 0.75rem)
-    max(env(safe-area-inset-bottom), 0.75rem)
-    max(env(safe-area-inset-left), 0.75rem);
+  padding: var(--story-viewer-pad-top) var(--story-viewer-pad-right) var(--story-viewer-pad-bottom)
+    var(--story-viewer-pad-left);
   border: 0;
   border-radius: 1.6rem;
   background: transparent;
   color: var(--profile-text);
   overflow: clip;
+  overscroll-behavior: none;
 }
 
 .story-viewer::backdrop {
@@ -621,11 +625,11 @@ a {
 .story-viewer__surface {
   position: relative;
   z-index: 1;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
   gap: 0.8rem;
-  width: min(100%, 25rem);
-  height: min(100%, 52rem);
+  width: min(100%, 23.5rem);
+  height: min(calc(100dvh - var(--story-viewer-pad-top) - var(--story-viewer-pad-bottom)), 48rem);
   padding: 1rem;
   border: 1px solid rgba(211, 191, 169, 0.55);
   border-radius: 1.6rem;
@@ -774,9 +778,9 @@ a {
 }
 
 .story-viewer__card {
-  display: block;
+  display: flex;
+  height: 100%;
   min-height: 0;
-  flex: 0 0 auto;
 }
 
 .story-viewer__nav {
@@ -804,20 +808,22 @@ a {
   min-width: 0;
   min-height: 0;
   display: flex;
+  flex: 1 1 auto;
   width: min(100%, 92%);
   margin-inline: auto;
-  margin-block: 0.15rem 0.9rem;
+  height: 100%;
+  margin-block: 0.1rem 0.32rem;
 }
 
 .story-viewer__media-frame {
   position: relative;
   overflow: hidden;
-  aspect-ratio: 4 / 4.75;
   border-radius: 1.3rem;
   background-color: #f7ecda;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
   width: 100%;
-  max-height: min(46dvh, 31rem);
+  height: 100%;
+  max-height: none;
   min-height: 0;
 }
 
@@ -865,21 +871,20 @@ a {
   display: flex;
   position: relative;
   z-index: 1;
-  margin-top: 0.08rem;
+  padding-bottom: 0.08rem;
 }
 
 .story-viewer__surface[data-story-layout="full"] .story-viewer__body {
   display: none;
 }
 
-.story-viewer__surface[data-story-layout="full"] .story-viewer__media {
-  width: min(100%, 94%);
-  margin-block-end: 0.35rem;
+.story-viewer__surface[data-story-layout="full"] {
+  grid-template-rows: auto auto minmax(0, 1fr) 0 auto;
 }
 
-.story-viewer__surface[data-story-layout="full"] .story-viewer__media-frame {
-  aspect-ratio: 4 / 5.7;
-  max-height: min(67dvh, 40rem);
+.story-viewer__surface[data-story-layout="full"] .story-viewer__media {
+  width: min(100%, 94%);
+  margin-block-end: 0.32rem;
 }
 
 .story-viewer__cta {
@@ -1387,11 +1392,10 @@ a {
   }
 
   .story-viewer {
-    padding:
-      max(env(safe-area-inset-top), 0.5rem)
-      max(env(safe-area-inset-right), 0.5rem)
-      max(env(safe-area-inset-bottom), 0.5rem)
-      max(env(safe-area-inset-left), 0.5rem);
+    --story-viewer-pad-top: max(env(safe-area-inset-top), 0.8rem);
+    --story-viewer-pad-right: max(env(safe-area-inset-right), 0.8rem);
+    --story-viewer-pad-bottom: max(env(safe-area-inset-bottom), 0.8rem);
+    --story-viewer-pad-left: max(env(safe-area-inset-left), 0.8rem);
   }
 
   .profile__tagline {
@@ -1399,19 +1403,15 @@ a {
   }
 
   .story-viewer__surface {
-      width: min(100%, 24rem);
-      height: min(100%, 48rem);
-      padding: 0.85rem;
-      border-radius: 1.35rem;
+    width: min(100%, 22.75rem);
+    height: min(calc(100dvh - var(--story-viewer-pad-top) - var(--story-viewer-pad-bottom)), 44rem);
+    padding: 0.85rem;
+    border-radius: 1.35rem;
   }
 
   .story-viewer__media {
     width: min(100%, 94%);
-    margin-block-end: 0.8rem;
-  }
-
-  .story-viewer__media-frame {
-      max-height: min(44dvh, 27rem);
+    margin-block-end: 0.22rem;
   }
 
   .story-viewer__card {
