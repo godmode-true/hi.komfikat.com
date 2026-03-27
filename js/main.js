@@ -95,7 +95,6 @@ let storyNavHoldTimer = 0;
 let storyNavHoldTriggered = false;
 let activeStoryNavTarget = null;
 let shareTooltipTimeout = 0;
-let storyHintTimeout = 0;
 let storyHintCleanupTimeout = 0;
 
 async function copyText(text) {
@@ -178,7 +177,6 @@ function hideStoryHint() {
     return;
   }
 
-  window.clearTimeout(storyHintTimeout);
   window.clearTimeout(storyHintCleanupTimeout);
 
   if (!storyMobileHint.dataset.storyHint) {
@@ -198,11 +196,6 @@ function showStoryHint() {
 
   window.clearTimeout(storyHintCleanupTimeout);
   storyMobileHint.dataset.storyHint = "visible";
-
-  window.clearTimeout(storyHintTimeout);
-  storyHintTimeout = window.setTimeout(() => {
-    hideStoryHint();
-  }, 3000);
 }
 
 function updateStoryTriggerState() {
