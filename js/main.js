@@ -1,7 +1,13 @@
 const root = document.documentElement;
 const body = document.body;
 const themeToggle = document.querySelector("[data-theme-toggle]");
+const shareMenu = document.querySelector("[data-share-menu]");
+const shareRail = document.querySelector("[data-share-rail]");
+const shareRailHint = document.querySelector("[data-share-rail-hint]");
+const shareHoverBridge = document.querySelector(".share-rail__hover-bridge");
 const shareButton = document.querySelector("[data-share-page]");
+const shareCopyButton = document.querySelector('[data-share-option="copy"]');
+const shareOptions = document.querySelectorAll("[data-share-option]");
 const themeColorMeta = document.querySelector('meta[name="theme-color"]');
 const canonicalLink = document.querySelector('link[rel="canonical"]');
 const metaDescription = document.querySelector('meta[name="description"]');
@@ -64,6 +70,18 @@ const stories = [
     imageFit: "cover",
     layout: "full",
   },
+  {
+    eyebrow: "Komfi Kat",
+    title: "Apr 3, 2026",
+    meta: "",
+    description: "",
+    ctaLabel: "Open Reel on Instagram",
+    url: "https://www.instagram.com/komfikat/",
+    image: "img/stories/placeholder-white.svg",
+    imageAlt: "White story placeholder",
+    imageFit: "cover",
+    layout: "full",
+  },
 ];
 
 const storySignature = JSON.stringify(
@@ -95,6 +113,8 @@ let storyNavHoldTimer = 0;
 let storyNavHoldTriggered = false;
 let activeStoryNavTarget = null;
 let shareTooltipTimeout = 0;
+let shareRailHintTimeout = 0;
+let shareHintSuppressed = false;
 let storyHintCleanupTimeout = 0;
 
 async function copyText(text) {
@@ -132,6 +152,116 @@ function shouldUseNativeShare() {
   return window.matchMedia("(hover: none), (pointer: coarse)").matches;
 }
 
+function shouldUseDesktopShareRail() {
+  return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+}
+
+function getSharePayload() {
+  const url = canonicalLink?.href || window.location.href;
+  const title = document.title;
+  const text = metaDescription?.content || "Cozy hand-drawn coloring books by Komfi Kat.";
+
+  return {
+    url,
+    title,
+    text,
+    message: `Take a cozy peek at Komfi Kat. ${text} ${url}`,
+    emailBody: `Take a cozy peek at Komfi Kat.\n\n${text}\n\n${url}`,
+  };
+}
+
+function isShareMenuOpen() {
+  return shareMenu?.dataset.shareMenuOpen === "true";
+}
+
+function setShareRailHint(text = "Share with your friend 👉") {
+  if (!shareRailHint || !shareMenu) {
+    return;
+  }
+
+  if (text.endsWith("👉")) {
+    const label = text.slice(0, -2).trim();
+    shareRailHint.innerHTML = `<span class="share-rail__hint-text">${label}</span><span class="share-rail__hint-icon">👉</span>`;
+  } else {
+    shareRailHint.textContent = text;
+  }
+
+  shareMenu.dataset.shareHintVisible = "true";
+}
+
+function resetShareRailHint() {
+  if (shareMenu) {
+    delete shareMenu.dataset.shareHintVisible;
+  }
+
+  window.clearTimeout(shareRailHintTimeout);
+}
+
+function closeShareMenu() {
+  if (!shareMenu || !shareButton) {
+    return;
+  }
+
+  resetShareRailHint();
+  delete shareMenu.dataset.shareMenuOpen;
+  shareButton.setAttribute("aria-expanded", "false");
+}
+
+function openShareMenu() {
+  if (!shareMenu || !shareButton) {
+    return;
+  }
+
+  window.clearTimeout(shareTooltipTimeout);
+  resetShareButtonState();
+  delete shareMenu.dataset.shareTooltipSuppressed;
+  delete shareMenu.dataset.shareHintVisible;
+  shareMenu.dataset.shareMenuOpen = "true";
+  shareButton.setAttribute("aria-expanded", "true");
+
+  if (shareButton.matches(":hover, :focus-visible, :focus")) {
+    setShareRailHint();
+  }
+}
+
+function toggleShareMenu() {
+  if (!shareMenu) {
+    return;
+  }
+
+  if (isShareMenuOpen()) {
+    shareHintSuppressed = true;
+    shareMenu.dataset.shareTooltipSuppressed = "true";
+    closeShareMenu();
+    return;
+  }
+
+  shareHintSuppressed = false;
+  openShareMenu();
+}
+
+function resetShareCopyState() {
+  if (!shareCopyButton) {
+    return;
+  }
+}
+
+function showShareCopyButtonState() {
+  if (!shareCopyButton || !shouldUseDesktopShareRail()) {
+    return;
+  }
+
+  window.clearTimeout(shareRailHintTimeout);
+  setShareRailHint("Link copied!");
+  shareRailHintTimeout = window.setTimeout(() => {
+    if (!isShareMenuOpen()) {
+      return;
+    }
+
+    resetShareCopyState();
+  }, 1800);
+}
+
 function resetShareButtonState() {
   if (!shareButton) {
     return;
@@ -147,6 +277,7 @@ function showShareCopiedState() {
     return;
   }
 
+  closeShareMenu();
   window.clearTimeout(shareTooltipTimeout);
   shareButton.dataset.shareState = "copied";
   shareButton.setAttribute("data-tooltip", "Link copied!");
@@ -486,17 +617,21 @@ if (themeToggle) {
 }
 
 if (shareButton) {
-  shareButton.addEventListener("click", async () => {
-    const shareUrl = canonicalLink?.href || window.location.href;
-    const shareTitle = document.title;
-    const shareText = metaDescription?.content || "Cozy hand-drawn coloring books by Komfi Kat.";
+  shareButton.addEventListener("click", async (event) => {
+    if (shouldUseDesktopShareRail()) {
+      event.preventDefault();
+      toggleShareMenu();
+      return;
+    }
+
+    const sharePayload = getSharePayload();
 
     if (shouldUseNativeShare()) {
       try {
         await navigator.share({
-          title: shareTitle,
-          text: shareText,
-          url: shareUrl,
+          title: sharePayload.title,
+          text: sharePayload.text,
+          url: sharePayload.url,
         });
         return;
       } catch (error) {
@@ -506,10 +641,222 @@ if (shareButton) {
       }
     }
 
-    const didCopy = await copyText(shareUrl);
+    const didCopy = await copyText(sharePayload.url);
 
     if (didCopy) {
       showShareCopiedState();
+    }
+  });
+}
+
+if (shareOptions.length) {
+  shareOptions.forEach((shareOption) => {
+    const optionHint = shareOption.dataset.shareHint || "Share with your friend 👉";
+
+    shareOption.addEventListener("mouseenter", () => {
+      if (!shouldUseDesktopShareRail() || !isShareMenuOpen()) {
+        return;
+      }
+
+      window.clearTimeout(shareRailHintTimeout);
+      setShareRailHint(optionHint);
+    });
+
+    shareOption.addEventListener("mouseleave", (event) => {
+      if (!shouldUseDesktopShareRail() || !isShareMenuOpen()) {
+        return;
+      }
+
+      const nextTarget = event.relatedTarget;
+
+      if (nextTarget && shareRail?.contains(nextTarget)) {
+        return;
+      }
+
+      if (
+        nextTarget &&
+        ((shareButton && shareButton.contains(nextTarget)) ||
+          (shareHoverBridge && shareHoverBridge.contains(nextTarget)))
+      ) {
+        if (shareButton && shareButton.matches(":hover, :focus-visible, :focus")) {
+          setShareRailHint();
+        } else {
+          resetShareRailHint();
+        }
+        return;
+      }
+
+      if (nextTarget && shareMenu?.contains(nextTarget)) {
+        return;
+      }
+
+      resetShareRailHint();
+    });
+
+    shareOption.addEventListener("focus", () => {
+      if (!shouldUseDesktopShareRail() || !isShareMenuOpen()) {
+        return;
+      }
+
+      window.clearTimeout(shareRailHintTimeout);
+      setShareRailHint(optionHint);
+    });
+
+    shareOption.addEventListener("blur", (event) => {
+      if (!shouldUseDesktopShareRail() || !isShareMenuOpen()) {
+        return;
+      }
+
+      const nextTarget = event.relatedTarget;
+
+      if (nextTarget && shareRail?.contains(nextTarget)) {
+        return;
+      }
+
+      if (
+        nextTarget &&
+        ((shareButton && shareButton.contains(nextTarget)) ||
+          (shareHoverBridge && shareHoverBridge.contains(nextTarget)))
+      ) {
+        if (shareButton && shareButton.matches(":hover, :focus-visible, :focus")) {
+          setShareRailHint();
+        } else {
+          resetShareRailHint();
+        }
+        return;
+      }
+
+      if (nextTarget && shareMenu?.contains(nextTarget)) {
+        return;
+      }
+
+      resetShareRailHint();
+    });
+
+    shareOption.addEventListener("click", async () => {
+      const sharePayload = getSharePayload();
+      const option = shareOption.dataset.shareOption;
+
+      if (option === "copy") {
+        const didCopy = await copyText(sharePayload.url);
+
+        if (didCopy) {
+          showShareCopyButtonState();
+        }
+        return;
+      }
+
+      closeShareMenu();
+
+      if (option === "whatsapp") {
+        window.open(`https://wa.me/?text=${encodeURIComponent(sharePayload.message)}`, "_blank", "noopener,noreferrer");
+        return;
+      }
+
+      if (option === "facebook") {
+        window.open(
+          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(sharePayload.url)}`,
+          "_blank",
+          "noopener,noreferrer",
+        );
+        return;
+      }
+
+      if (option === "email") {
+        window.location.href = `mailto:?subject=${encodeURIComponent(sharePayload.title)}&body=${encodeURIComponent(sharePayload.emailBody)}`;
+      }
+    });
+  });
+}
+
+if (shareMenu && shareRail) {
+  if (shareButton) {
+    shareButton.addEventListener("mouseenter", () => {
+      if (shouldUseDesktopShareRail() && isShareMenuOpen() && !shareHintSuppressed) {
+        setShareRailHint();
+      }
+    });
+
+    shareButton.addEventListener("focus", () => {
+      if (shouldUseDesktopShareRail() && isShareMenuOpen() && !shareHintSuppressed) {
+        setShareRailHint();
+      }
+    });
+
+    shareButton.addEventListener("mouseleave", () => {
+      shareHintSuppressed = false;
+      delete shareMenu.dataset.shareTooltipSuppressed;
+      if (shouldUseDesktopShareRail() && isShareMenuOpen()) {
+        resetShareRailHint();
+      }
+    });
+
+    shareButton.addEventListener("blur", () => {
+      shareHintSuppressed = false;
+      delete shareMenu.dataset.shareTooltipSuppressed;
+      if (shouldUseDesktopShareRail() && isShareMenuOpen()) {
+        resetShareRailHint();
+      }
+    });
+  }
+
+  shareMenu.addEventListener("mouseenter", () => {
+    if (shouldUseDesktopShareRail()) {
+      openShareMenu();
+    }
+  });
+
+  shareMenu.addEventListener("mouseleave", () => {
+    if (shouldUseDesktopShareRail()) {
+      closeShareMenu();
+    }
+  });
+
+  shareMenu.addEventListener("focusin", () => {
+    if (shouldUseDesktopShareRail()) {
+      openShareMenu();
+    }
+  });
+
+  shareMenu.addEventListener("focusout", (event) => {
+    if (!shouldUseDesktopShareRail() || shareMenu.contains(event.relatedTarget)) {
+      return;
+    }
+
+    closeShareMenu();
+  });
+
+  document.addEventListener("pointerdown", (event) => {
+    if (!isShareMenuOpen() || shareMenu.contains(event.target)) {
+      return;
+    }
+
+    closeShareMenu();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && isShareMenuOpen()) {
+      closeShareMenu();
+    }
+  });
+
+  window.addEventListener("resize", () => {
+    if (!shouldUseDesktopShareRail()) {
+      closeShareMenu();
+    }
+  });
+}
+
+if (themeToggle) {
+  themeToggle.addEventListener("mouseenter", () => {
+    if (shouldUseDesktopShareRail()) {
+      closeShareMenu();
+    }
+  });
+
+  themeToggle.addEventListener("focusin", () => {
+    if (shouldUseDesktopShareRail()) {
+      closeShareMenu();
     }
   });
 }
