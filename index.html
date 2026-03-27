@@ -73,39 +73,127 @@
             <span class="action-button__label">SUBSCRIBE</span>
           </button>
           <div class="top-bar__actions cluster">
-            <button
-              class="action-button action-button--icon-only"
-              type="button"
-              aria-label="Share"
-              data-share-page
-              data-tooltip="Share with a friend"
-            >
-              <span class="action-button__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M12 14.75V5.75"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <path
-                    d="M8.8 8.95L12 5.75L15.2 8.95"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <path
-                    d="M7.25 12.7V15.35C7.25 16.7 8.35 17.8 9.7 17.8H14.3C15.65 17.8 16.75 16.7 16.75 15.35V12.7"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </span>
-            </button>
+            <div class="top-bar__share" data-share-menu>
+              <div class="share-rail__hint" data-share-rail-hint aria-hidden="true">
+                <span class="share-rail__hint-text">Share with your friend</span>
+                <span class="share-rail__hint-icon">👉</span>
+              </div>
+              <div class="share-rail" id="desktop-share-rail" data-share-rail role="group" aria-label="Share options">
+                <button
+                  class="share-rail__button share-rail__button--copy"
+                  type="button"
+                  aria-label="Copy link"
+                  data-share-option="copy"
+                  data-share-hint="Copy link"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      class="share-rail__copy-sheet"
+                      d="M8.55 4.7C7.58 4.7 6.8 5.48 6.8 6.45V17.55C6.8 18.52 7.58 19.3 8.55 19.3H15.45C16.42 19.3 17.2 18.52 17.2 17.55V9.15L13.2 5.15C12.92 4.87 12.54 4.7 12.15 4.7H8.55Z"
+                      fill="currentColor"
+                    />
+                    <path
+                      class="share-rail__copy-fold"
+                      d="M12.95 5.18V8.15C12.95 8.79 13.46 9.3 14.1 9.3H17.07L12.95 5.18Z"
+                      fill="none"
+                    />
+                    <path
+                      class="share-rail__copy-fold-line"
+                      d="M12.95 5.18V8.15C12.95 8.79 13.46 9.3 14.1 9.3H17.07"
+                      fill="none"
+                    />
+                  </svg>
+                </button>
+
+                <button
+                  class="share-rail__button share-rail__button--whatsapp"
+                  type="button"
+                  aria-label="Share via WhatsApp"
+                  data-share-option="whatsapp"
+                  data-share-hint="Share via WhatsApp"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      fill="currentColor"
+                      fill-rule="evenodd"
+                      d="M12.08 4.2C7.68 4.2 4.15 7.62 4.15 11.9C4.15 13.42 4.6 14.82 5.44 16.06L4.65 18.92L7.61 18.15C8.8 18.88 10.22 19.27 11.81 19.27C16.2 19.27 19.74 15.86 19.74 11.57C19.74 7.61 16.43 4.2 12.08 4.2ZM10.24 8.1C10.43 8.1 10.63 8.11 10.81 8.56L11.44 10.08C11.5 10.22 11.47 10.38 11.35 10.53L10.87 11.11C10.8 11.2 10.78 11.34 10.85 11.45C11.41 12.33 12.18 13.05 13.12 13.53C13.24 13.6 13.37 13.57 13.46 13.48L14.14 12.8C14.29 12.66 14.46 12.64 14.61 12.7L16.02 13.3C16.24 13.39 16.32 13.56 16.29 13.76C16.14 14.88 15.13 15.57 14.21 15.57C13.95 15.57 13.68 15.52 13.42 15.43C11.91 14.92 10.64 14.08 9.62 12.91C8.64 11.78 8.03 10.63 7.79 9.45C7.55 8.33 8.68 8.1 9.53 8.1H10.24Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </button>
+
+                <button
+                  class="share-rail__button share-rail__button--facebook"
+                  type="button"
+                  aria-label="Share on Facebook"
+                  data-share-option="facebook"
+                  data-share-hint="Share on Facebook"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M12.84 18.65V12.94H14.77L15.05 10.83H12.84V9.41C12.84 8.81 13.01 8.39 13.95 8.39H15.11V6.49C14.91 6.46 14.22 6.4 13.42 6.4C11.73 6.4 10.57 7.41 10.57 9.16V10.83H8.83V12.94H10.57V18.65H12.84Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </button>
+
+                <button
+                  class="share-rail__button share-rail__button--email"
+                  type="button"
+                  aria-label="Share via Email"
+                  data-share-option="email"
+                  data-share-hint="Share via Email"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      fill="currentColor"
+                      fill-rule="evenodd"
+                      d="M6.75 6.4C5.51 6.4 4.5 7.41 4.5 8.65V15.35C4.5 16.59 5.51 17.6 6.75 17.6H17.25C18.49 17.6 19.5 16.59 19.5 15.35V8.65C19.5 7.41 18.49 6.4 17.25 6.4H6.75ZM6.45 8.27C6.29 8.16 6.08 8.3 6.12 8.49C6.17 8.7 6.29 8.88 6.47 9L11.37 12.29C11.75 12.54 12.25 12.54 12.63 12.29L17.53 9C17.71 8.88 17.83 8.7 17.88 8.49C17.92 8.3 17.71 8.16 17.55 8.27L12.87 11.44C12.35 11.79 11.65 11.79 11.13 11.44L6.45 8.27Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <span class="share-rail__hover-bridge" aria-hidden="true"></span>
+
+              <button
+                class="action-button action-button--icon-only"
+                type="button"
+                aria-label="Share"
+                aria-haspopup="true"
+                aria-expanded="false"
+                aria-controls="desktop-share-rail"
+                data-share-page
+                data-tooltip="Share with a friend"
+              >
+                <span class="action-button__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M12 14.75V5.75"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M8.8 8.95L12 5.75L15.2 8.95"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M7.25 12.7V15.35C7.25 16.7 8.35 17.8 9.7 17.8H14.3C15.65 17.8 16.75 16.7 16.75 15.35V12.7"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+              </button>
+            </div>
 
             <button
               class="theme-toggle"
@@ -319,7 +407,7 @@
                 aria-label="Shop on Etsy for digital coloring books"
               >
                 <span class="link-card__badge" aria-hidden="true">
-                  <img class="link-card__brand-icon link-card__brand-icon--etsy" src="img/icons/etsy.svg" alt="" />
+                  <img class="link-card__brand-icon link-card__brand-icon--etsy" src="img/icons/etsy_168752.svg" alt="" />
                 </span>
                 <span class="link-card__content">
                   <span class="link-card__title">Shop on Etsy</span>
