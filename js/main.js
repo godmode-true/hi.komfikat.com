@@ -4,6 +4,7 @@ const themeToggle = document.querySelector("[data-theme-toggle]");
 const shareButton = document.querySelector("[data-share-page]");
 const themeColorMeta = document.querySelector('meta[name="theme-color"]');
 const canonicalLink = document.querySelector('link[rel="canonical"]');
+const metaDescription = document.querySelector('meta[name="description"]');
 const storyTrigger = document.querySelector("[data-story-open]");
 const storyViewer = document.querySelector("[data-story-viewer]");
 const storyTitle = document.querySelector("[data-story-title]");
@@ -88,6 +89,14 @@ async function copyText(text) {
 
   textarea.remove();
   return didCopy;
+}
+
+function shouldUseNativeShare() {
+  if (typeof navigator.share !== "function") {
+    return false;
+  }
+
+  return window.matchMedia("(hover: none), (pointer: coarse)").matches;
 }
 
 function resetShareButtonState() {
@@ -408,6 +417,24 @@ if (themeToggle) {
 if (shareButton) {
   shareButton.addEventListener("click", async () => {
     const shareUrl = canonicalLink?.href || window.location.href;
+    const shareTitle = document.title;
+    const shareText = metaDescription?.content || "Cozy hand-drawn coloring books by Komfi Kat.";
+
+    if (shouldUseNativeShare()) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
+      } catch (error) {
+        if (error?.name === "AbortError") {
+          return;
+        }
+      }
+    }
+
     const didCopy = await copyText(shareUrl);
 
     if (didCopy) {
