@@ -1082,6 +1082,46 @@ a {
       pointer;
   }
 
+  :root[data-theme="dark"]
+    :where(
+      a,
+      button,
+      [role="button"],
+      summary,
+      input[type="button"],
+      input[type="submit"],
+      input[type="reset"],
+      select,
+      label,
+      .profile__story-trigger,
+      .link-card,
+      .social-links__link,
+      .action-button,
+      .theme-toggle
+    ),
+  :root[data-theme="dark"]
+    :where(
+      a,
+      button,
+      [role="button"],
+      summary,
+      input[type="button"],
+      input[type="submit"],
+      input[type="reset"],
+      select,
+      label,
+      .profile__story-trigger,
+      .link-card,
+      .social-links__link,
+      .action-button,
+      .theme-toggle
+    )
+    * {
+    cursor:
+      url("../img/cursors/cursor-pointer-dark.svg") 17 3,
+      pointer;
+  }
+
   .action-button--subscribe[data-tooltip]::after {
     top: 50%;
     left: calc(100% + 0.6rem);
@@ -1106,8 +1146,8 @@ a {
   }
 
   .theme-toggle[data-tooltip]::after {
-    left: calc(100% + 0.6rem);
-    transform: translateY(-50%) translateX(-0.18rem);
+    right: calc(100% + var(--top-control-height) + 1.05rem);
+    transform: translateY(-50%) translateX(0.18rem);
   }
 
   .action-button--icon-only[data-tooltip]:hover::after,
@@ -1458,6 +1498,17 @@ a {
   .social-links__link * {
     cursor:
       url("../img/cursors/cursor-pointer.svg") 17 3,
+      pointer !important;
+  }
+
+  :root[data-theme="dark"] .profile__story-trigger,
+  :root[data-theme="dark"] .profile__story-trigger *,
+  :root[data-theme="dark"] .link-card,
+  :root[data-theme="dark"] .link-card *,
+  :root[data-theme="dark"] .social-links__link,
+  :root[data-theme="dark"] .social-links__link * {
+    cursor:
+      url("../img/cursors/cursor-pointer-dark.svg") 17 3,
       pointer !important;
   }
 
