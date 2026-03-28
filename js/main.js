@@ -42,6 +42,7 @@
 
   App.storageKeys = {
     theme: "komfi-theme",
+    themePreset: "komfi-theme-preset",
     storyViewed: "komfi-story-viewed-signature-v2",
     storyHintDismissed: "komfi-story-hint-dismissed-signature-v1",
   };
