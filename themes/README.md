@@ -4,6 +4,8 @@ Theme presets live in [theme-presets.js](/c:/Users/vladi/Desktop/github-projects
 
 Each preset drives both `light` and `dark` mode from one source and is applied by [theme.js](/c:/Users/vladi/Desktop/github-projects/hi.komfikat.com/js/theme.js).
 
+By default, the active theme for all users comes from `defaultPreset` in [theme-presets.js](/c:/Users/vladi/Desktop/github-projects/hi.komfikat.com/themes/theme-presets.js). Browser-side preset persistence is disabled unless you explicitly turn it on.
+
 ## Covered by presets
 
 - Page background
@@ -26,14 +28,17 @@ Each preset drives both `light` and `dark` mode from one source and is applied b
 - `rose-cream`
 - `burgundy-blush`
 - `mocha-petal`
+- `holiday-spruce`
 
 ## How to switch presets
 
-From the browser console or future tooling:
+Temporary preview in the current browser session:
 
 ```js
 window.KomfiKatApp.theme.setThemePreset("burgundy-blush");
 ```
+
+This does not override the site-wide default permanently.
 
 Available presets:
 
@@ -44,6 +49,15 @@ window.KomfiKatApp.theme.getAvailablePresets();
 ## Adding a new preset
 
 Add a new `createThemePreset({...})` entry in [theme-presets.js](/c:/Users/vladi/Desktop/github-projects/hi.komfikat.com/themes/theme-presets.js).
+
+To make that preset the default for everyone, also update:
+
+```js
+window.KomfiKatThemeConfig = {
+  defaultPreset: "your-preset-id",
+  allowStoredPresetOverride: false,
+};
+```
 
 You mainly set:
 

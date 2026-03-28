@@ -61,11 +61,29 @@
   }
 
   function createImageSlides(slideConfig) {
-    return slideConfig.files.map((slide) => ({
+    return slideConfig.files.map((slide, index) => ({
       type: "image",
       image: slide.src,
       alt: slide.alt,
+      preload: index < 2,
+      priority: index === 0,
     }));
+  }
+
+  function preloadCarouselImages(imageSlides) {
+    imageSlides
+      .filter((slide) => slide.preload)
+      .forEach((slide) => {
+        if (!slide.image || document.head.querySelector(`link[rel="preload"][href="${slide.image}"]`)) {
+          return;
+        }
+
+        const preload = document.createElement("link");
+        preload.rel = "preload";
+        preload.as = "image";
+        preload.href = slide.image;
+        document.head.append(preload);
+      });
   }
 
   function getVisibleCards() {
@@ -201,8 +219,9 @@
     image.className = "promo-carousel__image";
     image.src = item.image;
     image.alt = item.alt || "";
-    image.loading = index < 2 ? "eager" : "lazy";
+    image.loading = item.preload ? "eager" : "lazy";
     image.decoding = "async";
+    image.fetchPriority = item.priority ? "high" : "auto";
     image.draggable = false;
     card.append(image);
 
@@ -229,6 +248,7 @@
 
     const manifest = getCarouselManifest();
     const imageSlides = createImageSlides(manifest.slides);
+    preloadCarouselImages(imageSlides);
 
     let currentVisibleCards = getVisibleCards();
     let carouselItems = createCarouselItems(imageSlides, manifest.actions, currentVisibleCards);

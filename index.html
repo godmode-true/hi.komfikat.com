@@ -29,11 +29,9 @@
     <script>
       try {
         const savedTheme = localStorage.getItem("komfi-theme");
-        const savedPreset = localStorage.getItem("komfi-theme-preset");
         if (savedTheme === "dark") {
           document.documentElement.dataset.theme = "dark";
         }
-        document.documentElement.dataset.themePreset = savedPreset || "rose-cream";
       } catch {}
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
