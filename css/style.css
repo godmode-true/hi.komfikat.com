@@ -519,6 +519,7 @@ a {
 }
 
 .promo-carousel__card--image {
+  position: relative;
   background-color: transparent;
 }
 
@@ -534,9 +535,12 @@ a {
 }
 
 .promo-carousel__image {
-  width: 100%;
-  height: 100%;
-  border-radius: inherit;
+  position: absolute;
+  inset: -1px;
+  width: calc(100% + 2px);
+  height: calc(100% + 2px);
+  max-width: none;
+  border-radius: calc(var(--promo-card-radius) + 1px);
   object-fit: cover;
   pointer-events: none;
 }
@@ -546,11 +550,11 @@ a {
   align-items: stretch;
   justify-content: center;
   padding: 0;
-  background: transparent !important;
+  background: var(--promo-shell-surface) !important;
   border: 0;
   box-shadow: none !important;
-  border-radius: 0 !important;
-  overflow: visible !important;
+  border-radius: var(--promo-card-radius) !important;
+  overflow: hidden !important;
 }
 
 .promo-carousel__cta-panel {
@@ -962,7 +966,7 @@ a {
 }
 
 :root[data-theme="dark"] .promo-carousel__card--cta {
-  background: transparent !important;
+  background: var(--promo-shell-surface) !important;
 }
 
 :root[data-theme="dark"] .promo-carousel__cta-panel {
@@ -1246,7 +1250,7 @@ a {
 }
 
 :root[data-theme="dark"] .link-card--etsy {
-  background: #fcf8f2;
+  background: linear-gradient(180deg, #f8f1e7 0%, #f1e7db 100%);
   color: var(--panel-text);
 }
 
@@ -2713,7 +2717,7 @@ a {
 
   .promo-carousel__viewport {
     width: 100%;
-    border-radius: 0;
+    border-radius: calc(var(--promo-card-radius) + 0.15rem);
     padding-inline-start: 2px;
     padding-inline-end: 1px;
   }
@@ -2763,11 +2767,15 @@ a {
     --promo-cta-gap: 0.48rem;
     width: 100%;
     height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-evenly;
+    display: grid;
+    grid-template-rows: repeat(var(--promo-cta-action-count, 3), minmax(0, 1fr));
+    align-items: stretch;
+    align-content: stretch;
+    justify-items: stretch;
     margin-inline: 0;
     padding-inline: 0;
+    padding-block: 0;
+    gap: var(--promo-cta-gap);
   }
 
   .promo-carousel__shop-button-content {
