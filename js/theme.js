@@ -6,6 +6,8 @@
   }
 
   const { dom, helpers, storageKeys } = App;
+  const themePresets = window.KomfiKatThemePresets || {};
+  const defaultPresetName = window.KomfiKatThemeConfig?.defaultPreset || "rose-cream";
 
   function updateThemeColor() {
     if (!dom.themeColorMeta) {
@@ -19,20 +21,78 @@
     }
   }
 
-  function setTheme(theme) {
-    dom.root.dataset.theme = theme;
-    helpers.writeStorageValue(storageKeys.theme, theme);
+  function getAvailableThemePresets() {
+    return Object.values(themePresets).map((preset) => ({
+      id: preset.id,
+      label: preset.label,
+    }));
+  }
 
-    if (dom.themeToggle) {
-      const isDark = theme === "dark";
-      const tooltipText = isDark ? "Switch to light mode" : "Switch to dark mode";
-      dom.themeToggle.setAttribute("aria-pressed", String(isDark));
-      dom.themeToggle.setAttribute("aria-label", tooltipText);
-      dom.themeToggle.setAttribute("data-tooltip", tooltipText);
+  function resolvePresetName(name) {
+    return themePresets[name] ? name : defaultPresetName;
+  }
+
+  function getStoredPresetName() {
+    const savedPreset = helpers.readStorageValue(storageKeys.themePreset, defaultPresetName);
+    return resolvePresetName(savedPreset || defaultPresetName);
+  }
+
+  function applyPresetTokens(theme, presetName) {
+    const resolvedTheme = theme === "dark" ? "dark" : "light";
+    const resolvedPresetName = resolvePresetName(presetName);
+    const preset = themePresets[resolvedPresetName];
+    const tokens = preset?.[resolvedTheme];
+
+    if (!tokens) {
+      return resolvedPresetName;
     }
 
+    Object.entries(tokens).forEach(([token, value]) => {
+      dom.root.style.setProperty(token, value);
+    });
+
+    dom.root.dataset.themePreset = resolvedPresetName;
+    return resolvedPresetName;
+  }
+
+  function syncThemeToggle(theme) {
+    if (!dom.themeToggle) {
+      return;
+    }
+
+    const isDark = theme === "dark";
+    const tooltipText = isDark ? "Switch to light mode" : "Switch to dark mode";
+    dom.themeToggle.setAttribute("aria-pressed", String(isDark));
+    dom.themeToggle.setAttribute("aria-label", tooltipText);
+    dom.themeToggle.setAttribute("data-tooltip", tooltipText);
+  }
+
+  function setTheme(theme) {
+    const resolvedTheme = theme === "dark" ? "dark" : "light";
+    const presetName = getStoredPresetName();
+
+    dom.root.dataset.theme = resolvedTheme;
+    helpers.writeStorageValue(storageKeys.theme, resolvedTheme);
+    applyPresetTokens(resolvedTheme, presetName);
+    syncThemeToggle(resolvedTheme);
     updateThemeColor();
   }
+
+  function setThemePreset(presetName) {
+    const resolvedPresetName = resolvePresetName(presetName);
+    const currentTheme = dom.root.dataset.theme === "dark" ? "dark" : "light";
+
+    helpers.writeStorageValue(storageKeys.themePreset, resolvedPresetName);
+    applyPresetTokens(currentTheme, resolvedPresetName);
+    updateThemeColor();
+  }
+
+  App.theme = {
+    setTheme,
+    setThemePreset,
+    getAvailablePresets: getAvailableThemePresets,
+    getActivePreset: () => dom.root.dataset.themePreset || getStoredPresetName(),
+  };
 
   App.initTheme = function initTheme() {
     if (App.flags.themeInitialized) {
@@ -41,17 +101,18 @@
 
     App.flags.themeInitialized = true;
 
-    if (dom.themeToggle) {
-      const savedTheme = helpers.readStorageValue(storageKeys.theme, "light");
-      setTheme(savedTheme === "dark" ? "dark" : "light");
+    const savedTheme = helpers.readStorageValue(storageKeys.theme, "light");
+    const initialTheme = savedTheme === "dark" ? "dark" : "light";
+    const initialPreset = getStoredPresetName();
 
-      dom.themeToggle.addEventListener("click", () => {
-        const nextTheme = dom.root.dataset.theme === "dark" ? "light" : "dark";
-        setTheme(nextTheme);
-      });
-      return;
-    }
-
+    applyPresetTokens(initialTheme, initialPreset);
+    dom.root.dataset.theme = initialTheme;
+    syncThemeToggle(initialTheme);
     updateThemeColor();
+
+    dom.themeToggle?.addEventListener("click", () => {
+      const nextTheme = dom.root.dataset.theme === "dark" ? "light" : "dark";
+      setTheme(nextTheme);
+    });
   };
 })();
