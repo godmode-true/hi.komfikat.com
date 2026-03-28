@@ -21,9 +21,7 @@
   }
 
   function rgbToHex({ r, g, b }) {
-    return `#${[r, g, b]
-      .map((channel) => clampChannel(channel).toString(16).padStart(2, "0"))
-      .join("")}`;
+    return `#${[r, g, b].map((channel) => clampChannel(channel).toString(16).padStart(2, "0")).join("")}`;
   }
 
   function mixHex(first, second, amount = 0.5) {
@@ -51,13 +49,7 @@
     return `linear-gradient(180deg, ${topGlow} 0%, rgba(255, 255, 255, 0) 20%), ${verticalGradient(start, end)}`;
   }
 
-  function createThemePreset({
-    id,
-    label,
-    light,
-    dark,
-    brand = {},
-  }) {
+  function createThemePreset({ id, label, light, dark, brand = {} }) {
     const lightSurfaceHoverSolid = mixHex(light.surface, light.accentSoft, 0.34);
     const lightSurfaceHover = verticalGradient(
       mixHex(light.surface, "#ffffff", 0.12),
@@ -125,7 +117,11 @@
         "--promo-card-border": mixHex(light.accentSoft, "#ffffff", 0.18),
         "--promo-shell-surface":
           light.shellSurface ||
-          shellGradient(rgba(light.surface, 0.72), mixHex(light.surface, light.accentSoft, 0.26), mixHex(light.surface, light.accentSoft, 0.44)),
+          shellGradient(
+            rgba(light.surface, 0.72),
+            mixHex(light.surface, light.accentSoft, 0.26),
+            mixHex(light.surface, light.accentSoft, 0.44),
+          ),
         "--social-link-bg": light.surface,
         "--scrollbar-track": light.scrollbarTrack || mixHex(light.pageBg, light.accentSoft, 0.5),
         "--scrollbar-thumb": light.scrollbarThumb || mixHex(light.accentSoft, light.accent, 0.36),
@@ -136,8 +132,10 @@
         "--story-viewed-ring-shadow": light.viewedRingShadow || rgba(light.accent, 0.14),
         "--story-viewer-surface": light.storyViewerSurface || lightStorySurface,
         "--story-viewer-shadow":
-          light.storyViewerShadow || `0 28px 60px ${rgba(mixHex(light.text, light.accent, 0.3), 0.16)}, inset 0 1px 0 rgba(255, 255, 255, 0.82)`,
-        "--story-viewer-progress-track": light.storyViewerProgressTrack || rgba(mixHex(light.textMuted, light.accentSoft, 0.45), 0.18),
+          light.storyViewerShadow ||
+          `0 28px 60px ${rgba(mixHex(light.text, light.accent, 0.3), 0.16)}, inset 0 1px 0 rgba(255, 255, 255, 0.82)`,
+        "--story-viewer-progress-track":
+          light.storyViewerProgressTrack || rgba(mixHex(light.textMuted, light.accentSoft, 0.45), 0.18),
         "--story-viewer-brand-mark-bg": light.storyViewerBrandMarkBg || rgba(light.surface, 0.9),
         "--story-viewer-title": light.storyViewerTitle || rgba(light.text, 0.88),
         "--story-viewer-media-bg": light.storyViewerMediaBg || mixHex(light.surface, light.accentSoft, 0.3),
@@ -181,7 +179,8 @@
         "--surface-border-strong": rgba(dark.accent, 0.46),
         "--promo-card-border": mixHex(dark.accentSoft, dark.accent, 0.34),
         "--promo-shell-surface":
-          dark.shellSurface || verticalGradient(mixHex(dark.surface, dark.accentSoft, 0.12), mixHex(dark.surfaceSolid, dark.accent, 0.08)),
+          dark.shellSurface ||
+          verticalGradient(mixHex(dark.surface, dark.accentSoft, 0.12), mixHex(dark.surfaceSolid, dark.accent, 0.08)),
         "--social-link-bg": dark.surfaceSolid,
         "--scrollbar-track": dark.scrollbarTrack || mixHex(dark.pageBg, dark.surfaceSolid, 0.38),
         "--scrollbar-thumb": dark.scrollbarThumb || mixHex(dark.accentSoft, dark.surfaceSolid, 0.45),
@@ -193,7 +192,8 @@
         "--story-viewer-surface": dark.storyViewerSurface || darkStorySurface,
         "--story-viewer-shadow":
           dark.storyViewerShadow || `0 28px 60px ${rgba("#000000", 0.42)}, inset 0 1px 0 rgba(255, 255, 255, 0.08)`,
-        "--story-viewer-progress-track": dark.storyViewerProgressTrack || rgba(mixHex(dark.textMuted, dark.surfaceSolid, 0.35), 0.22),
+        "--story-viewer-progress-track":
+          dark.storyViewerProgressTrack || rgba(mixHex(dark.textMuted, dark.surfaceSolid, 0.35), 0.22),
         "--story-viewer-brand-mark-bg": dark.storyViewerBrandMarkBg || rgba(dark.surface, 0.92),
         "--story-viewer-title": dark.storyViewerTitle || rgba(dark.text, 0.86),
         "--story-viewer-media-bg": dark.storyViewerMediaBg || mixHex(dark.surface, dark.surfaceSolid, 0.55),
@@ -270,31 +270,77 @@
       id: "mocha-petal",
       label: "Mocha Petal",
       light: {
-        pageBg: "#fffbf9",
-        surface: "#fff7f7",
-        text: "#62433f",
-        textMuted: "#8e6966",
-        accent: "#d18798",
-        accentSoft: "#f2c8d2",
-        caret: "#c8887a",
+        pageBg: "#f8f0ea",
+        surface: "#f2e3db",
+        text: "#5a4036",
+        textMuted: "#7f645b",
+        accent: "#bc7a86",
+        accentSoft: "#dcc0c3",
+        shellSurface:
+          "linear-gradient(180deg, rgba(248, 240, 234, 0.74) 0%, rgba(248, 240, 234, 0) 20%), linear-gradient(180deg, #f1e4dd 0%, #e8d6cf 100%)",
+        scrollbarTrack: "#ead9d2",
+        scrollbarThumb: "#caa8a9",
+        scrollbarThumbHover: "#b88f95",
+        caret: "#c08a77",
       },
       dark: {
-        pageBg: "#261f1d",
-        surface: "#55403d",
-        surfaceSolid: "#4a3734",
-        text: "#f7ebe8",
-        textMuted: "#dfc3c0",
-        panelText: "#f7ebe8",
-        panelTextMuted: "#dfc3c0",
-        accent: "#e1a1af",
-        accentSoft: "#cfb1ba",
-        caret: "#e0a08b",
+        pageBg: "#1f1816",
+        surface: "#493933",
+        surfaceSolid: "#40312c",
+        text: "#f4e7e1",
+        textMuted: "#d5beb6",
+        panelText: "#f4e7e1",
+        panelTextMuted: "#d5beb6",
+        accent: "#d39aa3",
+        accentSoft: "#b89fa2",
+        shellSurface: "linear-gradient(180deg, #50403a 0%, #463731 100%)",
+        scrollbarTrack: "#2c2320",
+        scrollbarThumb: "#7c6767",
+        scrollbarThumbHover: "#917777",
+        caret: "#d39b88",
+      },
+    }),
+    "holiday-spruce": createThemePreset({
+      id: "holiday-spruce",
+      label: "Holiday Spruce",
+      light: {
+        pageBg: "#f8f3ee",
+        surface: "#f4ebe3",
+        selectionBg: "#eed7d9",
+        text: "#4f3a34",
+        textMuted: "#78625a",
+        accent: "#b84f5c",
+        accentSoft: "#d6b3b6",
+        shellSurface:
+          "linear-gradient(180deg, rgba(248, 243, 238, 0.74) 0%, rgba(248, 243, 238, 0) 20%), linear-gradient(180deg, #efe4dc 0%, #e6d6cf 100%)",
+        scrollbarTrack: "#e8ddd6",
+        scrollbarThumb: "#b99399",
+        scrollbarThumbHover: "#a77c84",
+        caret: "#b36b63",
+      },
+      dark: {
+        pageBg: "#171b18",
+        selectionBg: "#5b3138",
+        surface: "#314139",
+        surfaceSolid: "#28352e",
+        text: "#f5ece6",
+        textMuted: "#d7c4bc",
+        panelText: "#f5ece6",
+        panelTextMuted: "#d7c4bc",
+        accent: "#d98692",
+        accentSoft: "#9eb3a4",
+        shellSurface: "linear-gradient(180deg, #394940 0%, #2f3d35 100%)",
+        scrollbarTrack: "#232b26",
+        scrollbarThumb: "#6f8278",
+        scrollbarThumbHover: "#83958b",
+        caret: "#d49c8d",
       },
     }),
   };
 
   window.KomfiKatThemeConfig = {
     defaultPreset: "rose-cream",
+    allowStoredPresetOverride: false,
   };
 
   window.KomfiKatThemePresets = presets;

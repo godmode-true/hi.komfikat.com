@@ -87,6 +87,12 @@
     } catch {}
   }
 
+  function removeStorageValue(key) {
+    try {
+      localStorage.removeItem(key);
+    } catch {}
+  }
+
   function isDesktopPointerDevice() {
     return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   }
@@ -169,6 +175,7 @@
     formatStoryDate,
     readStorageValue,
     writeStorageValue,
+    removeStorageValue,
     isDesktopPointerDevice,
     isTouchLikeDevice,
     createShareHintText,

@@ -29,10 +29,10 @@ window.KomfiKatCarouselManifest = {
   // This avoids runtime probing and lets the carousel render immediately on mobile.
   slides: {
     files: [
-      { src: "img/carousel/1.png", alt: "Hobby Girl cover" },
-      { src: "img/carousel/2.png", alt: "Instagram carousel image 2" },
-      { src: "img/carousel/3.png", alt: "Instagram carousel image 3" },
-      { src: "img/carousel/4.png", alt: "Instagram carousel image 4" },
+      { src: "img/carousel/1.webp", alt: "Hobby Girl cover" },
+      { src: "img/carousel/2.webp", alt: "Instagram carousel image 2" },
+      { src: "img/carousel/3.webp", alt: "Instagram carousel image 3" },
+      { src: "img/carousel/4.webp", alt: "Instagram carousel image 4" },
     ],
   },
 };

@@ -8,6 +8,7 @@
   const { dom, helpers, storageKeys } = App;
   const themePresets = window.KomfiKatThemePresets || {};
   const defaultPresetName = window.KomfiKatThemeConfig?.defaultPreset || "rose-cream";
+  const allowStoredPresetOverride = window.KomfiKatThemeConfig?.allowStoredPresetOverride === true;
 
   function updateThemeColor() {
     if (!dom.themeColorMeta) {
@@ -33,6 +34,10 @@
   }
 
   function getStoredPresetName() {
+    if (!allowStoredPresetOverride) {
+      return defaultPresetName;
+    }
+
     const savedPreset = helpers.readStorageValue(storageKeys.themePreset, defaultPresetName);
     return resolvePresetName(savedPreset || defaultPresetName);
   }
@@ -78,11 +83,17 @@
     updateThemeColor();
   }
 
-  function setThemePreset(presetName) {
+  function setThemePreset(presetName, options = {}) {
     const resolvedPresetName = resolvePresetName(presetName);
     const currentTheme = dom.root.dataset.theme === "dark" ? "dark" : "light";
+    const persist = allowStoredPresetOverride && options.persist === true;
 
-    helpers.writeStorageValue(storageKeys.themePreset, resolvedPresetName);
+    if (persist) {
+      helpers.writeStorageValue(storageKeys.themePreset, resolvedPresetName);
+    } else {
+      helpers.removeStorageValue(storageKeys.themePreset);
+    }
+
     applyPresetTokens(currentTheme, resolvedPresetName);
     updateThemeColor();
   }
@@ -104,6 +115,10 @@
     const savedTheme = helpers.readStorageValue(storageKeys.theme, "light");
     const initialTheme = savedTheme === "dark" ? "dark" : "light";
     const initialPreset = getStoredPresetName();
+
+    if (!allowStoredPresetOverride) {
+      helpers.removeStorageValue(storageKeys.themePreset);
+    }
 
     applyPresetTokens(initialTheme, initialPreset);
     dom.root.dataset.theme = initialTheme;
