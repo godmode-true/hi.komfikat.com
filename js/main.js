@@ -1,3 +1,4 @@
+// DOM references
 const root = document.documentElement;
 const body = document.body;
 const themeToggle = document.querySelector("[data-theme-toggle]");
@@ -18,7 +19,6 @@ const storyEyebrow = document.querySelector("[data-story-eyebrow]");
 const storyMeta = document.querySelector("[data-story-meta]");
 const storyDescription = document.querySelector("[data-story-description]");
 const storyImage = document.querySelector("[data-story-image]");
-const storyFrame = document.querySelector("[data-story-frame]");
 const storyProgress = document.querySelector("[data-story-progress]");
 const storyCta = document.querySelector("[data-story-cta]");
 const storyPrev = document.querySelector("[data-story-prev]");
@@ -27,16 +27,34 @@ const storyClose = document.querySelector("[data-story-close]");
 const storyPlaybackToggle = document.querySelector("[data-story-toggle-playback]");
 const storySurface = document.querySelector(".story-viewer__surface");
 const storyMobileHint = document.querySelector(".profile__story-mobile-hint");
-const storageKey = "komfi-theme";
-const storyViewedKey = "komfi-story-viewed-signature-v2";
 
+// Storage, UI copy, and timings
+const storageKeys = {
+  theme: "komfi-theme",
+  storyViewed: "komfi-story-viewed-signature-v2",
+};
+
+const shareMessages = {
+  defaultHint: "Share with your friend 👉",
+  copiedHint: "Link copied!",
+};
+
+const storyTimings = {
+  duration: 4200,
+  navHoldDelay: 140,
+};
+
+const storyDateMonthMap = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+// Story content
 // Recommended story artwork size: 1080 x 1350 px.
-// Story date format: "Mar 27, 2026" (US short month + day + year).
+// Use publishedAt in ISO format: "2026-03-27".
+// It will render as: "Mar 27, 2026".
 // Month abbreviations: Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec.
 const stories = [
   {
     eyebrow: "Komfi Kat",
-    title: "Mar 27, 2026",
+    publishedAt: "2026-03-27",
     meta: "Instagram Story",
     description: "Fresh little peeks at new coloring pages, cute scenes, and what Komfi Kat is making next.",
     ctaLabel: "Visit Instagram",
@@ -48,7 +66,7 @@ const stories = [
   },
   {
     eyebrow: "Komfi Kat",
-    title: "Apr 3, 2026",
+    publishedAt: "2026-04-03",
     meta: "",
     description: "",
     ctaLabel: "Open Reel on Instagram",
@@ -60,7 +78,7 @@ const stories = [
   },
   {
     eyebrow: "Komfi Kat",
-    title: "Apr 3, 2026",
+    publishedAt: "2026-04-03",
     meta: "",
     description: "",
     ctaLabel: "Open Reel on Instagram",
@@ -72,7 +90,7 @@ const stories = [
   },
   {
     eyebrow: "Komfi Kat",
-    title: "Apr 3, 2026",
+    publishedAt: "2026-04-03",
     meta: "",
     description: "",
     ctaLabel: "Open Reel on Instagram",
@@ -85,9 +103,9 @@ const stories = [
 ];
 
 const storySignature = JSON.stringify(
-  stories.map(({ eyebrow, title, meta, description, ctaLabel, url, image, imageAlt, imageFit, layout }) => ({
+  stories.map(({ eyebrow, publishedAt, meta, description, ctaLabel, url, image, imageAlt, imageFit, layout }) => ({
     eyebrow,
-    title,
+    publishedAt,
     meta,
     description,
     ctaLabel,
@@ -99,6 +117,7 @@ const storySignature = JSON.stringify(
   })),
 );
 
+// Shared state
 let activeStoryIndex = 0;
 let storyRafId = 0;
 let storyStartedAt = 0;
@@ -107,8 +126,6 @@ let isStoryPaused = false;
 let isStoryHeld = false;
 let isStoryManuallyPaused = false;
 let sessionViewedStories = new Set();
-const storyDuration = 4200;
-const storyNavHoldDelay = 140;
 let storyNavHoldTimer = 0;
 let storyNavHoldTriggered = false;
 let activeStoryNavTarget = null;
@@ -116,6 +133,89 @@ let shareTooltipTimeout = 0;
 let shareRailHintTimeout = 0;
 let shareHintSuppressed = false;
 let storyHintCleanupTimeout = 0;
+
+// Generic helpers
+function formatStoryDate(dateString) {
+  if (typeof dateString !== "string") {
+    return "";
+  }
+
+  const [yearPart, monthPart, dayPart] = dateString.split("-");
+  const year = Number.parseInt(yearPart, 10);
+  const month = Number.parseInt(monthPart, 10);
+  const day = Number.parseInt(dayPart, 10);
+
+  if (!year || !month || !day || month < 1 || month > 12) {
+    return dateString;
+  }
+
+  return `${storyDateMonthMap[month - 1]} ${day}, ${year}`;
+}
+
+function readStorageValue(key, fallback = "") {
+  try {
+    return localStorage.getItem(key) || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeStorageValue(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {}
+}
+
+function isDesktopPointerDevice() {
+  return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+}
+
+function isTouchLikeDevice() {
+  return !isDesktopPointerDevice();
+}
+
+function createShareHintText(text) {
+  const textElement = document.createElement("span");
+  textElement.className = "share-rail__hint-text";
+  textElement.textContent = text;
+  return textElement;
+}
+
+function createShareHintIcon(icon) {
+  const iconElement = document.createElement("span");
+  iconElement.className = "share-rail__hint-icon";
+  iconElement.textContent = icon;
+  return iconElement;
+}
+
+function createShareHintStatusIcon() {
+  const iconElement = document.createElement("img");
+  iconElement.className = "share-rail__hint-status-icon";
+  iconElement.src = "img/icons/success.svg";
+  iconElement.alt = "";
+  iconElement.setAttribute("aria-hidden", "true");
+  return iconElement;
+}
+
+function setShareHintContent({ text, icon = "", success = false }) {
+  if (!shareRailHint) {
+    return;
+  }
+
+  const nodes = [];
+
+  if (success) {
+    nodes.push(createShareHintStatusIcon());
+  }
+
+  nodes.push(createShareHintText(text));
+
+  if (icon) {
+    nodes.push(createShareHintIcon(icon));
+  }
+
+  shareRailHint.replaceChildren(...nodes);
+}
 
 async function copyText(text) {
   if (navigator.clipboard?.writeText) {
@@ -144,16 +244,17 @@ async function copyText(text) {
   return didCopy;
 }
 
+// Share helpers
 function shouldUseNativeShare() {
   if (typeof navigator.share !== "function") {
     return false;
   }
 
-  return window.matchMedia("(hover: none), (pointer: coarse)").matches;
+  return isTouchLikeDevice();
 }
 
 function shouldUseDesktopShareRail() {
-  return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  return isDesktopPointerDevice();
 }
 
 function getSharePayload() {
@@ -166,7 +267,6 @@ function getSharePayload() {
     title,
     text,
     message: `Take a cozy peek at Komfi Kat. ${text} ${url}`,
-    emailBody: `Take a cozy peek at Komfi Kat.\n\n${text}\n\n${url}`,
   };
 }
 
@@ -174,18 +274,17 @@ function isShareMenuOpen() {
   return shareMenu?.dataset.shareMenuOpen === "true";
 }
 
-function setShareRailHint(text = "Share with your friend 👉") {
+function setShareRailHint(text = shareMessages.defaultHint) {
   if (!shareRailHint || !shareMenu) {
     return;
   }
 
-  if (text === "Link copied!") {
-    shareRailHint.innerHTML = `<img class="share-rail__hint-status-icon" src="img/icons/success.svg" alt="" aria-hidden="true"><span class="share-rail__hint-text">${text}</span>`;
+  if (text === shareMessages.copiedHint) {
+    setShareHintContent({ text, success: true });
   } else if (text.endsWith("👉")) {
-    const label = text.slice(0, -2).trim();
-    shareRailHint.innerHTML = `<span class="share-rail__hint-text">${label}</span><span class="share-rail__hint-icon">👉</span>`;
+    setShareHintContent({ text: text.slice(0, -2).trim(), icon: "👉" });
   } else {
-    shareRailHint.textContent = text;
+    setShareHintContent({ text });
   }
 
   shareMenu.dataset.shareHintVisible = "true";
@@ -222,7 +321,7 @@ function openShareMenu() {
   shareButton.setAttribute("aria-expanded", "true");
 
   if (shareButton.matches(":hover, :focus-visible, :focus")) {
-    setShareRailHint();
+    setShareRailHint(shareMessages.defaultHint);
   }
 }
 
@@ -242,25 +341,19 @@ function toggleShareMenu() {
   openShareMenu();
 }
 
-function resetShareCopyState() {
-  if (!shareCopyButton) {
-    return;
-  }
-}
-
 function showShareCopyButtonState() {
   if (!shareCopyButton || !shouldUseDesktopShareRail()) {
     return;
   }
 
   window.clearTimeout(shareRailHintTimeout);
-  setShareRailHint("Link copied!");
+  setShareRailHint(shareMessages.copiedHint);
   shareRailHintTimeout = window.setTimeout(() => {
     if (!isShareMenuOpen()) {
       return;
     }
 
-    resetShareCopyState();
+    resetShareRailHint();
   }, 1800);
 }
 
@@ -282,27 +375,19 @@ function showShareCopiedState() {
   closeShareMenu();
   window.clearTimeout(shareTooltipTimeout);
   shareButton.dataset.shareState = "copied";
-  shareButton.setAttribute("data-tooltip", "Link copied!");
-  shareButton.setAttribute("aria-label", "Link copied!");
+  shareButton.setAttribute("data-tooltip", shareMessages.copiedHint);
+  shareButton.setAttribute("aria-label", shareMessages.copiedHint);
   shareTooltipTimeout = window.setTimeout(() => {
     resetShareButtonState();
   }, 1800);
 }
 
 function getSeenStorySignature() {
-  try {
-    return localStorage.getItem(storyViewedKey) || "";
-  } catch {
-    return "";
-  }
+  return readStorageValue(storageKeys.storyViewed);
 }
 
 function hasSeenCurrentStories() {
   return getSeenStorySignature() === storySignature;
-}
-
-function isTouchLikeDevice() {
-  return window.matchMedia("(hover: none), (pointer: coarse)").matches;
 }
 
 function hideStoryHint() {
@@ -349,10 +434,7 @@ function updateStoryTriggerState() {
 }
 
 function markCurrentStoriesSeen() {
-  try {
-    localStorage.setItem(storyViewedKey, storySignature);
-  } catch {}
-
+  writeStorageValue(storageKeys.storyViewed, storySignature);
   updateStoryTriggerState();
 }
 
@@ -367,11 +449,10 @@ function updateThemeColor() {
   }
 }
 
+// Theme helpers
 function setTheme(theme) {
   root.dataset.theme = theme;
-  try {
-    localStorage.setItem(storageKey, theme);
-  } catch {}
+  writeStorageValue(storageKeys.theme, theme);
 
   if (themeToggle) {
     const isDark = theme === "dark";
@@ -389,7 +470,7 @@ function ensureProgressSegments() {
     return [];
   }
 
-  storyProgress.innerHTML = "";
+  storyProgress.replaceChildren();
   storyProgress.style.setProperty("--story-count", String(stories.length));
 
   return stories.map(() => {
@@ -402,6 +483,7 @@ function ensureProgressSegments() {
 
 const progressSegments = ensureProgressSegments();
 
+// Story viewer helpers
 function syncStoryProgress(currentProgress = 0) {
   progressSegments.forEach((segment, index) => {
     segment.classList.toggle("is-complete", index < activeStoryIndex);
@@ -417,7 +499,7 @@ function syncStoryProgress(currentProgress = 0) {
 function renderStory(index) {
   const story = stories[index];
 
-  if (!story || !storyTitle || !storyMeta || !storyDescription || !storyImage || !storyFrame || !storyCta) {
+  if (!story || !storyTitle || !storyMeta || !storyDescription || !storyImage || !storyCta) {
     return;
   }
 
@@ -428,7 +510,7 @@ function renderStory(index) {
     storyEyebrow.textContent = story.eyebrow || "Komfi Kat";
   }
 
-  storyTitle.textContent = story.title;
+  storyTitle.textContent = formatStoryDate(story.publishedAt);
   storyMeta.textContent = story.meta;
   storyDescription.textContent = story.description;
   storyImage.src = story.image;
@@ -571,7 +653,7 @@ function startStoryTimer() {
 
   const tick = (timestamp) => {
     const elapsed = storyElapsedBeforePause + (timestamp - storyStartedAt);
-    const progress = Math.min(elapsed / storyDuration, 1);
+    const progress = Math.min(elapsed / storyTimings.duration, 1);
 
     syncStoryProgress(progress);
 
@@ -604,10 +686,7 @@ function openStories(startIndex = 0) {
 }
 
 if (themeToggle) {
-  let savedTheme = "light";
-  try {
-    savedTheme = localStorage.getItem(storageKey) || "light";
-  } catch {}
+  const savedTheme = readStorageValue(storageKeys.theme, "light");
   setTheme(savedTheme === "dark" ? "dark" : "light");
 
   themeToggle.addEventListener("click", () => {
@@ -618,6 +697,7 @@ if (themeToggle) {
   updateThemeColor();
 }
 
+// Event wiring
 if (shareButton) {
   shareButton.addEventListener("click", async (event) => {
     if (shouldUseDesktopShareRail()) {
@@ -653,7 +733,7 @@ if (shareButton) {
 
 if (shareOptions.length) {
   shareOptions.forEach((shareOption) => {
-    const optionHint = shareOption.dataset.shareHint || "Share with your friend 👉";
+    const optionHint = shareOption.dataset.shareHint || shareMessages.defaultHint;
 
     shareOption.addEventListener("mouseenter", () => {
       if (!shouldUseDesktopShareRail() || !isShareMenuOpen()) {
@@ -761,11 +841,6 @@ if (shareOptions.length) {
           "_blank",
           "noopener,noreferrer",
         );
-        return;
-      }
-
-      if (option === "email") {
-        window.location.href = `mailto:?subject=${encodeURIComponent(sharePayload.title)}&body=${encodeURIComponent(sharePayload.emailBody)}`;
       }
     });
   });
@@ -888,7 +963,7 @@ if (storyTrigger && storyViewer && stories.length) {
     storyNavHoldTimer = window.setTimeout(() => {
       storyNavHoldTriggered = true;
       beginHeldPause();
-    }, storyNavHoldDelay);
+    }, storyTimings.navHoldDelay);
   };
 
   const handleStoryNavPointerEnd = (direction) => {
