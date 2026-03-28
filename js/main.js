@@ -1,1124 +1,176 @@
-// DOM references
-const root = document.documentElement;
-const body = document.body;
-const themeToggle = document.querySelector("[data-theme-toggle]");
-const shareMenu = document.querySelector("[data-share-menu]");
-const shareRail = document.querySelector("[data-share-rail]");
-const shareRailHint = document.querySelector("[data-share-rail-hint]");
-const shareHoverBridge = document.querySelector(".share-rail__hover-bridge");
-const shareButton = document.querySelector("[data-share-page]");
-const shareCopyButton = document.querySelector('[data-share-option="copy"]');
-const shareOptions = document.querySelectorAll("[data-share-option]");
-const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-const canonicalLink = document.querySelector('link[rel="canonical"]');
-const metaDescription = document.querySelector('meta[name="description"]');
-const storyTrigger = document.querySelector("[data-story-open]");
-const storyViewer = document.querySelector("[data-story-viewer]");
-const storyTitle = document.querySelector("[data-story-title]");
-const storyEyebrow = document.querySelector("[data-story-eyebrow]");
-const storyMeta = document.querySelector("[data-story-meta]");
-const storyDescription = document.querySelector("[data-story-description]");
-const storyImage = document.querySelector("[data-story-image]");
-const storyProgress = document.querySelector("[data-story-progress]");
-const storyCta = document.querySelector("[data-story-cta]");
-const storyPrev = document.querySelector("[data-story-prev]");
-const storyNext = document.querySelector("[data-story-next]");
-const storyClose = document.querySelector("[data-story-close]");
-const storyPlaybackToggle = document.querySelector("[data-story-toggle-playback]");
-const storySurface = document.querySelector(".story-viewer__surface");
-const storyMobileHint = document.querySelector(".profile__story-mobile-hint");
-
-// Storage, UI copy, and timings
-const storageKeys = {
-  theme: "komfi-theme",
-  storyViewed: "komfi-story-viewed-signature-v2",
-};
-
-const shareMessages = {
-  defaultHint: "Share with your friend 👉",
-  copiedHint: "Link copied!",
-};
-
-const storyTimings = {
-  duration: 4200,
-  navHoldDelay: 140,
-};
-
-const storyDateMonthMap = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-// Story content
-// Recommended story artwork size: 1080 x 1350 px.
-// Use publishedAt in ISO format: "2026-03-27".
-// It will render as: "Mar 27, 2026".
-// Month abbreviations: Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec.
-const stories = [
-  {
-    eyebrow: "Komfi Kat",
-    publishedAt: "2026-03-27",
-    meta: "Instagram Story",
-    description: "Fresh little peeks at new coloring pages, cute scenes, and what Komfi Kat is making next.",
-    ctaLabel: "Visit Instagram",
-    url: "https://www.instagram.com/komfikat/",
-    image: "img/stories/placeholder-white.svg",
-    imageAlt: "White story placeholder",
-    imageFit: "cover",
-    layout: "caption",
-  },
-  {
-    eyebrow: "Komfi Kat",
-    publishedAt: "2026-04-03",
-    meta: "",
-    description: "",
-    ctaLabel: "Open Reel on Instagram",
-    url: "https://www.instagram.com/komfikat/",
-    image: "img/stories/placeholder-white.svg",
-    imageAlt: "White story placeholder",
-    imageFit: "cover",
-    layout: "full",
-  },
-  {
-    eyebrow: "Komfi Kat",
-    publishedAt: "2026-04-03",
-    meta: "",
-    description: "",
-    ctaLabel: "Open Reel on Instagram",
-    url: "https://www.instagram.com/komfikat/",
-    image: "img/stories/placeholder-white.svg",
-    imageAlt: "White story placeholder",
-    imageFit: "cover",
-    layout: "full",
-  },
-  {
-    eyebrow: "Komfi Kat",
-    publishedAt: "2026-04-03",
-    meta: "",
-    description: "",
-    ctaLabel: "Open Reel on Instagram",
-    url: "https://www.instagram.com/komfikat/",
-    image: "img/stories/placeholder-white.svg",
-    imageAlt: "White story placeholder",
-    imageFit: "cover",
-    layout: "full",
-  },
-];
-
-const storySignature = JSON.stringify(
-  stories.map(({ eyebrow, publishedAt, meta, description, ctaLabel, url, image, imageAlt, imageFit, layout }) => ({
-    eyebrow,
-    publishedAt,
-    meta,
-    description,
-    ctaLabel,
-    url,
-    image,
-    imageAlt,
-    imageFit: imageFit || "cover",
-    layout: layout || "caption",
-  })),
-);
-
-// Shared state
-let activeStoryIndex = 0;
-let storyRafId = 0;
-let storyStartedAt = 0;
-let storyElapsedBeforePause = 0;
-let isStoryPaused = false;
-let isStoryHeld = false;
-let isStoryManuallyPaused = false;
-let sessionViewedStories = new Set();
-let storyNavHoldTimer = 0;
-let storyNavHoldTriggered = false;
-let activeStoryNavTarget = null;
-let shareTooltipTimeout = 0;
-let shareRailHintTimeout = 0;
-let shareHintSuppressed = false;
-let storyHintCleanupTimeout = 0;
-
-// Generic helpers
-function formatStoryDate(dateString) {
-  if (typeof dateString !== "string") {
-    return "";
-  }
-
-  const [yearPart, monthPart, dayPart] = dateString.split("-");
-  const year = Number.parseInt(yearPart, 10);
-  const month = Number.parseInt(monthPart, 10);
-  const day = Number.parseInt(dayPart, 10);
-
-  if (!year || !month || !day || month < 1 || month > 12) {
-    return dateString;
-  }
-
-  return `${storyDateMonthMap[month - 1]} ${day}, ${year}`;
-}
-
-function readStorageValue(key, fallback = "") {
-  try {
-    return localStorage.getItem(key) || fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function writeStorageValue(key, value) {
-  try {
-    localStorage.setItem(key, value);
-  } catch {}
-}
-
-function isDesktopPointerDevice() {
-  return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-}
-
-function isTouchLikeDevice() {
-  return !isDesktopPointerDevice();
-}
-
-function createShareHintText(text) {
-  const textElement = document.createElement("span");
-  textElement.className = "share-rail__hint-text";
-  textElement.textContent = text;
-  return textElement;
-}
-
-function createShareHintIcon(icon) {
-  const iconElement = document.createElement("span");
-  iconElement.className = "share-rail__hint-icon";
-  iconElement.textContent = icon;
-  return iconElement;
-}
-
-function createShareHintStatusIcon() {
-  const iconElement = document.createElement("img");
-  iconElement.className = "share-rail__hint-status-icon";
-  iconElement.src = "img/icons/success.svg";
-  iconElement.alt = "";
-  iconElement.setAttribute("aria-hidden", "true");
-  return iconElement;
-}
-
-function setShareHintContent({ text, icon = "", success = false }) {
-  if (!shareRailHint) {
-    return;
-  }
-
-  const nodes = [];
-
-  if (success) {
-    nodes.push(createShareHintStatusIcon());
-  }
-
-  nodes.push(createShareHintText(text));
-
-  if (icon) {
-    nodes.push(createShareHintIcon(icon));
-  }
-
-  shareRailHint.replaceChildren(...nodes);
-}
-
-async function copyText(text) {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text);
-    return true;
-  }
-
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-  textarea.setAttribute("readonly", "");
-  textarea.style.position = "fixed";
-  textarea.style.opacity = "0";
-  textarea.style.pointerEvents = "none";
-  document.body.append(textarea);
-  textarea.select();
-
-  let didCopy = false;
-
-  try {
-    didCopy = document.execCommand("copy");
-  } catch {
-    didCopy = false;
-  }
-
-  textarea.remove();
-  return didCopy;
-}
-
-// Share helpers
-function shouldUseNativeShare() {
-  if (typeof navigator.share !== "function") {
-    return false;
-  }
-
-  return isTouchLikeDevice();
-}
-
-function shouldUseDesktopShareRail() {
-  return isDesktopPointerDevice();
-}
-
-function getSharePayload() {
-  const url = canonicalLink?.href || window.location.href;
-  const title = document.title;
-  const text = metaDescription?.content || "Cozy hand-drawn coloring books by Komfi Kat.";
-
-  return {
-    url,
-    title,
-    text,
-    message: `Take a cozy peek at Komfi Kat. ${text} ${url}`,
-  };
-}
-
-function isShareMenuOpen() {
-  return shareMenu?.dataset.shareMenuOpen === "true";
-}
-
-function setShareRailHint(text = shareMessages.defaultHint) {
-  if (!shareRailHint || !shareMenu) {
-    return;
-  }
-
-  if (text === shareMessages.copiedHint) {
-    setShareHintContent({ text, success: true });
-  } else if (text.endsWith("👉")) {
-    setShareHintContent({ text: text.slice(0, -2).trim(), icon: "👉" });
-  } else {
-    setShareHintContent({ text });
-  }
-
-  shareMenu.dataset.shareHintVisible = "true";
-}
-
-function resetShareRailHint() {
-  if (shareMenu) {
-    delete shareMenu.dataset.shareHintVisible;
-  }
-
-  window.clearTimeout(shareRailHintTimeout);
-}
-
-function closeShareMenu() {
-  if (!shareMenu || !shareButton) {
-    return;
-  }
-
-  resetShareRailHint();
-  delete shareMenu.dataset.shareMenuOpen;
-  shareButton.setAttribute("aria-expanded", "false");
-}
-
-function openShareMenu() {
-  if (!shareMenu || !shareButton) {
-    return;
-  }
-
-  window.clearTimeout(shareTooltipTimeout);
-  resetShareButtonState();
-  delete shareMenu.dataset.shareTooltipSuppressed;
-  delete shareMenu.dataset.shareHintVisible;
-  shareMenu.dataset.shareMenuOpen = "true";
-  shareButton.setAttribute("aria-expanded", "true");
-
-  if (shareButton.matches(":hover, :focus-visible, :focus")) {
-    setShareRailHint(shareMessages.defaultHint);
-  }
-}
-
-function toggleShareMenu() {
-  if (!shareMenu) {
-    return;
-  }
-
-  if (isShareMenuOpen()) {
-    shareHintSuppressed = true;
-    shareMenu.dataset.shareTooltipSuppressed = "true";
-    closeShareMenu();
-    return;
-  }
-
-  shareHintSuppressed = false;
-  openShareMenu();
-}
-
-function showShareCopyButtonState() {
-  if (!shareCopyButton || !shouldUseDesktopShareRail()) {
-    return;
-  }
-
-  window.clearTimeout(shareRailHintTimeout);
-  setShareRailHint(shareMessages.copiedHint);
-  shareRailHintTimeout = window.setTimeout(() => {
-    if (!isShareMenuOpen()) {
-      return;
-    }
-
-    resetShareRailHint();
-  }, 1800);
-}
-
-function resetShareButtonState() {
-  if (!shareButton) {
-    return;
-  }
-
-  shareButton.dataset.shareState = "";
-  shareButton.setAttribute("data-tooltip", "Share with a friend");
-  shareButton.setAttribute("aria-label", "Share");
-}
-
-function showShareCopiedState() {
-  if (!shareButton) {
-    return;
-  }
-
-  closeShareMenu();
-  window.clearTimeout(shareTooltipTimeout);
-  shareButton.dataset.shareState = "copied";
-  shareButton.setAttribute("data-tooltip", shareMessages.copiedHint);
-  shareButton.setAttribute("aria-label", shareMessages.copiedHint);
-  shareTooltipTimeout = window.setTimeout(() => {
-    resetShareButtonState();
-  }, 1800);
-}
-
-function getSeenStorySignature() {
-  return readStorageValue(storageKeys.storyViewed);
-}
-
-function hasSeenCurrentStories() {
-  return getSeenStorySignature() === storySignature;
-}
-
-function hideStoryHint() {
-  if (!storyTrigger || !storyMobileHint) {
-    return;
-  }
-
-  window.clearTimeout(storyHintCleanupTimeout);
-
-  if (!storyMobileHint.dataset.storyHint) {
-    return;
-  }
-
-  storyMobileHint.dataset.storyHint = "closing";
-  storyHintCleanupTimeout = window.setTimeout(() => {
-    delete storyMobileHint.dataset.storyHint;
-  }, 220);
-}
-
-function showStoryHint() {
-  if (!storyTrigger || !storyMobileHint || hasSeenCurrentStories() || !isTouchLikeDevice()) {
-    return;
-  }
-
-  window.clearTimeout(storyHintCleanupTimeout);
-  storyMobileHint.dataset.storyHint = "visible";
-}
-
-function updateStoryTriggerState() {
-  if (!storyTrigger) {
-    return;
-  }
-
-  const hasSeenStories = hasSeenCurrentStories();
-  storyTrigger.dataset.storyState = hasSeenStories ? "viewed" : "new";
-  storyTrigger.setAttribute(
-    "aria-label",
-    hasSeenStories ? "Rewatch Komfi Kat stories" : "Open Komfi Kat stories with new updates",
-  );
-
-  if (hasSeenStories) {
-    hideStoryHint();
-  }
-}
-
-function markCurrentStoriesSeen() {
-  writeStorageValue(storageKeys.storyViewed, storySignature);
-  updateStoryTriggerState();
-}
-
-function updateThemeColor() {
-  if (!themeColorMeta) {
-    return;
-  }
-
-  const pageBg = getComputedStyle(root).getPropertyValue("--page-bg").trim();
-  if (pageBg) {
-    themeColorMeta.setAttribute("content", pageBg);
-  }
-}
-
-// Theme helpers
-function setTheme(theme) {
-  root.dataset.theme = theme;
-  writeStorageValue(storageKeys.theme, theme);
-
-  if (themeToggle) {
-    const isDark = theme === "dark";
-    const tooltipText = isDark ? "Switch to light mode" : "Switch to dark mode";
-    themeToggle.setAttribute("aria-pressed", String(isDark));
-    themeToggle.setAttribute("aria-label", tooltipText);
-    themeToggle.setAttribute("data-tooltip", tooltipText);
-  }
-
-  updateThemeColor();
-}
-
-function ensureProgressSegments() {
-  if (!storyProgress) {
-    return [];
-  }
-
-  storyProgress.replaceChildren();
-  storyProgress.style.setProperty("--story-count", String(stories.length));
-
-  return stories.map(() => {
-    const segment = document.createElement("span");
-    segment.className = "story-viewer__progress-segment";
-    storyProgress.append(segment);
-    return segment;
-  });
-}
-
-const progressSegments = ensureProgressSegments();
-
-// Story viewer helpers
-function syncStoryProgress(currentProgress = 0) {
-  progressSegments.forEach((segment, index) => {
-    segment.classList.toggle("is-complete", index < activeStoryIndex);
-
-    if (index === activeStoryIndex) {
-      segment.style.setProperty("--story-progress", String(currentProgress));
-    } else {
-      segment.style.setProperty("--story-progress", index < activeStoryIndex ? "1" : "0");
-    }
-  });
-}
-
-function renderStory(index) {
-  const story = stories[index];
-
-  if (!story || !storyTitle || !storyMeta || !storyDescription || !storyImage || !storyCta) {
-    return;
-  }
-
-  activeStoryIndex = index;
-  sessionViewedStories.add(index);
-
-  if (storyEyebrow) {
-    storyEyebrow.textContent = story.eyebrow || "Komfi Kat";
-  }
-
-  storyTitle.textContent = formatStoryDate(story.publishedAt);
-  storyMeta.textContent = story.meta;
-  storyDescription.textContent = story.description;
-  storyImage.src = story.image;
-  storyImage.alt = story.imageAlt;
-  storyImage.style.objectFit = story.imageFit || "cover";
-  storySurface?.setAttribute("data-story-layout", story.layout || "caption");
-  storyMeta.parentElement.hidden = (story.layout || "caption") === "full";
-
-  if (story.url) {
-    storyCta.hidden = false;
-    storyCta.textContent = story.ctaLabel;
-  } else {
-    storyCta.hidden = true;
-  }
-
-  if (storyPrev) {
-    storyPrev.disabled = index === 0;
-  }
-
-  syncStoryProgress(0);
-}
-
-function stopStoryTimer() {
-  if (storyRafId) {
-    cancelAnimationFrame(storyRafId);
-    storyRafId = 0;
-  }
-}
-
-function pauseStoryTimer() {
-  if (isStoryPaused || !storyViewer?.open) {
-    return;
-  }
-
-  isStoryPaused = true;
-  storyElapsedBeforePause += performance.now() - storyStartedAt;
-  stopStoryTimer();
-}
-
-function resumeStoryTimer() {
-  if (!isStoryPaused || !storyViewer?.open || isStoryHeld || isStoryManuallyPaused) {
-    return;
-  }
-
-  isStoryPaused = false;
-  startStoryTimer();
-}
-
-function beginHeldPause() {
-  isStoryHeld = true;
-  pauseStoryTimer();
-}
-
-function endHeldPause() {
-  isStoryHeld = false;
-  resumeStoryTimer();
-}
-
-function clearStoryNavHoldTimer() {
-  if (storyNavHoldTimer) {
-    window.clearTimeout(storyNavHoldTimer);
-    storyNavHoldTimer = 0;
-  }
-}
-
-function syncPlaybackToggle() {
-  if (!storyPlaybackToggle) {
-    return;
-  }
-
-  const isPaused = isStoryManuallyPaused;
-  storyPlaybackToggle.setAttribute("aria-pressed", String(isPaused));
-  storyPlaybackToggle.setAttribute("aria-label", isPaused ? "Play stories" : "Pause stories");
-}
-
-function finalizeStorySession() {
-  if (sessionViewedStories.size === stories.length && stories.length > 0) {
-    markCurrentStoriesSeen();
-  }
-}
-
-function resetStorySessionState() {
-  clearStoryNavHoldTimer();
-  storyNavHoldTriggered = false;
-  activeStoryNavTarget = null;
-  stopStoryTimer();
-  isStoryPaused = false;
-  isStoryHeld = false;
-  isStoryManuallyPaused = false;
-  storyElapsedBeforePause = 0;
-  syncPlaybackToggle();
-  body.classList.remove("story-viewer-is-open");
-}
-
-function closeStories() {
-  finalizeStorySession();
-  resetStorySessionState();
-
-  if (storyViewer?.open) {
-    storyViewer.close();
-  }
-}
-
-function goToStory(index) {
-  if (!stories.length) {
-    return;
-  }
-
-  const boundedIndex = Math.min(Math.max(index, 0), stories.length - 1);
-  storyElapsedBeforePause = 0;
-  isStoryPaused = false;
-  isStoryHeld = false;
-  isStoryManuallyPaused = false;
-  syncPlaybackToggle();
-  renderStory(boundedIndex);
-  startStoryTimer();
-}
-
-function goToNextStory() {
-  if (activeStoryIndex >= stories.length - 1) {
-    closeStories();
-    return;
-  }
-
-  goToStory(activeStoryIndex + 1);
-}
-
-function goToPreviousStory() {
-  if (activeStoryIndex <= 0) {
-    goToStory(0);
-    return;
-  }
-
-  goToStory(activeStoryIndex - 1);
-}
-
-function startStoryTimer() {
-  stopStoryTimer();
-  storyStartedAt = performance.now();
-
-  const tick = (timestamp) => {
-    const elapsed = storyElapsedBeforePause + (timestamp - storyStartedAt);
-    const progress = Math.min(elapsed / storyTimings.duration, 1);
-
-    syncStoryProgress(progress);
-
-    if (progress >= 1) {
-      goToNextStory();
-      return;
-    }
-
-    storyRafId = requestAnimationFrame(tick);
+(() => {
+  const App = (window.KomfiKatApp = window.KomfiKatApp || {});
+
+  // DOM references
+  App.dom = {
+    root: document.documentElement,
+    body: document.body,
+    themeToggle: document.querySelector("[data-theme-toggle]"),
+    shareMenu: document.querySelector("[data-share-menu]"),
+    shareRail: document.querySelector("[data-share-rail]"),
+    shareRailHint: document.querySelector("[data-share-rail-hint]"),
+    shareHoverBridge: document.querySelector(".share-rail__hover-bridge"),
+    shareButton: document.querySelector("[data-share-page]"),
+    shareCopyButton: document.querySelector('[data-share-option="copy"]'),
+    shareOptions: document.querySelectorAll("[data-share-option]"),
+    themeColorMeta: document.querySelector('meta[name="theme-color"]'),
+    canonicalLink: document.querySelector('link[rel="canonical"]'),
+    metaDescription: document.querySelector('meta[name="description"]'),
+    storyTrigger: document.querySelector("[data-story-open]"),
+    storyViewer: document.querySelector("[data-story-viewer]"),
+    storyTitle: document.querySelector("[data-story-title]"),
+    storyEyebrow: document.querySelector("[data-story-eyebrow]"),
+    storyMeta: document.querySelector("[data-story-meta]"),
+    storyDescription: document.querySelector("[data-story-description]"),
+    storyImage: document.querySelector("[data-story-image]"),
+    storyProgress: document.querySelector("[data-story-progress]"),
+    storyCta: document.querySelector("[data-story-cta]"),
+    storyPrev: document.querySelector("[data-story-prev]"),
+    storyNext: document.querySelector("[data-story-next]"),
+    storyClose: document.querySelector("[data-story-close]"),
+    storyPlaybackToggle: document.querySelector("[data-story-toggle-playback]"),
+    storySurface: document.querySelector(".story-viewer__surface"),
+    storyMobileHint: document.querySelector(".profile__story-mobile-hint"),
   };
 
-  storyRafId = requestAnimationFrame(tick);
-}
+  App.storageKeys = {
+    theme: "komfi-theme",
+    storyViewed: "komfi-story-viewed-signature-v2",
+  };
 
-function openStories(startIndex = 0) {
-  if (!storyViewer || !stories.length || typeof storyViewer.showModal !== "function") {
-    return;
+  App.flags = {
+    themeInitialized: false,
+    shareInitialized: false,
+    storiesInitialized: false,
+  };
+
+  const monthMap = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  function formatStoryDate(dateString) {
+    if (typeof dateString !== "string") {
+      return "";
+    }
+
+    const [yearPart, monthPart, dayPart] = dateString.split("-");
+    const year = Number.parseInt(yearPart, 10);
+    const month = Number.parseInt(monthPart, 10);
+    const day = Number.parseInt(dayPart, 10);
+
+    if (!year || !month || !day || month < 1 || month > 12) {
+      return dateString;
+    }
+
+    return `${monthMap[month - 1]} ${day}, ${year}`;
   }
 
-  sessionViewedStories = new Set();
-  storyElapsedBeforePause = 0;
-  isStoryPaused = false;
-  isStoryHeld = false;
-  isStoryManuallyPaused = false;
-  syncPlaybackToggle();
-  renderStory(startIndex);
-  body.classList.add("story-viewer-is-open");
-  storyViewer.showModal();
-  startStoryTimer();
-}
-
-if (themeToggle) {
-  const savedTheme = readStorageValue(storageKeys.theme, "light");
-  setTheme(savedTheme === "dark" ? "dark" : "light");
-
-  themeToggle.addEventListener("click", () => {
-    const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
-    setTheme(nextTheme);
-  });
-} else {
-  updateThemeColor();
-}
-
-// Event wiring
-if (shareButton) {
-  shareButton.addEventListener("click", async (event) => {
-    if (shouldUseDesktopShareRail()) {
-      event.preventDefault();
-      toggleShareMenu();
-      return;
+  function readStorageValue(key, fallback = "") {
+    try {
+      return localStorage.getItem(key) || fallback;
+    } catch {
+      return fallback;
     }
-
-    const sharePayload = getSharePayload();
-
-    if (shouldUseNativeShare()) {
-      try {
-        await navigator.share({
-          title: sharePayload.title,
-          text: sharePayload.text,
-          url: sharePayload.url,
-        });
-        return;
-      } catch (error) {
-        if (error?.name === "AbortError") {
-          return;
-        }
-      }
-    }
-
-    const didCopy = await copyText(sharePayload.url);
-
-    if (didCopy) {
-      showShareCopiedState();
-    }
-  });
-}
-
-if (shareOptions.length) {
-  shareOptions.forEach((shareOption) => {
-    const optionHint = shareOption.dataset.shareHint || shareMessages.defaultHint;
-
-    shareOption.addEventListener("mouseenter", () => {
-      if (!shouldUseDesktopShareRail() || !isShareMenuOpen()) {
-        return;
-      }
-
-      window.clearTimeout(shareRailHintTimeout);
-      setShareRailHint(optionHint);
-    });
-
-    shareOption.addEventListener("mouseleave", (event) => {
-      if (!shouldUseDesktopShareRail() || !isShareMenuOpen()) {
-        return;
-      }
-
-      const nextTarget = event.relatedTarget;
-
-      if (nextTarget && shareRail?.contains(nextTarget)) {
-        return;
-      }
-
-      if (
-        nextTarget &&
-        ((shareButton && shareButton.contains(nextTarget)) ||
-          (shareHoverBridge && shareHoverBridge.contains(nextTarget)))
-      ) {
-        if (shareButton && shareButton.matches(":hover, :focus-visible, :focus")) {
-          setShareRailHint();
-        } else {
-          resetShareRailHint();
-        }
-        return;
-      }
-
-      if (nextTarget && shareMenu?.contains(nextTarget)) {
-        return;
-      }
-
-      resetShareRailHint();
-    });
-
-    shareOption.addEventListener("focus", () => {
-      if (!shouldUseDesktopShareRail() || !isShareMenuOpen()) {
-        return;
-      }
-
-      window.clearTimeout(shareRailHintTimeout);
-      setShareRailHint(optionHint);
-    });
-
-    shareOption.addEventListener("blur", (event) => {
-      if (!shouldUseDesktopShareRail() || !isShareMenuOpen()) {
-        return;
-      }
-
-      const nextTarget = event.relatedTarget;
-
-      if (nextTarget && shareRail?.contains(nextTarget)) {
-        return;
-      }
-
-      if (
-        nextTarget &&
-        ((shareButton && shareButton.contains(nextTarget)) ||
-          (shareHoverBridge && shareHoverBridge.contains(nextTarget)))
-      ) {
-        if (shareButton && shareButton.matches(":hover, :focus-visible, :focus")) {
-          setShareRailHint();
-        } else {
-          resetShareRailHint();
-        }
-        return;
-      }
-
-      if (nextTarget && shareMenu?.contains(nextTarget)) {
-        return;
-      }
-
-      resetShareRailHint();
-    });
-
-    shareOption.addEventListener("click", async () => {
-      const sharePayload = getSharePayload();
-      const option = shareOption.dataset.shareOption;
-
-      if (option === "copy") {
-        const didCopy = await copyText(sharePayload.url);
-
-        if (didCopy) {
-          showShareCopyButtonState();
-        }
-        return;
-      }
-
-      closeShareMenu();
-
-      if (option === "whatsapp") {
-        window.open(`https://wa.me/?text=${encodeURIComponent(sharePayload.message)}`, "_blank", "noopener,noreferrer");
-        return;
-      }
-
-      if (option === "facebook") {
-        window.open(
-          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(sharePayload.url)}`,
-          "_blank",
-          "noopener,noreferrer",
-        );
-      }
-    });
-  });
-}
-
-if (shareMenu && shareRail) {
-  if (shareButton) {
-    shareButton.addEventListener("mouseenter", () => {
-      if (shouldUseDesktopShareRail() && isShareMenuOpen() && !shareHintSuppressed) {
-        setShareRailHint();
-      }
-    });
-
-    shareButton.addEventListener("focus", () => {
-      if (shouldUseDesktopShareRail() && isShareMenuOpen() && !shareHintSuppressed) {
-        setShareRailHint();
-      }
-    });
-
-    shareButton.addEventListener("mouseleave", () => {
-      shareHintSuppressed = false;
-      delete shareMenu.dataset.shareTooltipSuppressed;
-      if (shouldUseDesktopShareRail() && isShareMenuOpen()) {
-        resetShareRailHint();
-      }
-    });
-
-    shareButton.addEventListener("blur", () => {
-      shareHintSuppressed = false;
-      delete shareMenu.dataset.shareTooltipSuppressed;
-      if (shouldUseDesktopShareRail() && isShareMenuOpen()) {
-        resetShareRailHint();
-      }
-    });
   }
 
-  shareMenu.addEventListener("mouseenter", () => {
-    if (shouldUseDesktopShareRail()) {
-      openShareMenu();
-    }
-  });
+  function writeStorageValue(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch {}
+  }
 
-  shareMenu.addEventListener("mouseleave", () => {
-    if (shouldUseDesktopShareRail()) {
-      closeShareMenu();
-    }
-  });
+  function isDesktopPointerDevice() {
+    return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  }
 
-  shareMenu.addEventListener("focusin", () => {
-    if (shouldUseDesktopShareRail()) {
-      openShareMenu();
-    }
-  });
+  function isTouchLikeDevice() {
+    return !isDesktopPointerDevice();
+  }
 
-  shareMenu.addEventListener("focusout", (event) => {
-    if (!shouldUseDesktopShareRail() || shareMenu.contains(event.relatedTarget)) {
+  function createShareHintText(text) {
+    const textElement = document.createElement("span");
+    textElement.className = "share-rail__hint-text";
+    textElement.textContent = text;
+    return textElement;
+  }
+
+  function createShareHintIcon(icon) {
+    const iconElement = document.createElement("span");
+    iconElement.className = "share-rail__hint-icon";
+    iconElement.textContent = icon;
+    return iconElement;
+  }
+
+  function createShareHintStatusIcon() {
+    const iconElement = document.createElement("img");
+    iconElement.className = "share-rail__hint-status-icon";
+    iconElement.src = "img/icons/success.svg";
+    iconElement.alt = "";
+    iconElement.setAttribute("aria-hidden", "true");
+    return iconElement;
+  }
+
+  function setShareHintContent({ text, icon = "", success = false }) {
+    if (!App.dom.shareRailHint) {
       return;
     }
 
-    closeShareMenu();
-  });
+    const nodes = [];
 
-  document.addEventListener("pointerdown", (event) => {
-    if (!isShareMenuOpen() || shareMenu.contains(event.target)) {
-      return;
+    if (success) {
+      nodes.push(createShareHintStatusIcon());
     }
 
-    closeShareMenu();
-  });
+    nodes.push(createShareHintText(text));
 
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && isShareMenuOpen()) {
-      closeShareMenu();
-    }
-  });
-
-  window.addEventListener("resize", () => {
-    if (!shouldUseDesktopShareRail()) {
-      closeShareMenu();
-    }
-  });
-}
-
-if (themeToggle) {
-  themeToggle.addEventListener("mouseenter", () => {
-    if (shouldUseDesktopShareRail()) {
-      closeShareMenu();
-    }
-  });
-
-  themeToggle.addEventListener("focusin", () => {
-    if (shouldUseDesktopShareRail()) {
-      closeShareMenu();
-    }
-  });
-}
-
-if (storyTrigger && storyViewer && stories.length) {
-  updateStoryTriggerState();
-  window.setTimeout(() => {
-    showStoryHint();
-  }, 420);
-
-  storyTrigger.addEventListener("click", () => {
-    hideStoryHint();
-    openStories(0);
-  });
-
-  const handleStoryNavPointerDown = (event, direction) => {
-    if (!storyViewer.open) {
-      return;
+    if (icon) {
+      nodes.push(createShareHintIcon(icon));
     }
 
-    clearStoryNavHoldTimer();
-    storyNavHoldTriggered = false;
-    activeStoryNavTarget = direction;
+    App.dom.shareRailHint.replaceChildren(...nodes);
+  }
 
-    event.currentTarget?.setPointerCapture?.(event.pointerId);
+  async function copyText(text) {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
 
-    storyNavHoldTimer = window.setTimeout(() => {
-      storyNavHoldTriggered = true;
-      beginHeldPause();
-    }, storyTimings.navHoldDelay);
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    textarea.style.pointerEvents = "none";
+    document.body.append(textarea);
+    textarea.select();
+
+    let didCopy = false;
+
+    try {
+      didCopy = document.execCommand("copy");
+    } catch {
+      didCopy = false;
+    }
+
+    textarea.remove();
+    return didCopy;
+  }
+
+  App.helpers = {
+    formatStoryDate,
+    readStorageValue,
+    writeStorageValue,
+    isDesktopPointerDevice,
+    isTouchLikeDevice,
+    createShareHintText,
+    createShareHintIcon,
+    createShareHintStatusIcon,
+    setShareHintContent,
+    copyText,
   };
 
-  const handleStoryNavPointerEnd = (direction) => {
-    if (activeStoryNavTarget !== direction) {
-      return;
-    }
-
-    clearStoryNavHoldTimer();
-
-    if (storyNavHoldTriggered) {
-      storyNavHoldTriggered = false;
-      activeStoryNavTarget = null;
-      endHeldPause();
-      return;
-    }
-
-    activeStoryNavTarget = null;
-
-    if (direction === "prev") {
-      goToPreviousStory();
-    } else {
-      goToNextStory();
-    }
-  };
-
-  const handleStoryNavPointerCancel = (direction) => {
-    if (activeStoryNavTarget !== direction) {
-      return;
-    }
-
-    clearStoryNavHoldTimer();
-
-    if (storyNavHoldTriggered) {
-      storyNavHoldTriggered = false;
-      endHeldPause();
-    }
-
-    activeStoryNavTarget = null;
-  };
-
-  storyPrev?.addEventListener("pointerdown", (event) => {
-    handleStoryNavPointerDown(event, "prev");
+  document.addEventListener("DOMContentLoaded", () => {
+    App.initTheme?.();
+    App.initShare?.();
+    App.initStories?.();
   });
-
-  storyPrev?.addEventListener("pointerup", () => {
-    handleStoryNavPointerEnd("prev");
-  });
-
-  storyPrev?.addEventListener("pointercancel", () => {
-    handleStoryNavPointerCancel("prev");
-  });
-
-  storyPrev?.addEventListener("click", (event) => {
-    if (event.detail !== 0) {
-      event.preventDefault();
-    } else {
-      goToPreviousStory();
-    }
-  });
-
-  storyNext?.addEventListener("pointerdown", (event) => {
-    handleStoryNavPointerDown(event, "next");
-  });
-
-  storyNext?.addEventListener("pointerup", () => {
-    handleStoryNavPointerEnd("next");
-  });
-
-  storyNext?.addEventListener("pointercancel", () => {
-    handleStoryNavPointerCancel("next");
-  });
-
-  storyNext?.addEventListener("click", (event) => {
-    if (event.detail !== 0) {
-      event.preventDefault();
-    } else {
-      goToNextStory();
-    }
-  });
-
-  storyClose?.addEventListener("click", () => {
-    closeStories();
-  });
-
-  storyViewer.addEventListener("close", () => {
-    finalizeStorySession();
-    resetStorySessionState();
-  });
-
-  storyViewer.addEventListener("cancel", () => {
-    finalizeStorySession();
-    resetStorySessionState();
-  });
-
-  storyViewer.addEventListener("click", (event) => {
-    if (event.target === storyViewer) {
-      closeStories();
-    }
-  });
-
-  storyViewer.addEventListener("keydown", (event) => {
-    if (event.key === "ArrowRight") {
-      event.preventDefault();
-      goToNextStory();
-    }
-
-    if (event.key === "ArrowLeft") {
-      event.preventDefault();
-      goToPreviousStory();
-    }
-  });
-
-  storyCta?.addEventListener("click", () => {
-    const story = stories[activeStoryIndex];
-    if (!story?.url) {
-      return;
-    }
-
-    window.open(story.url, "_blank", "noopener,noreferrer");
-  });
-
-  storyPlaybackToggle?.addEventListener("click", () => {
-    isStoryManuallyPaused = !isStoryManuallyPaused;
-    syncPlaybackToggle();
-
-    if (isStoryManuallyPaused) {
-      pauseStoryTimer();
-    } else {
-      resumeStoryTimer();
-    }
-  });
-
-  const handlePressStart = (event) => {
-    if (!storyViewer.open) {
-      return;
-    }
-
-    if (
-      event.target instanceof Element &&
-      event.target.closest(
-        "[data-story-prev], [data-story-next], [data-story-close], [data-story-cta], [data-story-toggle-playback]",
-      )
-    ) {
-      return;
-    }
-
-    beginHeldPause();
-  };
-
-  const handlePressEnd = () => {
-    endHeldPause();
-  };
-
-  storySurface?.addEventListener("pointerdown", handlePressStart);
-  window.addEventListener("pointerup", handlePressEnd);
-  window.addEventListener("pointercancel", handlePressEnd);
-  window.addEventListener("blur", handlePressEnd);
-}
+})();
