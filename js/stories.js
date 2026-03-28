@@ -41,18 +41,6 @@
       imageFit: "cover",
       layout: "full",
     },
-    {
-      eyebrow: "Komfi Kat",
-      publishedAt: "2026-04-03",
-      meta: "",
-      description: "",
-      ctaLabel: "Open Reel on Instagram",
-      url: "https://www.instagram.com/komfikat/",
-      image: "img/stories/placeholder-white.svg",
-      imageAlt: "White story placeholder",
-      imageFit: "cover",
-      layout: "full",
-    },
   ];
 
   const storySignature = JSON.stringify(
@@ -87,8 +75,16 @@
     return helpers.readStorageValue(storageKeys.storyViewed);
   }
 
+  function getDismissedStoryHintSignature() {
+    return helpers.readStorageValue(storageKeys.storyHintDismissed);
+  }
+
   function hasSeenCurrentStories() {
     return getSeenStorySignature() === storySignature;
+  }
+
+  function hasDismissedCurrentStoryHint() {
+    return getDismissedStoryHintSignature() === storySignature;
   }
 
   function hideStoryHint() {
@@ -109,12 +105,23 @@
   }
 
   function showStoryHint() {
-    if (!dom.storyTrigger || !dom.storyMobileHint || hasSeenCurrentStories() || !helpers.isTouchLikeDevice()) {
+    if (
+      !dom.storyTrigger ||
+      !dom.storyMobileHint ||
+      hasSeenCurrentStories() ||
+      hasDismissedCurrentStoryHint() ||
+      !helpers.isTouchLikeDevice()
+    ) {
       return;
     }
 
     window.clearTimeout(storyHintCleanupTimeout);
     dom.storyMobileHint.dataset.storyHint = "visible";
+  }
+
+  function dismissCurrentStoryHint() {
+    helpers.writeStorageValue(storageKeys.storyHintDismissed, storySignature);
+    updateStoryTriggerState();
   }
 
   function updateStoryTriggerState() {
@@ -123,13 +130,15 @@
     }
 
     const hasSeenStories = hasSeenCurrentStories();
+    const hasDismissedHint = hasDismissedCurrentStoryHint();
     dom.storyTrigger.dataset.storyState = hasSeenStories ? "viewed" : "new";
+    dom.storyTrigger.dataset.storyHintState = hasDismissedHint ? "dismissed" : "visible";
     dom.storyTrigger.setAttribute(
       "aria-label",
       hasSeenStories ? "Rewatch Komfi Kat stories" : "Open Komfi Kat stories with new updates",
     );
 
-    if (hasSeenStories) {
+    if (hasSeenStories || hasDismissedHint) {
       hideStoryHint();
     }
   }
@@ -472,6 +481,7 @@
     }, 420);
 
     dom.storyTrigger.addEventListener("click", () => {
+      dismissCurrentStoryHint();
       hideStoryHint();
       openStories(0);
     });
