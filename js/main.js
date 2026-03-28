@@ -31,6 +31,12 @@
     storyPlaybackToggle: document.querySelector("[data-story-toggle-playback]"),
     storySurface: document.querySelector(".story-viewer__surface"),
     storyMobileHint: document.querySelector(".profile__story-mobile-hint"),
+    promoCarousel: document.querySelector("[data-promo-carousel]"),
+    promoCarouselViewport: document.querySelector("[data-promo-carousel-viewport]"),
+    promoCarouselTrack: document.querySelector("[data-promo-carousel-track]"),
+    promoCarouselDots: document.querySelector("[data-promo-carousel-dots]"),
+    promoCarouselPrev: document.querySelector("[data-promo-carousel-prev]"),
+    promoCarouselNext: document.querySelector("[data-promo-carousel-next]"),
   };
 
   App.storageKeys = {
@@ -42,6 +48,7 @@
     themeInitialized: false,
     shareInitialized: false,
     storiesInitialized: false,
+    carouselInitialized: false,
   };
 
   const monthMap = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -172,5 +179,6 @@
     App.initTheme?.();
     App.initShare?.();
     App.initStories?.();
+    App.initCarousel?.();
   });
 })();

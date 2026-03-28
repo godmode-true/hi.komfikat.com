@@ -41,6 +41,7 @@
       as="style"
       href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap"
     />
+    <link rel="preload" href="fonts/comic-story.ttf" as="font" type="font/ttf" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap" />
 
     <link rel="stylesheet" href="css/style.css" />
@@ -48,6 +49,8 @@
     <script src="js/theme.js" defer></script>
     <script src="js/share.js" defer></script>
     <script src="js/stories.js" defer></script>
+    <script src="js/carousel-manifest.js" defer></script>
+    <script src="js/carousel.js" defer></script>
   </head>
 
   <body>
@@ -365,6 +368,48 @@
               </a>
             </li>
           </ul>
+        </section>
+
+        <section class="promo-carousel" aria-label="Latest carousel previews">
+          <div class="promo-carousel__shell" data-promo-carousel>
+            <span class="promo-carousel__badge">NEW</span>
+
+            <div class="promo-carousel__viewport" data-promo-carousel-viewport>
+              <div class="promo-carousel__track" data-promo-carousel-track></div>
+            </div>
+
+            <div class="promo-carousel__pager">
+              <button
+                class="promo-carousel__nav promo-carousel__nav--prev"
+                type="button"
+                aria-label="Previous carousel slide"
+                data-promo-carousel-prev
+              >
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M15.76 5.56C16.55 4.99 17.67 5.55 17.67 6.52V17.48C17.67 18.45 16.55 19.01 15.76 18.44L8.27 13.01C7.59 12.52 7.59 11.48 8.27 10.99L15.76 5.56Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </button>
+
+              <div class="promo-carousel__dots" data-promo-carousel-dots aria-label="Carousel pagination"></div>
+
+              <button
+                class="promo-carousel__nav promo-carousel__nav--next"
+                type="button"
+                aria-label="Next carousel slide"
+                data-promo-carousel-next
+              >
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M8.24 5.56C7.45 4.99 6.33 5.55 6.33 6.52V17.48C6.33 18.45 7.45 19.01 8.24 18.44L15.73 13.01C16.41 12.52 16.41 11.48 15.73 10.99L8.24 5.56Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
         </section>
 
         <section class="link-section" aria-label="Shop links">
