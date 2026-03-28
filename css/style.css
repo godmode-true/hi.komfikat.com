@@ -152,7 +152,8 @@ ol {
 html,
 body {
   min-height: 100%;
-  overscroll-behavior: none;
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: auto;
 }
 
 body {
@@ -2623,6 +2624,11 @@ a {
 
 /* Phone layout */
 @media (max-width: 30rem) {
+  .link-list {
+    width: min(100%, 91%);
+    margin-inline: auto;
+  }
+
   .profile {
     padding-top: clamp(1.15rem, 6vw, 1.55rem);
   }

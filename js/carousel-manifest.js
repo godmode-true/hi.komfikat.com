@@ -33,8 +33,6 @@ window.KomfiKatCarouselManifest = {
       { src: "img/carousel/2.png", alt: "Instagram carousel image 2" },
       { src: "img/carousel/3.png", alt: "Instagram carousel image 3" },
       { src: "img/carousel/4.png", alt: "Instagram carousel image 4" },
-      { src: "img/carousel/5.png", alt: "Instagram carousel image 5" },
-      { src: "img/carousel/6.png", alt: "Instagram carousel image 6" },
     ],
   },
 };
