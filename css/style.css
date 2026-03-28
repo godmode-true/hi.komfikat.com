@@ -223,7 +223,7 @@ a {
   gap: 0.75rem;
 }
 
-/* Blocks */
+/* Top Bar, Share Menu, and Theme Toggle */
 .top-bar {
   display: flex;
   flex-wrap: wrap;
@@ -244,10 +244,16 @@ a {
   align-items: center;
 }
 
+.share-rail__hint,
+.share-rail__hover-bridge {
+  display: none;
+}
+
 .share-rail {
   display: none;
 }
 
+/* Profile, Story Trigger, and Story Hints */
 .profile {
   align-items: center;
   gap: clamp(1rem, 5vw, 1.75rem);
@@ -340,6 +346,7 @@ a {
   white-space: nowrap;
 }
 
+/* Social Links */
 .social-links {
   margin-top: clamp(0.7rem, 3vw, 1rem);
 }
@@ -375,6 +382,7 @@ a {
   color: var(--profile-text);
 }
 
+/* Link Cards */
 .link-section {
   margin-top: var(--link-section-space);
 }
@@ -576,6 +584,7 @@ a {
   color: rgba(255, 244, 234, 0.9);
 }
 
+/* Story Viewer */
 .story-viewer {
   --story-viewer-pad-top: max(env(safe-area-inset-top), 1rem);
   --story-viewer-pad-right: max(env(safe-area-inset-right), 1rem);
@@ -970,6 +979,7 @@ a {
   color: #f4e8d8;
 }
 
+/* Theme Toggle */
 .theme-toggle {
   position: relative;
   display: inline-grid;
@@ -1021,6 +1031,7 @@ a {
   display: block;
 }
 
+/* Desktop Pointer and Hover Enhancements */
 .profile__story-desktop-hint {
   display: none;
 }
@@ -1038,6 +1049,7 @@ a {
   }
 
   .share-rail__hover-bridge {
+    display: block;
     position: absolute;
     top: 50%;
     right: 100%;
@@ -1048,11 +1060,11 @@ a {
   }
 
   .share-rail__hint {
+    display: inline-flex;
     position: absolute;
     top: 50%;
     right: calc(100% + var(--share-rail-offset) + var(--share-rail-width) + var(--share-rail-offset));
     z-index: 3;
-    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.24rem;
@@ -1507,6 +1519,7 @@ a {
   }
 
   :root[data-theme="dark"] .share-rail__hint {
+    display: inline-flex;
     border-color: rgba(214, 186, 160, 0.22);
     background-color: rgba(49, 40, 35, 0.96);
     color: #f5ead9;
@@ -1523,6 +1536,7 @@ a {
   }
 }
 
+/* Touch and Mobile Share / Hint Behavior */
 @media (hover: none), (pointer: coarse) {
   .share-rail {
     display: none !important;
@@ -1626,6 +1640,7 @@ a {
   }
 }
 
+/* Action Buttons */
 .action-button {
   display: inline-flex;
   align-items: center;
