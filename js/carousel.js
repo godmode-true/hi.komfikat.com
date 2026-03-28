@@ -6,92 +6,118 @@
   }
 
   const { dom } = App;
-  const visibleCards = 2;
   const defaultManifest = {
     actions: [
       {
+        label: "Buy on Etsy",
+        subtitle: "Digital Version",
+        icon: "img/icons/etsy.svg",
+        href: "https://komfikatcoloring.etsy.com/listing/4472798201",
+        className: "promo-carousel__shop-button--etsy",
+      },
+      {
         label: "Buy on Amazon",
-        subtitle: "Physical Copy",
+        subtitle: "Coming soon",
         icon: "img/icons/amazon.svg",
         className: "promo-carousel__shop-button--amazon",
         disabled: true,
       },
       {
-        label: "Buy on Etsy",
-        subtitle: "Digital Version",
-        icon: "img/icons/etsy_168752.svg",
-        href: "https://komfikatcoloring.etsy.com/",
-        className: "promo-carousel__shop-button--etsy",
-      },
-      {
         label: "View on Website",
-        subtitle: "Official Website",
+        subtitle: "Coming soon",
         icon: "img/icons/favicon.png",
+        href: "http://komfikat.com/",
         className: "promo-carousel__shop-button--website",
         disabled: true,
       },
     ],
     slides: {
-      directory: "img/carousel",
-      startIndex: 1,
-      maxIndex: 24,
-      extension: "png",
-      alts: {},
+      files: [],
     },
   };
 
   function getCarouselManifest() {
     const manifest = window.KomfiKatCarouselManifest || {};
     const slideConfig = manifest.slides || {};
+    const slideFiles = Array.isArray(slideConfig.files)
+      ? slideConfig.files
+          .filter((slide) => slide && typeof slide.src === "string" && slide.src.trim())
+          .map((slide, index) => ({
+            src: slide.src.trim(),
+            alt:
+              typeof slide.alt === "string" && slide.alt.trim()
+                ? slide.alt.trim()
+                : `Instagram carousel image ${index + 1}`,
+          }))
+      : defaultManifest.slides.files;
 
     return {
-      actions: Array.isArray(manifest.actions) && manifest.actions.length > 0 ? manifest.actions : defaultManifest.actions,
+      actions:
+        Array.isArray(manifest.actions) && manifest.actions.length > 0 ? manifest.actions : defaultManifest.actions,
       slides: {
-        directory:
-          typeof slideConfig.directory === "string" && slideConfig.directory.trim()
-            ? slideConfig.directory.replace(/\/+$/, "")
-            : defaultManifest.slides.directory,
-        startIndex: Number.isInteger(slideConfig.startIndex) && slideConfig.startIndex > 0 ? slideConfig.startIndex : 1,
-        maxIndex: Number.isInteger(slideConfig.maxIndex) && slideConfig.maxIndex > 0 ? slideConfig.maxIndex : 24,
-        extension:
-          typeof slideConfig.extension === "string" && slideConfig.extension.trim()
-            ? slideConfig.extension.replace(/^\./, "")
-            : defaultManifest.slides.extension,
-        alts: slideConfig.alts && typeof slideConfig.alts === "object" ? slideConfig.alts : {},
+        files: slideFiles,
       },
     };
   }
 
-  function probeImage(src) {
-    return new Promise((resolve) => {
-      const image = new Image();
-
-      image.onload = () => resolve(true);
-      image.onerror = () => resolve(false);
-      image.src = src;
-    });
+  function createImageSlides(slideConfig) {
+    return slideConfig.files.map((slide) => ({
+      type: "image",
+      image: slide.src,
+      alt: slide.alt,
+    }));
   }
 
-  async function loadImageSlides(slideConfig) {
-    const slides = [];
+  function getVisibleCards() {
+    return window.matchMedia("(max-width: 30rem)").matches ? 1 : 2;
+  }
 
-    // Load numbered files in order and stop at the first gap: 1.png, 2.png, 3.png...
-    for (let index = slideConfig.startIndex; index <= slideConfig.maxIndex; index += 1) {
-      const src = `${slideConfig.directory}/${index}.${slideConfig.extension}`;
-      const exists = await probeImage(src);
+  function createCarouselItems(imageSlides, actions, visibleCardsCount) {
+    const ctaItem = {
+      type: "cta",
+      title: "Shop links",
+      actions,
+    };
 
-      if (!exists) {
-        break;
-      }
-
-      slides.push({
-        type: "image",
-        image: src,
-        alt: slideConfig.alts[index] || `Instagram carousel image ${index}`,
-      });
+    if (visibleCardsCount === 1) {
+      return [...imageSlides, ctaItem];
     }
 
-    return slides;
+    if (imageSlides.length === 0) {
+      return [ctaItem];
+    }
+
+    // Desktop starts with the first image + CTA. Mobile starts with the first image and keeps CTA last.
+    // With only two images, repeat the first one at the tail so the second desktop state can still be image-only.
+    if (imageSlides.length === 2) {
+      return [imageSlides[0], ctaItem, imageSlides[1], imageSlides[0]];
+    }
+
+    return [imageSlides[0], ctaItem, ...imageSlides.slice(1)];
+  }
+
+  function createPageStarts(items, visibleCardsCount) {
+    if (visibleCardsCount === 1) {
+      return items.map((_, index) => index);
+    }
+
+    if (items.length <= visibleCardsCount) {
+      return [0];
+    }
+
+    const hasDesktopIntroState = items[1]?.type === "cta";
+
+    if (hasDesktopIntroState) {
+      const imagePairStarts = [];
+
+      for (let index = 2; index <= items.length - visibleCardsCount; index += 1) {
+        imagePairStarts.push(index);
+      }
+
+      return [0, ...imagePairStarts];
+    }
+
+    return Array.from({ length: items.length - visibleCardsCount + 1 }, (_, index) => index);
   }
 
   function createShopButton(action) {
@@ -107,6 +133,7 @@
     icon.className = "promo-carousel__shop-button-icon";
     icon.src = action.icon;
     icon.alt = "";
+    icon.draggable = false;
     badge.append(icon);
 
     const copy = document.createElement("span");
@@ -131,8 +158,8 @@
       const button = document.createElement("button");
       button.className = className;
       button.type = "button";
-      button.disabled = true;
       button.setAttribute("aria-disabled", "true");
+      button.addEventListener("dragstart", (event) => event.preventDefault());
       button.append(content);
       return button;
     }
@@ -142,6 +169,8 @@
     link.href = action.href;
     link.target = "_blank";
     link.rel = "noopener noreferrer";
+    link.draggable = false;
+    link.addEventListener("dragstart", (event) => event.preventDefault());
     link.append(content);
     return link;
   }
@@ -158,6 +187,7 @@
 
       const actions = document.createElement("div");
       actions.className = "promo-carousel__cta-actions";
+      actions.style.setProperty("--promo-cta-action-count", String(item.actions.length || 0));
       item.actions.forEach((action) => actions.append(createShopButton(action)));
 
       panel.append(actions);
@@ -171,7 +201,7 @@
     image.className = "promo-carousel__image";
     image.src = item.image;
     image.alt = item.alt || "";
-    image.loading = index < visibleCards + 1 ? "eager" : "lazy";
+    image.loading = index < 2 ? "eager" : "lazy";
     image.decoding = "async";
     image.draggable = false;
     card.append(image);
@@ -179,7 +209,7 @@
     return card;
   }
 
-  App.initCarousel = async function initCarousel() {
+  App.initCarousel = function initCarousel() {
     if (App.flags.carouselInitialized) {
       return;
     }
@@ -198,71 +228,77 @@
     }
 
     const manifest = getCarouselManifest();
-    const imageSlides = await loadImageSlides(manifest.slides);
-    const carouselItems = [
-      {
-        type: "cta",
-        title: "Shop links",
-        actions: manifest.actions,
-      },
-      ...imageSlides,
-    ];
+    const imageSlides = createImageSlides(manifest.slides);
 
-    const maxIndex = Math.max(carouselItems.length - visibleCards, 0);
-    const pageCount = maxIndex + 1;
-    const hasPagination = maxIndex > 0;
-    const shouldLoop = pageCount > 2;
-    const cloneCount = shouldLoop ? Math.min(visibleCards, carouselItems.length) : 0;
-    const renderedItems = [
-      ...carouselItems.slice(-cloneCount),
-      ...carouselItems,
-      ...carouselItems.slice(0, cloneCount),
-    ];
+    let currentVisibleCards = getVisibleCards();
+    let carouselItems = createCarouselItems(imageSlides, manifest.actions, currentVisibleCards);
+    let pageStarts = [];
+    let maxIndex = 0;
+    let pageCount = 0;
+    let hasPagination = false;
+    let shouldLoop = false;
+    let cloneCount = 0;
+    let renderedItems = [];
+    let dots = [];
     let activeIndex = 0;
-    let renderedIndex = cloneCount + activeIndex;
+    let renderedIndex = 0;
     let isDragging = false;
     let isAnimating = false;
     let pointerId = null;
+    let touchId = null;
+    let pointerDragReady = false;
     let pendingSnapIndex = null;
     let dragStartX = 0;
     let dragOffset = 0;
     let suppressClick = false;
     let stepSize = 0;
-    let navRepeatDelayTimer = 0;
-    let navRepeatInterval = 0;
     let activeNavButton = null;
-    let wheelUnlockTimer = 0;
-    let wheelLocked = false;
-    let wheelCaptureArmed = false;
-    let wheelForwardWrapped = false;
-    let wheelForwardReleaseReady = false;
-    let wheelBackwardWrapped = false;
-    let wheelBackwardReleaseReady = false;
 
     shell.setAttribute("aria-roledescription", "carousel");
     viewport.setAttribute("tabindex", "0");
     viewport.setAttribute("aria-label", "Instagram-style preview carousel");
-    track.replaceChildren(...renderedItems.map(createCard));
 
-    const dots = Array.from({ length: maxIndex + 1 }, (_, index) => {
-      const dot = document.createElement("button");
-      dot.type = "button";
-      dot.className = "promo-carousel__dot";
-      dot.setAttribute("aria-label", `Go to preview ${index + 1}`);
-      dot.addEventListener("click", () => {
-        if (isAnimating || index === activeIndex) {
-          return;
-        }
+    function rebuildCarouselStructure() {
+      const nextVisibleCards = getVisibleCards();
+      const visibleCardCountChanged = nextVisibleCards !== currentVisibleCards;
 
-        activeIndex = index;
-        renderedIndex = cloneCount + activeIndex;
-        isAnimating = true;
-        syncPosition();
+      currentVisibleCards = nextVisibleCards;
+      carouselItems = createCarouselItems(imageSlides, manifest.actions, currentVisibleCards);
+      pageStarts = createPageStarts(carouselItems, currentVisibleCards);
+      pageCount = pageStarts.length;
+      maxIndex = Math.max(pageCount - 1, 0);
+      hasPagination = maxIndex > 0;
+      shouldLoop = pageCount > 1;
+      cloneCount = shouldLoop ? Math.min(currentVisibleCards, carouselItems.length) : 0;
+      renderedItems = [...carouselItems.slice(-cloneCount), ...carouselItems, ...carouselItems.slice(0, cloneCount)];
+
+      activeIndex = visibleCardCountChanged ? 0 : Math.min(activeIndex, maxIndex);
+      renderedIndex = cloneCount + (pageStarts[activeIndex] ?? 0);
+      track.replaceChildren(...renderedItems.map(createCard));
+
+      dotsRoot.replaceChildren();
+      dots = Array.from({ length: pageCount }, (_, index) => {
+        const dot = document.createElement("button");
+        dot.type = "button";
+        dot.className = "promo-carousel__dot";
+        dot.setAttribute("aria-label", `Go to preview ${index + 1}`);
+        dot.addEventListener("click", () => {
+          if (isAnimating || index === activeIndex) {
+            return;
+          }
+
+          activeIndex = index;
+          renderedIndex = cloneCount + (pageStarts[activeIndex] ?? 0);
+          isAnimating = true;
+          syncPosition();
+        });
+        dotsRoot.append(dot);
+        return dot;
       });
-      dotsRoot.append(dot);
-      return dot;
-    });
-    dotsRoot.hidden = !hasPagination;
+
+      dotsRoot.hidden = !hasPagination;
+      syncControls();
+    }
 
     function getGap() {
       const styles = window.getComputedStyle(track);
@@ -271,7 +307,12 @@
 
     function getStep() {
       const gap = getGap();
-      return (viewport.clientWidth - gap) / visibleCards + gap;
+      const viewportStyles = window.getComputedStyle(viewport);
+      const viewportPadding =
+        (Number.parseFloat(viewportStyles.paddingLeft || "0") || 0) +
+        (Number.parseFloat(viewportStyles.paddingRight || "0") || 0);
+      const availableWidth = viewport.clientWidth - viewportPadding;
+      return (availableWidth - gap * (currentVisibleCards - 1)) / currentVisibleCards + gap;
     }
 
     function updateMetrics() {
@@ -283,12 +324,13 @@
         dot.setAttribute("aria-current", String(index === activeIndex));
       });
 
-      prevButton.hidden = !hasPagination || activeIndex === 0;
-      nextButton.hidden = !hasPagination || (!shouldLoop && activeIndex === maxIndex);
+      prevButton.hidden = !hasPagination;
+      nextButton.hidden = !hasPagination;
     }
 
     function syncPosition(immediate = false) {
-      const position = -renderedIndex * stepSize + dragOffset;
+      const rawPosition = -renderedIndex * stepSize + dragOffset;
+      const position = isDragging ? rawPosition : Math.round(rawPosition);
 
       if (immediate) {
         track.style.transition = "none";
@@ -307,42 +349,10 @@
     function dismissGestureHint() {}
 
     function clearNavRepeat() {
-      window.clearTimeout(navRepeatDelayTimer);
-      window.clearInterval(navRepeatInterval);
-      navRepeatDelayTimer = 0;
-      navRepeatInterval = 0;
-
       if (activeNavButton) {
         delete activeNavButton.dataset.pressing;
         activeNavButton = null;
       }
-    }
-
-    function unlockWheelNavigation() {
-      wheelLocked = false;
-      window.clearTimeout(wheelUnlockTimer);
-      wheelUnlockTimer = 0;
-    }
-
-    function armWheelCapture() {
-      if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches || window.innerWidth <= 1024) {
-        return;
-      }
-
-      wheelCaptureArmed = true;
-      wheelForwardWrapped = false;
-      wheelForwardReleaseReady = false;
-      wheelBackwardWrapped = false;
-      wheelBackwardReleaseReady = false;
-    }
-
-    function disarmWheelCapture() {
-      wheelCaptureArmed = false;
-      wheelForwardWrapped = false;
-      wheelForwardReleaseReady = false;
-      wheelBackwardWrapped = false;
-      wheelBackwardReleaseReady = false;
-      unlockWheelNavigation();
     }
 
     function scheduleGestureHint() {}
@@ -353,21 +363,18 @@
       }
 
       dismissGestureHint();
-      wheelBackwardWrapped = false;
-      wheelBackwardReleaseReady = false;
 
       if (activeIndex === maxIndex) {
         if (!shouldLoop) {
           return;
         }
 
-        wheelForwardWrapped = true;
         activeIndex = 0;
-        renderedIndex += visibleCards;
-        pendingSnapIndex = cloneCount;
+        renderedIndex += currentVisibleCards;
+        pendingSnapIndex = cloneCount + (pageStarts[0] ?? 0);
       } else {
         activeIndex += 1;
-        renderedIndex += 1;
+        renderedIndex = cloneCount + (pageStarts[activeIndex] ?? 0);
         pendingSnapIndex = null;
       }
 
@@ -382,21 +389,18 @@
       }
 
       dismissGestureHint();
-      wheelForwardWrapped = false;
-      wheelForwardReleaseReady = false;
 
       if (activeIndex === 0) {
         if (!shouldLoop) {
           return;
         }
 
-        wheelBackwardWrapped = true;
         activeIndex = maxIndex;
-        renderedIndex -= visibleCards;
-        pendingSnapIndex = cloneCount + maxIndex;
+        renderedIndex -= currentVisibleCards;
+        pendingSnapIndex = cloneCount + (pageStarts[activeIndex] ?? 0);
       } else {
         activeIndex -= 1;
-        renderedIndex -= 1;
+        renderedIndex = cloneCount + (pageStarts[activeIndex] ?? 0);
         pendingSnapIndex = null;
       }
 
@@ -411,18 +415,9 @@
           return;
         }
 
-        event.preventDefault();
         clearNavRepeat();
         activeNavButton = button;
         button.dataset.pressing = "true";
-        action();
-
-        navRepeatDelayTimer = window.setTimeout(() => {
-          navRepeatInterval = window.setInterval(() => {
-            action();
-          }, 320);
-        }, 260);
-
         button.setPointerCapture?.(event.pointerId);
       });
 
@@ -435,18 +430,15 @@
       button.addEventListener("pointerup", stopRepeat);
       button.addEventListener("pointercancel", stopRepeat);
       button.addEventListener("lostpointercapture", stopRepeat);
-      button.addEventListener("click", (event) => {
-        if (event.detail !== 0) {
-          event.preventDefault();
-          return;
-        }
-
+      button.addEventListener("click", () => {
         action();
       });
     }
 
-    function finishDrag(currentPointerId) {
-      if (!isDragging || currentPointerId !== pointerId) {
+    function finalizeDrag() {
+      if (!isDragging) {
+        pointerDragReady = false;
+        dragOffset = 0;
         return;
       }
 
@@ -456,6 +448,7 @@
       dismissGestureHint();
       isDragging = false;
       pointerId = null;
+      pointerDragReady = false;
       delete shell.dataset.dragging;
 
       if (dragOffset > threshold) {
@@ -470,6 +463,24 @@
 
       dragOffset = 0;
       syncPosition();
+    }
+
+    function finishDrag(currentPointerId) {
+      if (currentPointerId !== pointerId) {
+        return;
+      }
+
+      pointerId = null;
+      finalizeDrag();
+    }
+
+    function finishTouchDrag() {
+      if (touchId === null) {
+        return;
+      }
+
+      touchId = null;
+      finalizeDrag();
     }
 
     bindNavButton(prevButton, goToPrevious);
@@ -488,6 +499,10 @@
     });
 
     viewport.addEventListener("pointerdown", (event) => {
+      if (event.pointerType === "touch") {
+        return;
+      }
+
       if (event.pointerType === "mouse" && event.button !== 0) {
         return;
       }
@@ -497,101 +512,131 @@
       }
 
       dismissGestureHint();
+      suppressClick = false;
 
-      if (
-        event.target instanceof Element &&
-        event.target.closest(".promo-carousel__shop-button, .promo-carousel__nav, .promo-carousel__dot")
-      ) {
+      if (event.target instanceof Element && event.target.closest(".promo-carousel__nav, .promo-carousel__dot")) {
         return;
       }
 
-      isDragging = true;
       pointerId = event.pointerId;
+      pointerDragReady = true;
       dragStartX = event.clientX;
       dragOffset = 0;
-      shell.dataset.dragging = "true";
-      viewport.setPointerCapture?.(event.pointerId);
     });
 
-    viewport.addEventListener("pointermove", (event) => {
-      if (!isDragging || event.pointerId !== pointerId) {
+    viewport.addEventListener(
+      "touchstart",
+      (event) => {
+        if (pointerId !== null || touchId !== null || isAnimating || event.touches.length !== 1) {
+          return;
+        }
+
+        dismissGestureHint();
+        suppressClick = false;
+
+        if (event.target instanceof Element && event.target.closest(".promo-carousel__nav, .promo-carousel__dot")) {
+          return;
+        }
+
+        const touch = event.changedTouches[0];
+        if (!touch) {
+          return;
+        }
+
+        touchId = touch.identifier;
+        pointerDragReady = true;
+        dragStartX = touch.clientX;
+        dragOffset = 0;
+      },
+      { passive: true },
+    );
+
+    function handlePointerMove(event) {
+      if (event.pointerType === "touch") {
+        return;
+      }
+
+      if ((!pointerDragReady && !isDragging) || event.pointerId !== pointerId) {
         return;
       }
 
       dragOffset = event.clientX - dragStartX;
+
+      if (!isDragging) {
+        if (Math.abs(dragOffset) < 8) {
+          return;
+        }
+
+        isDragging = true;
+        suppressClick = true;
+        shell.dataset.dragging = "true";
+        viewport.setPointerCapture?.(event.pointerId);
+      }
 
       if (event.cancelable && Math.abs(dragOffset) > 4) {
         event.preventDefault();
       }
 
       syncPosition();
-    });
+    }
 
-    viewport.addEventListener("pointerup", (event) => finishDrag(event.pointerId));
-    viewport.addEventListener("pointercancel", (event) => finishDrag(event.pointerId));
-    viewport.addEventListener("lostpointercapture", (event) => finishDrag(event.pointerId));
+    function handlePointerRelease(event) {
+      if (event.pointerType === "touch") {
+        return;
+      }
 
-    shell.addEventListener("mouseenter", armWheelCapture);
-    shell.addEventListener("mouseleave", disarmWheelCapture);
+      finishDrag(event.pointerId);
+    }
 
-    shell.addEventListener(
-      "wheel",
-      (event) => {
-        const isDesktopWheelContext =
-          window.matchMedia("(hover: hover) and (pointer: fine)").matches && window.innerWidth > 1024;
+    function handleTouchMove(event) {
+      if ((!pointerDragReady && !isDragging) || touchId === null) {
+        return;
+      }
 
-        if (!isDesktopWheelContext || !wheelCaptureArmed) {
+      const touch = Array.from(event.touches).find((entry) => entry.identifier === touchId);
+      if (!touch) {
+        return;
+      }
+
+      dragOffset = touch.clientX - dragStartX;
+
+      if (!isDragging) {
+        if (Math.abs(dragOffset) < 8) {
           return;
         }
 
-        if (Math.abs(event.deltaY) < 10 || Math.abs(event.deltaY) < Math.abs(event.deltaX)) {
-          event.preventDefault();
-          return;
-        }
+        isDragging = true;
+        suppressClick = true;
+        shell.dataset.dragging = "true";
+      }
 
-        const direction = event.deltaY > 0 ? 1 : -1;
-        const reachedTerminalEdge =
-          !shouldLoop && ((activeIndex === maxIndex && direction > 0) || (activeIndex === 0 && direction < 0));
-
-        if (reachedTerminalEdge) {
-          disarmWheelCapture();
-          return;
-        }
-
-        if (shouldLoop && direction > 0 && activeIndex === 0 && wheelForwardReleaseReady) {
-          disarmWheelCapture();
-          return;
-        }
-
-        if (shouldLoop && direction < 0 && activeIndex === 0 && wheelBackwardReleaseReady) {
-          disarmWheelCapture();
-          return;
-        }
-
+      if (event.cancelable && Math.abs(dragOffset) > 4) {
         event.preventDefault();
+      }
 
-        if (
-          !hasPagination ||
-          isAnimating ||
-          isDragging ||
-          wheelLocked
-        ) {
-          return;
-        }
+      syncPosition();
+    }
 
-        dismissGestureHint();
-        wheelLocked = true;
-        wheelUnlockTimer = window.setTimeout(unlockWheelNavigation, 260);
+    function handleTouchRelease(event) {
+      if (touchId === null) {
+        return;
+      }
 
-        if (event.deltaY > 0) {
-          goToNext();
-          return;
-        }
+      const releasedTouch = Array.from(event.changedTouches).find((entry) => entry.identifier === touchId);
+      if (!releasedTouch) {
+        return;
+      }
 
-        goToPrevious();
-      },
-      { passive: false },
-    );
+      finishTouchDrag();
+    }
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerRelease);
+    window.addEventListener("pointercancel", handlePointerRelease);
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchend", handleTouchRelease, { passive: true });
+    window.addEventListener("touchcancel", handleTouchRelease, { passive: true });
+    viewport.addEventListener("lostpointercapture", (event) => finishDrag(event.pointerId));
 
     track.addEventListener("transitionend", (event) => {
       if (event.target !== track || event.propertyName !== "transform") {
@@ -602,14 +647,6 @@
         renderedIndex = pendingSnapIndex;
         pendingSnapIndex = null;
         syncPosition(true);
-      }
-
-      if (shouldLoop && activeIndex === 0 && wheelForwardWrapped) {
-        wheelForwardReleaseReady = true;
-      }
-
-      if (shouldLoop && activeIndex === 0 && wheelBackwardWrapped) {
-        wheelBackwardReleaseReady = true;
       }
 
       isAnimating = false;
@@ -633,6 +670,12 @@
     if (typeof ResizeObserver === "function") {
       const resizeObserver = new ResizeObserver(() => {
         cancelGestureHint();
+        const nextVisibleCards = getVisibleCards();
+
+        if (nextVisibleCards !== currentVisibleCards) {
+          rebuildCarouselStructure();
+        }
+
         updateMetrics();
         syncPosition(true);
         scheduleGestureHint();
@@ -641,6 +684,12 @@
     } else {
       window.addEventListener("resize", () => {
         cancelGestureHint();
+        const nextVisibleCards = getVisibleCards();
+
+        if (nextVisibleCards !== currentVisibleCards) {
+          rebuildCarouselStructure();
+        }
+
         updateMetrics();
         syncPosition(true);
         scheduleGestureHint();
@@ -651,10 +700,10 @@
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         clearNavRepeat();
-        unlockWheelNavigation();
       }
     });
 
+    rebuildCarouselStructure();
     updateMetrics();
     syncPosition(true);
     scheduleGestureHint();

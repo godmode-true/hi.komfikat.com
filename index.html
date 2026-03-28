@@ -91,30 +91,30 @@
                   aria-label="Copy link"
                   data-share-option="copy"
                   data-share-hint="Copy link"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-                      <path
-                        class="share-rail__copy-sheet-back"
-                        d="M8.1 4.35C7.24 4.35 6.55 5.04 6.55 5.9V14.6C6.55 15.46 7.24 16.15 8.1 16.15H8.8V7.95C8.8 6.75 9.78 5.77 10.98 5.77H16.88V5.9C16.88 5.04 16.19 4.35 15.33 4.35H8.1Z"
-                        fill="currentColor"
-                      />
-                      <path
-                        class="share-rail__copy-sheet"
-                        d="M10.78 5.77C9.58 5.77 8.6 6.75 8.6 7.95V18.1C8.6 19.3 9.58 20.28 10.78 20.28H16.63C17.83 20.28 18.8 19.3 18.8 18.1V10.62C18.8 10.08 18.59 9.56 18.2 9.18L15.39 6.37C15.01 5.98 14.49 5.77 13.95 5.77H10.78Z"
-                        fill="currentColor"
-                      />
-                      <path
-                        class="share-rail__copy-fold"
-                        d="M14.12 6.28V9.06C14.12 9.68 14.63 10.19 15.25 10.19H18.03L14.12 6.28Z"
-                        fill="none"
-                      />
-                      <path
-                        class="share-rail__copy-fold-line"
-                        d="M14.12 6.28V9.06C14.12 9.68 14.63 10.19 15.25 10.19H18.03"
-                        fill="none"
-                      />
-                    </svg>
-                  </button>
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      class="share-rail__copy-sheet-back"
+                      d="M8.1 4.35C7.24 4.35 6.55 5.04 6.55 5.9V14.6C6.55 15.46 7.24 16.15 8.1 16.15H8.8V7.95C8.8 6.75 9.78 5.77 10.98 5.77H16.88V5.9C16.88 5.04 16.19 4.35 15.33 4.35H8.1Z"
+                      fill="currentColor"
+                    />
+                    <path
+                      class="share-rail__copy-sheet"
+                      d="M10.78 5.77C9.58 5.77 8.6 6.75 8.6 7.95V18.1C8.6 19.3 9.58 20.28 10.78 20.28H16.63C17.83 20.28 18.8 19.3 18.8 18.1V10.62C18.8 10.08 18.59 9.56 18.2 9.18L15.39 6.37C15.01 5.98 14.49 5.77 13.95 5.77H10.78Z"
+                      fill="currentColor"
+                    />
+                    <path
+                      class="share-rail__copy-fold"
+                      d="M14.12 6.28V9.06C14.12 9.68 14.63 10.19 15.25 10.19H18.03L14.12 6.28Z"
+                      fill="none"
+                    />
+                    <path
+                      class="share-rail__copy-fold-line"
+                      d="M14.12 6.28V9.06C14.12 9.68 14.63 10.19 15.25 10.19H18.03"
+                      fill="none"
+                    />
+                  </svg>
+                </button>
 
                 <button
                   class="share-rail__button share-rail__button--whatsapp"
@@ -236,12 +236,7 @@
             <span class="profile__story-mobile-hint-text">Tap to see what’s new</span>
             <span class="profile__story-mobile-hint-icon">👇</span>
           </span>
-          <button
-            class="profile__story-trigger"
-            type="button"
-            aria-label="Open Komfi Kat stories"
-            data-story-open
-          >
+          <button class="profile__story-trigger" type="button" aria-label="Open Komfi Kat stories" data-story-open>
             <span class="profile__story-desktop-hint" aria-hidden="true">
               <span class="profile__story-desktop-hint-text">Click to see what’s new</span>
               <span class="profile__story-desktop-hint-icon">👇</span>
@@ -249,7 +244,7 @@
             <span class="profile__story-ring" aria-hidden="true">
               <span class="profile__story-core">
                 <span class="profile__logo-frame">
-                  <img class="profile__logo" src="img/logo.png" alt="" />
+                  <img class="profile__logo" src="img/logo.png" alt="" draggable="false" />
                 </span>
               </span>
             </span>
@@ -415,26 +410,6 @@
         <section class="link-section" aria-label="Shop links">
           <ul class="link-list stack">
             <li>
-              <div
-                class="link-card link-card--website link-card--disabled"
-                aria-label="Website coming soon"
-                aria-disabled="true"
-              >
-                <span class="link-card__badge" aria-hidden="true">
-                  <img
-                    class="link-card__brand-icon link-card__brand-icon--website"
-                    src="img/icons/favicon.png"
-                    alt=""
-                  />
-                </span>
-                <span class="link-card__content">
-                  <span class="link-card__title">Website</span>
-                  <span class="link-card__subtitle">Coming soon</span>
-                </span>
-                <span class="link-card__spacer" aria-hidden="true"></span>
-              </div>
-            </li>
-            <li>
               <a
                 class="link-card link-card--etsy"
                 href="https://komfikatcoloring.etsy.com/"
@@ -443,10 +418,10 @@
                 aria-label="Shop on Etsy for digital coloring books"
               >
                 <span class="link-card__badge" aria-hidden="true">
-                  <img class="link-card__brand-icon link-card__brand-icon--etsy" src="img/icons/etsy_168752.svg" alt="" />
+                  <img class="link-card__brand-icon link-card__brand-icon--etsy" src="img/icons/etsy.svg" alt="" />
                 </span>
                 <span class="link-card__content">
-                  <span class="link-card__title">Shop on Etsy</span>
+                  <span class="link-card__title">Etsy Shop</span>
                   <span class="link-card__subtitle">Digital Coloring Books &amp; More</span>
                 </span>
                 <span class="link-card__spacer" aria-hidden="true"></span>
@@ -462,8 +437,28 @@
                   <img class="link-card__brand-icon link-card__brand-icon--amazon" src="img/icons/amazon.svg" alt="" />
                 </span>
                 <span class="link-card__content">
-                  <span class="link-card__title">Coming Soon on Amazon</span>
-                  <span class="link-card__subtitle">Physical Coloring Books</span>
+                  <span class="link-card__title">Amazon Shop</span>
+                  <span class="link-card__subtitle">Coming soon</span>
+                </span>
+                <span class="link-card__spacer" aria-hidden="true"></span>
+              </div>
+            </li>
+            <li>
+              <div
+                class="link-card link-card--website link-card--disabled"
+                aria-label="Website coming soon"
+                aria-disabled="true"
+              >
+                <span class="link-card__badge" aria-hidden="true">
+                  <img
+                    class="link-card__brand-icon link-card__brand-icon--website"
+                    src="img/icons/favicon.png"
+                    alt=""
+                  />
+                </span>
+                <span class="link-card__content">
+                  <span class="link-card__title">Website</span>
+                  <span class="link-card__subtitle">Coming soon</span>
                 </span>
                 <span class="link-card__spacer" aria-hidden="true"></span>
               </div>

@@ -17,6 +17,7 @@
     canonicalLink: document.querySelector('link[rel="canonical"]'),
     metaDescription: document.querySelector('meta[name="description"]'),
     storyTrigger: document.querySelector("[data-story-open]"),
+    profileLogo: document.querySelector(".profile__logo"),
     storyViewer: document.querySelector("[data-story-viewer]"),
     storyTitle: document.querySelector("[data-story-title]"),
     storyEyebrow: document.querySelector("[data-story-eyebrow]"),
@@ -176,6 +177,15 @@
   };
 
   document.addEventListener("DOMContentLoaded", () => {
+    [App.dom.storyTrigger, App.dom.profileLogo].forEach((element) => {
+      if (!element) {
+        return;
+      }
+
+      element.addEventListener("dragstart", (event) => event.preventDefault());
+      element.addEventListener("contextmenu", (event) => event.preventDefault());
+    });
+
     App.initTheme?.();
     App.initShare?.();
     App.initStories?.();

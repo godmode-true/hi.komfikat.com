@@ -2,39 +2,39 @@ window.KomfiKatCarouselManifest = {
   // Edit CTA buttons here: labels, subtitles, icons, links, and disabled state.
   actions: [
     {
+      label: "Buy on Etsy",
+      subtitle: "Digital Version",
+      icon: "img/icons/etsy.svg",
+      href: "https://komfikatcoloring.etsy.com/listing/4472798201",
+      className: "promo-carousel__shop-button--etsy",
+    },
+    {
       label: "Buy on Amazon",
-      subtitle: "Physical Copy",
+      subtitle: "Coming soon",
       icon: "img/icons/amazon.svg",
       className: "promo-carousel__shop-button--amazon",
       disabled: true,
     },
     {
-      label: "Buy on Etsy",
-      subtitle: "Digital Version",
-      icon: "img/icons/etsy_168752.svg",
-      href: "https://komfikatcoloring.etsy.com/",
-      className: "promo-carousel__shop-button--etsy",
-    },
-    {
       label: "View on Website",
-      subtitle: "Official Website",
+      subtitle: "Coming soon",
       icon: "img/icons/favicon.png",
+      href: "http://komfikat.com/",
       className: "promo-carousel__shop-button--website",
       disabled: true,
     },
   ],
 
-  // Slides are auto-loaded from img/carousel/1.png, 2.png, 3.png and so on.
-  // The carousel stops at the first missing number, so keep numbering continuous.
+  // Slide files are synced by .\scripts\sync-carousel-manifest.ps1
+  // This avoids runtime probing and lets the carousel render immediately on mobile.
   slides: {
-    directory: "img/carousel",
-    startIndex: 1,
-    maxIndex: 24,
-    extension: "png",
-
-    // Optional alt-text overrides by slide number.
-    alts: {
-      1: "Hobby Girl cover",
-    },
+    files: [
+      { src: "img/carousel/1.png", alt: "Hobby Girl cover" },
+      { src: "img/carousel/2.png", alt: "Instagram carousel image 2" },
+      { src: "img/carousel/3.png", alt: "Instagram carousel image 3" },
+      { src: "img/carousel/4.png", alt: "Instagram carousel image 4" },
+      { src: "img/carousel/5.png", alt: "Instagram carousel image 5" },
+      { src: "img/carousel/6.png", alt: "Instagram carousel image 6" },
+    ],
   },
 };
