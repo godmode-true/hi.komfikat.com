@@ -8,8 +8,8 @@
 
 /* Design tokens */
 :root {
-  --page-bg: #fdfcf3;
-  --selection-bg: #efe6d2;
+  --page-bg: #fffcfe;
+  --selection-bg: #f1dce4;
   --selection-text: #5f3442;
   --content-max-width: 36rem;
   --page-gutter: clamp(1rem, 4vw, 1.5rem);
@@ -20,17 +20,21 @@
   --top-control-height: 2.25rem;
   --button-radius: 999px;
   --button-border-color: #1f1f1f;
-  --button-bg: #e7dfcf;
-  --button-bg-hover: #ddd2bf;
+  --button-bg: #fff8fb;
+  --button-bg-hover: #f7eef2;
   --button-text: #6b3e4d;
   --panel-text: #5f3442;
   --panel-subtext: #8a5a69;
-  --top-control-bg-hover: #ebe2d3;
-  --top-control-shadow-hover: inset 0 1px 0 rgba(255, 255, 255, 0.78), 0 10px 20px rgba(122, 103, 89, 0.1);
+  --top-control-bg-hover: #f7eef2;
+  --top-control-shadow-hover: none;
   --logo-size: clamp(5.75rem, 24vw, 7rem);
   --profile-space: clamp(1.5rem, 8vw, 2.5rem);
-  --profile-logo-bg: #f3ead8;
-  --profile-logo-ring: #d9ccb5;
+  --profile-logo-bg: #faf4f5;
+  --profile-logo-bg-hover: #f8f0f2;
+  --profile-logo-ring: #e5d1d7;
+  --profile-logo-ring-hover: #e5c7d0;
+  --profile-logo-image-filter: hue-rotate(-13deg) saturate(0.9) brightness(1.015);
+  --profile-logo-image-filter-hover: hue-rotate(-15deg) saturate(0.92) brightness(1.02);
   --profile-story-ring-start: #ff8fa7;
   --profile-story-ring-end: #f7bcc8;
   --profile-text: #5f3442;
@@ -38,8 +42,11 @@
   --surface-border-soft: rgba(247, 188, 200, 0.52);
   --surface-border-strong: rgba(247, 188, 200, 0.7);
   --promo-card-border: #f5c1cb;
+  --promo-shell-surface:
+    linear-gradient(180deg, rgba(255, 250, 251, 0.72) 0%, rgba(255, 250, 251, 0) 20%),
+    linear-gradient(180deg, #faf4f5 0%, #f7eff1 100%);
   --social-link-size: 2.28rem;
-  --social-link-bg: #f4ecdc;
+  --social-link-bg: #fff8fb;
   --link-section-space: clamp(1rem, 4vw, 1.35rem);
   --link-card-radius: 999px;
   --link-card-padding-inline: clamp(1rem, 4vw, 1.25rem);
@@ -47,9 +54,9 @@
   --link-card-badge-size: 2.65rem;
   --link-card-title-size: clamp(1.35rem, 5vw, 1.7rem);
   --link-card-subtitle-size: clamp(1rem, 3.8vw, 1.2rem);
-  --scrollbar-track: #f4eddf;
-  --scrollbar-thumb: #d8c8b2;
-  --scrollbar-thumb-hover: #cbb79d;
+  --scrollbar-track: #f7edf1;
+  --scrollbar-thumb: #d9b8c4;
+  --scrollbar-thumb-hover: #cba0af;
   --caret-color: #c98d67;
   --surface-shadow-soft: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 10px 24px rgba(122, 103, 89, 0.08);
   --surface-shadow-hover: inset 0 1px 0 rgba(255, 255, 255, 0.78), 0 14px 28px rgba(122, 103, 89, 0.14);
@@ -59,17 +66,21 @@
 
 :root[data-theme="dark"] {
   --page-bg: #241e1a;
-  --selection-bg: #5d3342;
+  --selection-bg: #774554;
   --selection-text: #fff1f5;
-  --button-bg: #4a3d35;
-  --button-bg-hover: #59483f;
+  --button-bg: #45373b;
+  --button-bg-hover: #4b4043;
   --button-text: #f7e7eb;
   --panel-text: #6a3f4c;
   --panel-subtext: #936775;
-  --top-control-bg-hover: #55463d;
-  --top-control-shadow-hover: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 10px 20px rgba(0, 0, 0, 0.24);
-  --profile-logo-bg: #3c312b;
-  --profile-logo-ring: #756456;
+  --top-control-bg-hover: #4b4043;
+  --top-control-shadow-hover: none;
+  --profile-logo-bg: #473b3d;
+  --profile-logo-bg-hover: #4d4043;
+  --profile-logo-ring: #b59da4;
+  --profile-logo-ring-hover: #c3a5ae;
+  --profile-logo-image-filter: hue-rotate(-11deg) saturate(0.9) brightness(1.02);
+  --profile-logo-image-filter-hover: hue-rotate(-13deg) saturate(0.92) brightness(1.025);
   --profile-story-ring-start: #f7a4b6;
   --profile-story-ring-end: #e3b8c7;
   --profile-text: #f7e7eb;
@@ -77,10 +88,11 @@
   --surface-border-soft: rgba(247, 188, 200, 0.34);
   --surface-border-strong: rgba(247, 188, 200, 0.46);
   --promo-card-border: #d49aaa;
-  --social-link-bg: #43362f;
-  --scrollbar-track: #312823;
-  --scrollbar-thumb: #6d5a4d;
-  --scrollbar-thumb-hover: #816b5d;
+  --promo-shell-surface: linear-gradient(180deg, #55484a 0%, #4e4244 100%);
+  --social-link-bg: #45373b;
+  --scrollbar-track: #33282d;
+  --scrollbar-thumb: #8a6874;
+  --scrollbar-thumb-hover: #9c7683;
   --caret-color: #f2b085;
   --surface-shadow-soft: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 10px 24px rgba(0, 0, 0, 0.28);
   --surface-shadow-hover: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 14px 28px rgba(0, 0, 0, 0.34);
@@ -314,8 +326,8 @@ a {
 }
 
 .profile__story-trigger[data-story-state="viewed"] .profile__story-ring {
-  background: linear-gradient(145deg, #d1c4b2, #c4b39d);
-  box-shadow: 0 8px 18px rgba(122, 103, 89, 0.12);
+  background: linear-gradient(145deg, #e3c6d0, #d8b8c4);
+  box-shadow: 0 8px 18px rgba(177, 121, 143, 0.14);
 }
 
 .profile__story-core {
@@ -349,10 +361,12 @@ a {
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
+  filter: var(--profile-logo-image-filter);
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
   -webkit-touch-callout: none;
+  transition: filter 130ms ease;
 }
 
 .profile__copy {
@@ -391,11 +405,14 @@ a {
   justify-content: center;
   width: var(--social-link-size);
   height: var(--social-link-size);
+  border: 1.5px solid var(--surface-border-soft);
   border-radius: 50%;
   background-color: var(--social-link-bg);
-  box-shadow: var(--surface-shadow-soft);
+  box-shadow: none;
+  color: var(--panel-text);
   transition:
     background-color 110ms ease,
+    border-color 110ms ease,
     box-shadow 110ms ease,
     transform 110ms ease;
 }
@@ -417,15 +434,11 @@ a {
 }
 
 .promo-carousel__shell {
-  --promo-shell-surface:
-    linear-gradient(180deg, rgba(255, 252, 245, 0.72) 0%, rgba(255, 252, 245, 0) 20%),
-    linear-gradient(180deg, #f8efde 0%, #f4e7d2 100%);
   --promo-shell-pad-top: clamp(1rem, 3vw, 1.18rem);
   --promo-shell-pad-inline: clamp(1rem, 3vw, 1.18rem);
   --promo-shell-pad-bottom: clamp(1rem, 3vw, 1.18rem);
   --promo-gap: clamp(0.55rem, 2vw, 0.85rem);
   --promo-card-radius: clamp(1.04rem, 3vw, 1.26rem);
-  --promo-nav-size: clamp(1.96rem, 6vw, 2.28rem);
   --promo-dot-size: 0.5rem;
   position: relative;
   width: 100%;
@@ -594,7 +607,7 @@ a {
   padding: 0.42rem 1rem;
   border-radius: calc(var(--promo-card-radius) * 1.45);
   border: 1.5px solid var(--surface-border-soft);
-  background: #fcf8f2;
+  background: #fff8fb;
   color: var(--profile-text);
   box-shadow: none;
   touch-action: pan-y;
@@ -630,7 +643,7 @@ a {
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background-color: rgba(255, 248, 239, 0.96);
+  background-color: rgba(255, 248, 251, 0.96);
   pointer-events: none;
 }
 
@@ -704,7 +717,7 @@ a {
 
 .promo-carousel__shop-button--website,
 .promo-carousel__shop-button--website:visited {
-  background: #fcf8f2;
+  background: #fff8fb;
   color: var(--panel-text);
 }
 
@@ -718,7 +731,7 @@ a {
 
 .promo-carousel__shop-button--etsy,
 .promo-carousel__shop-button--etsy:visited {
-  background: #fcf8f2;
+  background: #fff8fb;
   color: var(--panel-text);
 }
 
@@ -736,7 +749,7 @@ a {
 
 .promo-carousel__shop-button--amazon,
 .promo-carousel__shop-button--amazon:visited {
-  background: #fcf8f2;
+  background: #fff8fb;
   color: var(--panel-text);
 }
 
@@ -762,11 +775,6 @@ a {
 .promo-carousel__shop-button[aria-disabled="true"] .promo-carousel__shop-button-title,
 .promo-carousel__shop-button[aria-disabled="true"] .promo-carousel__shop-button-subtitle {
   opacity: 0.88;
-}
-
-.promo-carousel__card--cta::after {
-  content: none !important;
-  display: none !important;
 }
 
 .promo-carousel__pager {
@@ -902,12 +910,12 @@ a {
 
   .promo-carousel__nav--prev {
     left: 0;
-    transform: translate(calc(-50% - 0.34rem), -50%);
+    transform: translate(calc(-50% - 0.46rem), -50%);
   }
 
   .promo-carousel__nav--next {
     right: 0;
-    transform: translate(calc(50% + 0.34rem), -50%);
+    transform: translate(calc(50% + 0.46rem), -50%);
   }
 
   .promo-carousel__nav--prev svg {
@@ -920,12 +928,12 @@ a {
 
   .promo-carousel__nav--prev[data-pressing="true"],
   .promo-carousel__nav--prev:active {
-    transform: translate(calc(-50% - 0.34rem), calc(-50% + 1px));
+    transform: translate(calc(-50% - 0.46rem), calc(-50% + 1px));
   }
 
   .promo-carousel__nav--next[data-pressing="true"],
   .promo-carousel__nav--next:active {
-    transform: translate(calc(50% + 0.34rem), calc(-50% + 1px));
+    transform: translate(calc(50% + 0.46rem), calc(-50% + 1px));
   }
 
   .promo-carousel__nav--prev[data-pressing="true"] svg,
@@ -949,7 +957,6 @@ a {
 }
 
 :root[data-theme="dark"] .promo-carousel__shell {
-  --promo-shell-surface: linear-gradient(180deg, #5a493f 0%, #56453c 100%);
   border-color: var(--surface-border-soft);
   background: var(--promo-shell-surface);
   box-shadow: none;
@@ -961,12 +968,20 @@ a {
     0 10px 18px rgba(0, 0, 0, 0.2);
 }
 
-:root[data-theme="dark"] .promo-carousel__card::after {
-  content: none;
-}
-
 :root[data-theme="dark"] .promo-carousel__card--cta {
   background: var(--promo-shell-surface) !important;
+}
+
+:root[data-theme="dark"] .share-rail__button {
+  background-color: var(--social-link-bg);
+  color: var(--profile-text);
+  box-shadow: none;
+}
+
+:root[data-theme="dark"] .share-rail__button:hover,
+:root[data-theme="dark"] .share-rail__button:focus-visible {
+  background-color: #514045;
+  box-shadow: none;
 }
 
 :root[data-theme="dark"] .promo-carousel__cta-panel {
@@ -978,29 +993,24 @@ a {
 :root[data-theme="dark"] .promo-carousel__shop-button,
 :root[data-theme="dark"] .promo-carousel__shop-button:visited {
   border-color: var(--surface-border-soft);
-  background: linear-gradient(180deg, #f8f1e7 0%, #f1e7db 100%);
-  color: var(--panel-text);
+  background: linear-gradient(180deg, #4d4043 0%, #43373a 100%);
+  color: var(--profile-text);
   box-shadow: none !important;
-}
-
-:root[data-theme="dark"] .promo-carousel__shop-button--etsy,
-:root[data-theme="dark"] .promo-carousel__shop-button--etsy:visited {
-  box-shadow: none;
 }
 
 :root[data-theme="dark"] .promo-carousel__shop-button--website,
 :root[data-theme="dark"] .promo-carousel__shop-button--website:visited {
-  background: linear-gradient(180deg, #f8f1e7 0%, #f1e7db 100%);
-  color: var(--panel-text);
+  background: linear-gradient(180deg, #4d4043 0%, #43373a 100%);
+  color: var(--profile-text);
   box-shadow: none;
 }
 
 :root[data-theme="dark"] .promo-carousel__shop-button--website .promo-carousel__shop-button-title {
-  color: var(--panel-text);
+  color: var(--profile-text);
 }
 
 :root[data-theme="dark"] .promo-carousel__shop-button-badge {
-  background-color: rgba(255, 248, 239, 0.96);
+  background-color: rgba(255, 244, 247, 0.08);
 }
 
 :root[data-theme="dark"] .promo-carousel__shop-button--etsy .promo-carousel__shop-button-badge {
@@ -1008,28 +1018,28 @@ a {
 }
 
 :root[data-theme="dark"] .promo-carousel__shop-button--website .promo-carousel__shop-button-subtitle {
-  color: var(--panel-subtext);
+  color: var(--profile-subtext);
 }
 
 :root[data-theme="dark"] .promo-carousel__shop-button--amazon,
 :root[data-theme="dark"] .promo-carousel__shop-button--amazon:visited {
-  background: linear-gradient(180deg, #f8f1e7 0%, #f1e7db 100%);
-  color: var(--panel-text);
+  background: linear-gradient(180deg, #4d4043 0%, #43373a 100%);
+  color: var(--profile-text);
   box-shadow: none;
 }
 
 :root[data-theme="dark"] .promo-carousel__shop-button--amazon .promo-carousel__shop-button-subtitle {
-  color: var(--panel-subtext);
+  color: var(--profile-subtext);
 }
 
 :root[data-theme="dark"] .promo-carousel__shop-button--etsy,
 :root[data-theme="dark"] .promo-carousel__shop-button--etsy:visited {
-  background: linear-gradient(180deg, #f8f1e7 0%, #f1e7db 100%);
-  color: var(--panel-text);
+  background: linear-gradient(180deg, #4d4043 0%, #43373a 100%);
+  color: var(--profile-text);
 }
 
 :root[data-theme="dark"] .promo-carousel__shop-button--etsy .promo-carousel__shop-button-subtitle {
-  color: var(--panel-subtext);
+  color: var(--profile-subtext);
 }
 
 :root[data-theme="dark"] .promo-carousel__nav {
@@ -1071,7 +1081,7 @@ a {
   padding: 0.42rem var(--link-card-padding-inline);
   border: 1.5px solid var(--surface-border-soft);
   border-radius: var(--link-card-radius);
-  background: #fcf8f2;
+  background: #fff8fb;
   color: var(--panel-text);
   box-shadow: none;
   transition:
@@ -1094,7 +1104,7 @@ a {
   width: var(--link-card-badge-size);
   height: var(--link-card-badge-size);
   border-radius: 50%;
-  background-color: rgba(255, 248, 239, 0.96);
+  background-color: rgba(255, 248, 251, 0.96);
 }
 
 .link-card__badge svg {
@@ -1171,12 +1181,12 @@ a {
 }
 
 .link-card--amazon {
-  background: #fcf8f2;
+  background: #fff8fb;
   color: var(--panel-text);
 }
 
 .link-card--website {
-  background: #fcf8f2;
+  background: #fff8fb;
   color: var(--panel-text);
 }
 
@@ -1211,7 +1221,7 @@ a {
 }
 
 .link-card--etsy {
-  background: #fcf8f2;
+  background: #fff8fb;
   color: var(--panel-text);
 }
 
@@ -1228,21 +1238,21 @@ a {
 }
 
 :root[data-theme="dark"] .link-card--amazon {
-  background: #fcf8f2;
-  color: var(--panel-text);
+  background: linear-gradient(180deg, #4d4043 0%, #43373a 100%);
+  color: var(--profile-text);
 }
 
 :root[data-theme="dark"] .link-card--website {
-  background: #fcf8f2;
-  color: var(--panel-text);
+  background: linear-gradient(180deg, #4d4043 0%, #43373a 100%);
+  color: var(--profile-text);
 }
 
 :root[data-theme="dark"] .link-card--website .link-card__subtitle {
-  color: var(--panel-subtext);
+  color: var(--profile-subtext);
 }
 
 :root[data-theme="dark"] .link-card--amazon .link-card__subtitle {
-  color: var(--panel-subtext);
+  color: var(--profile-subtext);
 }
 
 :root[data-theme="dark"] .link-card--disabled {
@@ -1250,12 +1260,12 @@ a {
 }
 
 :root[data-theme="dark"] .link-card--etsy {
-  background: linear-gradient(180deg, #f8f1e7 0%, #f1e7db 100%);
-  color: var(--panel-text);
+  background: linear-gradient(180deg, #4d4043 0%, #43373a 100%);
+  color: var(--profile-text);
 }
 
 :root[data-theme="dark"] .link-card--etsy .link-card__subtitle {
-  color: var(--panel-subtext);
+  color: var(--profile-subtext);
 }
 
 /* Story Viewer */
@@ -1400,6 +1410,7 @@ a {
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
+  filter: var(--profile-logo-image-filter);
 }
 
 .story-viewer__brand-copy {
@@ -1631,8 +1642,8 @@ a {
 }
 
 :root[data-theme="dark"] .profile__story-trigger[data-story-state="viewed"] .profile__story-ring {
-  background: linear-gradient(145deg, #625349, #584a42);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(145deg, #8f6f7a, #80646f);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
 }
 
 :root[data-theme="dark"] .story-viewer__brand-mark {
@@ -1661,13 +1672,15 @@ a {
   width: var(--top-control-height);
   height: var(--top-control-height);
   padding: 0;
-  border: 0;
+  border: 1.5px solid var(--surface-border-soft);
   border-radius: 50%;
-  background-color: var(--button-bg);
-  box-shadow: var(--surface-shadow-soft);
-  color: var(--button-text);
+  background: #fff8fb;
+  box-shadow: none;
+  color: var(--panel-text);
   transition:
+    background 130ms ease,
     background-color 130ms ease,
+    border-color 130ms ease,
     color 130ms ease,
     box-shadow 130ms ease,
     transform 130ms ease;
@@ -1694,7 +1707,9 @@ a {
 }
 
 :root[data-theme="dark"] .theme-toggle {
-  box-shadow: var(--surface-shadow-pressed);
+  background: var(--social-link-bg);
+  color: var(--profile-text);
+  box-shadow: none;
 }
 
 :root[data-theme="dark"] .theme-toggle__icon--sun {
@@ -1747,7 +1762,7 @@ a {
     padding: 0.42rem 0.66rem 0.34rem 0.74rem;
     border: 1px solid var(--surface-border-soft);
     border-radius: 999px;
-    background-color: rgba(255, 252, 243, 0.96);
+    background-color: rgba(255, 248, 251, 0.96);
     color: var(--profile-text);
     font-size: 0.95rem;
     line-height: 0.9;
@@ -1804,13 +1819,14 @@ a {
     min-width: var(--share-rail-button-size);
     height: var(--share-rail-button-size);
     padding: 0;
-    border: 0;
+    border: 1.5px solid var(--surface-border-soft);
     border-radius: 999px;
-    background-color: rgba(244, 236, 220, 0.96);
-    box-shadow: var(--surface-shadow-soft);
-    color: var(--profile-text);
+    background-color: var(--social-link-bg);
+    box-shadow: none;
+    color: var(--panel-text);
     transition:
       background-color 130ms ease,
+      border-color 130ms ease,
       box-shadow 130ms ease,
       transform 130ms ease;
   }
@@ -1847,8 +1863,8 @@ a {
 
   .share-rail__button:hover,
   .share-rail__button:focus-visible {
-    background-color: var(--top-control-bg-hover);
-    box-shadow: var(--top-control-shadow-hover);
+    background-color: #f6eff2;
+    box-shadow: none;
   }
 
   .share-rail__button:active {
@@ -1868,8 +1884,8 @@ a {
   }
 
   .top-bar__share[data-share-menu-open="true"] .action-button--icon-only {
-    background-color: var(--top-control-bg-hover);
-    box-shadow: var(--top-control-shadow-hover);
+    background: linear-gradient(180deg, #fdf6f8 0%, #f7eef1 100%);
+    box-shadow: none;
   }
 
   .top-bar__share[data-share-tooltip-suppressed="true"] .action-button--icon-only[data-tooltip]::after,
@@ -1898,7 +1914,7 @@ a {
     padding: 0.45rem 0.8rem 0.35rem;
     border: 1px solid var(--surface-border-soft);
     border-radius: 999px;
-    background-color: rgba(255, 252, 243, 0.96);
+    background-color: rgba(255, 248, 251, 0.96);
     color: var(--profile-text);
     font-size: 1rem;
     line-height: 0.9;
@@ -2044,7 +2060,7 @@ a {
     padding: 0.45rem 0.72rem 0.35rem 0.8rem;
     border: 1px solid var(--surface-border-soft);
     border-radius: 999px;
-    background-color: rgba(255, 252, 243, 0.96);
+    background-color: rgba(255, 248, 251, 0.96);
     color: var(--profile-text);
     font-size: 1rem;
     line-height: 0.9;
@@ -2082,16 +2098,27 @@ a {
     filter: saturate(1.06) brightness(1.02);
   }
 
-  .profile__story-trigger:hover .profile__logo-frame,
-  .profile__story-trigger:focus-visible .profile__logo-frame {
-    box-shadow: var(--surface-shadow-hover);
-    transform: translateY(-1px);
-  }
+.profile__story-trigger:hover .profile__logo-frame,
+.profile__story-trigger:focus-visible .profile__logo-frame {
+  border-color: var(--profile-logo-ring-hover);
+  background:
+    radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 34%),
+    var(--profile-logo-bg-hover);
+  box-shadow: var(--surface-shadow-hover);
+  transform: translateY(-1px);
+}
+
+.profile__story-trigger:hover .profile__logo,
+.profile__story-trigger:focus-visible .profile__logo,
+.story-viewer__brand-mark:hover img,
+.story-viewer__brand-mark:focus-visible img {
+  filter: var(--profile-logo-image-filter-hover);
+}
 
   .social-links__link:hover,
   .social-links__link:focus-visible {
-    background-color: #efe5d2;
-    box-shadow: var(--surface-shadow-hover);
+    background-color: #f6eff2;
+    box-shadow: none;
   }
 
   .link-card:not(.link-card--disabled):hover,
@@ -2101,18 +2128,18 @@ a {
 
   .link-card--amazon:not(.link-card--disabled):hover,
   .link-card--amazon:not(.link-card--disabled):focus-visible {
-    background: #fffaf4;
+    background: linear-gradient(180deg, #fdf6f8 0%, #f7eef1 100%);
   }
 
   .link-card--etsy:hover,
   .link-card--etsy:focus-visible {
-    background: #fffaf4;
+    background: linear-gradient(180deg, #fdf6f8 0%, #f7eef1 100%);
   }
 
   .theme-toggle:hover,
   .theme-toggle:focus-visible {
-    background-color: var(--top-control-bg-hover);
-    box-shadow: var(--top-control-shadow-hover);
+    background: #f6eff2;
+    box-shadow: none;
   }
 
   .story-viewer__control:hover,
@@ -2131,7 +2158,7 @@ a {
 
   .story-viewer__cta:hover,
   .story-viewer__cta:focus-visible {
-    background: linear-gradient(180deg, #faf2e2 0%, #f6ead6 100%);
+    background: linear-gradient(180deg, #fdf6f8 0%, #f7eef1 100%);
     box-shadow: var(--surface-shadow-hover);
   }
 
@@ -2197,37 +2224,41 @@ a {
 
   .promo-carousel__shop-button--website:not([aria-disabled="true"]):hover,
   .promo-carousel__shop-button--website:not([aria-disabled="true"]):focus-visible {
-    background: #fffaf4;
+    background: linear-gradient(180deg, #fdf6f8 0%, #f7eef1 100%);
   }
 
   .promo-carousel__shop-button--amazon:not([aria-disabled="true"]):hover,
   .promo-carousel__shop-button--amazon:not([aria-disabled="true"]):focus-visible {
-    background: #fffaf4;
+    background: linear-gradient(180deg, #fdf6f8 0%, #f7eef1 100%);
   }
 
   .promo-carousel__shop-button--etsy:not([aria-disabled="true"]):hover,
   .promo-carousel__shop-button--etsy:not([aria-disabled="true"]):focus-visible {
-    background: #fffaf4;
+    background: linear-gradient(180deg, #fdf6f8 0%, #f7eef1 100%);
   }
 
   :root[data-theme="dark"] .social-links__link:hover,
   :root[data-theme="dark"] .social-links__link:focus-visible {
-    background-color: #514239;
+    background-color: #4b4043;
   }
 
   :root[data-theme="dark"] .link-card--amazon:not(.link-card--disabled):hover,
   :root[data-theme="dark"] .link-card--amazon:not(.link-card--disabled):focus-visible {
-    background: #fffaf4;
+    background: linear-gradient(180deg, #56484c 0%, #4a3d41 100%);
   }
 
   :root[data-theme="dark"] .link-card--etsy:hover,
   :root[data-theme="dark"] .link-card--etsy:focus-visible {
-    background: #fffaf4;
+    background: linear-gradient(180deg, #56484c 0%, #4a3d41 100%);
   }
 
   :root[data-theme="dark"] .theme-toggle:hover,
   :root[data-theme="dark"] .theme-toggle:focus-visible {
-    background-color: var(--top-control-bg-hover);
+    background: #4b4043;
+  }
+
+  :root[data-theme="dark"] .top-bar__share[data-share-menu-open="true"] .action-button--icon-only {
+    background: #4b4043;
   }
 
   :root[data-theme="dark"] .story-viewer__control:hover,
@@ -2246,7 +2277,7 @@ a {
 
   :root[data-theme="dark"] .story-viewer__cta:hover,
   :root[data-theme="dark"] .story-viewer__cta:focus-visible {
-    background: linear-gradient(180deg, #655247 0%, #57453c 100%);
+    background: linear-gradient(180deg, #5b4b50 0%, #4f4145 100%);
     box-shadow: var(--surface-shadow-hover);
   }
 
@@ -2257,19 +2288,19 @@ a {
 
   :root[data-theme="dark"] .promo-carousel__shop-button--website:not([aria-disabled="true"]):hover,
   :root[data-theme="dark"] .promo-carousel__shop-button--website:not([aria-disabled="true"]):focus-visible {
-    background: #fffaf4;
+    background: linear-gradient(180deg, #56484c 0%, #4a3d41 100%);
     box-shadow: none;
   }
 
   :root[data-theme="dark"] .promo-carousel__shop-button--amazon:not([aria-disabled="true"]):hover,
   :root[data-theme="dark"] .promo-carousel__shop-button--amazon:not([aria-disabled="true"]):focus-visible {
-    background: #fffaf4;
+    background: linear-gradient(180deg, #56484c 0%, #4a3d41 100%);
     box-shadow: none;
   }
 
   :root[data-theme="dark"] .promo-carousel__shop-button--etsy:not([aria-disabled="true"]):hover,
   :root[data-theme="dark"] .promo-carousel__shop-button--etsy:not([aria-disabled="true"]):focus-visible {
-    background: #fffaf4;
+    background: linear-gradient(180deg, #56484c 0%, #4a3d41 100%);
     box-shadow: none;
   }
 
@@ -2283,7 +2314,7 @@ a {
   :root[data-theme="dark"] .action-button--subscribe[data-tooltip]::after,
   :root[data-theme="dark"] .theme-toggle[data-tooltip]::after {
     border-color: var(--surface-border-soft);
-    background-color: rgba(43, 35, 30, 0.96);
+    background-color: rgba(57, 45, 49, 0.96);
   }
 
   :root[data-theme="dark"] .share-rail__button {
@@ -2293,7 +2324,7 @@ a {
   :root[data-theme="dark"] .share-rail__hint {
     display: inline-flex;
     border-color: var(--surface-border-soft);
-    background-color: rgba(49, 40, 35, 0.96);
+    background-color: rgba(57, 45, 49, 0.96);
     color: var(--profile-text);
   }
 
@@ -2304,7 +2335,7 @@ a {
   :root[data-theme="dark"] .profile__story-desktop-hint {
     color: var(--profile-text);
     border-color: var(--surface-border-soft);
-    background-color: rgba(43, 35, 30, 0.96);
+    background-color: rgba(57, 45, 49, 0.96);
   }
 }
 
@@ -2325,7 +2356,7 @@ a {
     padding: 0.38rem 0.66rem 0.3rem;
     border: 1px solid var(--surface-border-soft);
     border-radius: 999px;
-    background-color: rgba(255, 252, 243, 0.96);
+    background-color: rgba(255, 248, 251, 0.96);
     color: var(--profile-text);
     font-size: 0.9rem;
     line-height: 0.9;
@@ -2344,7 +2375,7 @@ a {
 
   :root[data-theme="dark"] .action-button--icon-only[data-share-state="copied"][data-tooltip]::after {
     border-color: var(--surface-border-soft);
-    background-color: rgba(43, 35, 30, 0.96);
+    background-color: rgba(57, 45, 49, 0.96);
     color: var(--profile-text);
   }
 }
@@ -2366,7 +2397,7 @@ a {
     padding: 0.48rem 1.9rem 0.4rem 0.92rem;
     border: 1px solid var(--surface-border-soft);
     border-radius: 999px;
-    background-color: rgba(255, 252, 243, 0.96);
+    background-color: rgba(255, 248, 251, 0.96);
     color: var(--profile-text);
     font-size: 1rem;
     line-height: 0.9;
@@ -2403,7 +2434,7 @@ a {
 
   :root[data-theme="dark"] .profile__story-mobile-hint {
     border-color: var(--surface-border-soft);
-    background-color: rgba(43, 35, 30, 0.96);
+    background-color: rgba(57, 45, 49, 0.96);
     color: var(--profile-text);
   }
 
@@ -2421,17 +2452,19 @@ a {
   width: fit-content;
   min-height: var(--top-control-height);
   padding: var(--button-padding-top) var(--button-padding-inline) var(--button-padding-bottom);
-  border: 0;
+  border: 1.5px solid var(--surface-border-soft);
   border-radius: var(--button-radius);
-  background-color: var(--button-bg);
+  background: #fff8fb;
   appearance: none;
   -webkit-appearance: none;
-  color: var(--button-text);
+  color: var(--panel-text);
   font-size: 1.12rem;
   line-height: 1;
-  box-shadow: var(--surface-shadow-soft);
+  box-shadow: none;
   transition:
+    background 130ms ease,
     background-color 130ms ease,
+    border-color 130ms ease,
     color 130ms ease,
     box-shadow 130ms ease;
 }
@@ -2477,6 +2510,12 @@ a {
 .action-button:active {
   transform: translateY(1px);
   box-shadow: var(--surface-shadow-pressed);
+}
+
+:root[data-theme="dark"] .action-button {
+  background: var(--social-link-bg);
+  color: var(--profile-text);
+  box-shadow: none;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -2535,8 +2574,15 @@ a {
 
   .action-button:hover,
   .action-button:focus-visible {
-    background-color: var(--top-control-bg-hover);
-    box-shadow: var(--top-control-shadow-hover);
+    background: linear-gradient(180deg, #fdf6f8 0%, #f7eef1 100%);
+    box-shadow: none;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root[data-theme="dark"] .action-button:hover,
+  :root[data-theme="dark"] .action-button:focus-visible {
+    background: #4b4043;
   }
 }
 

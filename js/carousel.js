@@ -344,9 +344,36 @@
       syncControls();
     }
 
-    function cancelGestureHint() {}
+    function isPagerTarget(target) {
+      return target instanceof Element && Boolean(target.closest(".promo-carousel__nav, .promo-carousel__dot"));
+    }
 
-    function dismissGestureHint() {}
+    function prepareDrag(clientX) {
+      suppressClick = false;
+      pointerDragReady = true;
+      dragStartX = clientX;
+      dragOffset = 0;
+    }
+
+    function updateDrag(clientX, capturePointerId = null) {
+      dragOffset = clientX - dragStartX;
+
+      if (!isDragging) {
+        if (Math.abs(dragOffset) < 8) {
+          return false;
+        }
+
+        isDragging = true;
+        suppressClick = true;
+        shell.dataset.dragging = "true";
+        if (capturePointerId !== null) {
+          viewport.setPointerCapture?.(capturePointerId);
+        }
+      }
+
+      syncPosition();
+      return true;
+    }
 
     function clearNavRepeat() {
       if (activeNavButton) {
@@ -355,14 +382,10 @@
       }
     }
 
-    function scheduleGestureHint() {}
-
     function goToNext() {
       if (isAnimating || maxIndex <= 0) {
         return;
       }
-
-      dismissGestureHint();
 
       if (activeIndex === maxIndex) {
         if (!shouldLoop) {
@@ -387,8 +410,6 @@
       if (isAnimating || maxIndex <= 0) {
         return;
       }
-
-      dismissGestureHint();
 
       if (activeIndex === 0) {
         if (!shouldLoop) {
@@ -445,7 +466,6 @@
       const threshold = Math.max(36, stepSize * 0.16);
       suppressClick = Math.abs(dragOffset) > 8;
 
-      dismissGestureHint();
       isDragging = false;
       pointerId = null;
       pointerDragReady = false;
@@ -511,17 +531,12 @@
         return;
       }
 
-      dismissGestureHint();
-      suppressClick = false;
-
-      if (event.target instanceof Element && event.target.closest(".promo-carousel__nav, .promo-carousel__dot")) {
+      if (isPagerTarget(event.target)) {
         return;
       }
 
       pointerId = event.pointerId;
-      pointerDragReady = true;
-      dragStartX = event.clientX;
-      dragOffset = 0;
+      prepareDrag(event.clientX);
     });
 
     viewport.addEventListener(
@@ -531,10 +546,7 @@
           return;
         }
 
-        dismissGestureHint();
-        suppressClick = false;
-
-        if (event.target instanceof Element && event.target.closest(".promo-carousel__nav, .promo-carousel__dot")) {
+        if (isPagerTarget(event.target)) {
           return;
         }
 
@@ -544,9 +556,7 @@
         }
 
         touchId = touch.identifier;
-        pointerDragReady = true;
-        dragStartX = touch.clientX;
-        dragOffset = 0;
+        prepareDrag(touch.clientX);
       },
       { passive: true },
     );
@@ -560,24 +570,11 @@
         return;
       }
 
-      dragOffset = event.clientX - dragStartX;
+      const didUpdate = updateDrag(event.clientX, event.pointerId);
 
-      if (!isDragging) {
-        if (Math.abs(dragOffset) < 8) {
-          return;
-        }
-
-        isDragging = true;
-        suppressClick = true;
-        shell.dataset.dragging = "true";
-        viewport.setPointerCapture?.(event.pointerId);
-      }
-
-      if (event.cancelable && Math.abs(dragOffset) > 4) {
+      if (didUpdate && event.cancelable && Math.abs(dragOffset) > 4) {
         event.preventDefault();
       }
-
-      syncPosition();
     }
 
     function handlePointerRelease(event) {
@@ -598,23 +595,11 @@
         return;
       }
 
-      dragOffset = touch.clientX - dragStartX;
+      const didUpdate = updateDrag(touch.clientX);
 
-      if (!isDragging) {
-        if (Math.abs(dragOffset) < 8) {
-          return;
-        }
-
-        isDragging = true;
-        suppressClick = true;
-        shell.dataset.dragging = "true";
-      }
-
-      if (event.cancelable && Math.abs(dragOffset) > 4) {
+      if (didUpdate && event.cancelable && Math.abs(dragOffset) > 4) {
         event.preventDefault();
       }
-
-      syncPosition();
     }
 
     function handleTouchRelease(event) {
@@ -650,7 +635,6 @@
       }
 
       isAnimating = false;
-      scheduleGestureHint();
     });
 
     track.addEventListener(
@@ -669,7 +653,6 @@
 
     if (typeof ResizeObserver === "function") {
       const resizeObserver = new ResizeObserver(() => {
-        cancelGestureHint();
         const nextVisibleCards = getVisibleCards();
 
         if (nextVisibleCards !== currentVisibleCards) {
@@ -678,12 +661,10 @@
 
         updateMetrics();
         syncPosition(true);
-        scheduleGestureHint();
       });
       resizeObserver.observe(viewport);
     } else {
       window.addEventListener("resize", () => {
-        cancelGestureHint();
         const nextVisibleCards = getVisibleCards();
 
         if (nextVisibleCards !== currentVisibleCards) {
@@ -692,7 +673,6 @@
 
         updateMetrics();
         syncPosition(true);
-        scheduleGestureHint();
       });
     }
 
@@ -706,6 +686,5 @@
     rebuildCarouselStructure();
     updateMetrics();
     syncPosition(true);
-    scheduleGestureHint();
   };
 })();

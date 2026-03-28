@@ -43,6 +43,7 @@
   App.storageKeys = {
     theme: "komfi-theme",
     storyViewed: "komfi-story-viewed-signature-v2",
+    storyHintDismissed: "komfi-story-hint-dismissed-signature-v1",
   };
 
   App.flags = {
