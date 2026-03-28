@@ -179,7 +179,9 @@ function setShareRailHint(text = "Share with your friend 👉") {
     return;
   }
 
-  if (text.endsWith("👉")) {
+  if (text === "Link copied!") {
+    shareRailHint.innerHTML = `<img class="share-rail__hint-status-icon" src="img/icons/success.svg" alt="" aria-hidden="true"><span class="share-rail__hint-text">${text}</span>`;
+  } else if (text.endsWith("👉")) {
     const label = text.slice(0, -2).trim();
     shareRailHint.innerHTML = `<span class="share-rail__hint-text">${label}</span><span class="share-rail__hint-icon">👉</span>`;
   } else {

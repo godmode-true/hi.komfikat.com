@@ -1029,7 +1029,7 @@ a {
   .top-bar__share {
     --share-rail-button-size: 1.64rem;
     --share-rail-gap: 0.35rem;
-    --share-rail-count: 4;
+    --share-rail-count: 3;
     --share-rail-offset: 0.45rem;
     --share-rail-width: calc(
       (var(--share-rail-button-size) * var(--share-rail-count)) +
@@ -1079,10 +1079,18 @@ a {
     display: inline-block;
   }
 
+  .share-rail__hint-status-icon {
+    width: 0.82rem;
+    height: 0.82rem;
+    display: inline-block;
+    flex: 0 0 auto;
+    transform: translateY(-0.04rem);
+  }
+
   .share-rail__hint-icon {
     margin-left: 0;
     margin-right: -0.08em;
-    font-size: 0.5rem;
+    font-size: 0.62rem;
     line-height: 1;
     transform: translateY(-0.02rem);
   }
@@ -1128,6 +1136,14 @@ a {
 
   .share-rail__button--copy .share-rail__copy-sheet {
     fill: currentColor;
+  }
+
+  .share-rail__button--copy .share-rail__copy-sheet-back {
+    fill: currentColor;
+    opacity: 1;
+    transform: translate(-1px, -1px);
+    transform-box: fill-box;
+    transform-origin: center;
   }
 
   .share-rail__button--copy .share-rail__copy-fold {
@@ -1360,7 +1376,7 @@ a {
   .profile__story-desktop-hint-icon {
     display: inline-block;
     margin-right: -0.08em;
-    font-size: 0.48rem;
+    font-size: 0.62rem;
     line-height: 1;
     transform: translateY(0.02rem);
   }
@@ -1589,7 +1605,7 @@ a {
     position: absolute;
     top: 50%;
     right: 0.68rem;
-    font-size: 0.5rem;
+    font-size: 0.62rem;
     line-height: 1;
     transform: translateY(-42%);
   }
@@ -1737,13 +1753,17 @@ a {
   box-shadow: var(--surface-shadow-pressed);
 }
 
+@media (max-width: 48rem) {
+  .top-bar__share .share-rail__hint,
+  .top-bar__share .share-rail__hover-bridge,
+  .top-bar__share .action-button--icon-only[data-tooltip]::after {
+    display: none !important;
+  }
+}
+
 @media (max-width: 30rem) {
   .profile {
     padding-top: clamp(1.75rem, 9vw, 2.25rem);
-  }
-
-  .top-bar__share .action-button--icon-only[data-tooltip]::after {
-    display: none !important;
   }
 
   .story-viewer {
