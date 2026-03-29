@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-default-preset="rose-cream">
+<html lang="en" data-default-preset="default-rose">
   <head>
     <meta charset="utf-8" />
     <meta
@@ -25,20 +25,19 @@
 
     <meta name="theme-color" content="#fffcfe" />
     <!-- Bump this cache token whenever theme/style/script visuals change, so browsers do not mix old and new theme assets. -->
-    <link rel="icon" href="favicon.ico?v=20260329b" sizes="any" />
-    <link rel="shortcut icon" href="favicon.ico?v=20260329b" />
-    <link rel="icon" href="img/icons/favicon-32x32.png?v=20260329b" sizes="32x32" type="image/png" />
-    <link rel="icon" href="img/icons/favicon-16x16.png?v=20260329b" sizes="16x16" type="image/png" />
-    <link rel="apple-touch-icon" href="img/icons/apple-touch-icon.png?v=20260329b" sizes="180x180" />
-    <link rel="preload" as="image" href="img/logo.webp?v=20260329b" type="image/webp" fetchpriority="high" />
-    <script src="themes/theme-presets.js?v=20260329b"></script>
+    <link rel="icon" href="favicon.ico?v=20260329c" sizes="any" />
+    <link rel="shortcut icon" href="favicon.ico?v=20260329c" />
+    <link rel="icon" href="img/icons/favicon-32x32.png?v=20260329c" sizes="32x32" type="image/png" />
+    <link rel="icon" href="img/icons/favicon-16x16.png?v=20260329c" sizes="16x16" type="image/png" />
+    <link rel="apple-touch-icon" href="img/icons/apple-touch-icon.png?v=20260329c" sizes="180x180" />
+    <link rel="preload" as="image" href="img/logo.webp?v=20260329c" type="image/webp" fetchpriority="high" />
+    <script src="themes/theme-presets.js?v=20260329c"></script>
     <script>
       try {
         const root = document.documentElement;
         const savedTheme = localStorage.getItem("komfi-theme");
         const initialTheme = savedTheme === "dark" ? "dark" : "light";
-        // Keep this in sync with theme-presets.js defaultPreset.
-        const defaultPreset = root.dataset.defaultPreset || "rose-cream";
+        const defaultPreset = window.KomfiKatThemeConfig?.defaultPreset || root.dataset.defaultPreset || "default-rose";
         root.dataset.theme = initialTheme;
         root.dataset.themePreset = defaultPreset;
       } catch {}
@@ -50,24 +49,24 @@
       as="style"
       href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap"
     />
-    <link rel="preload" href="fonts/comic-story.ttf?v=20260329b" as="font" type="font/ttf" crossorigin />
+    <link rel="preload" href="fonts/comic-story.ttf?v=20260329c" as="font" type="font/ttf" crossorigin />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap"
       media="print"
-      onload="this.media='all'"
+      onload="this.media = 'all'"
     />
     <noscript>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap" />
     </noscript>
 
-    <link rel="stylesheet" href="css/style.css?v=20260329b" />
-    <script src="js/main.js?v=20260329b" defer></script>
-    <script src="js/theme.js?v=20260329b" defer></script>
-    <script src="js/share.js?v=20260329b" defer></script>
-    <script src="js/stories.js?v=20260329b" defer></script>
-    <script src="js/carousel-manifest.js?v=20260329b" defer></script>
-    <script src="js/carousel.js?v=20260329b" defer></script>
+    <link rel="stylesheet" href="css/style.css?v=20260329c" />
+    <script src="js/main.js?v=20260329c" defer></script>
+    <script src="js/theme.js?v=20260329c" defer></script>
+    <script src="js/share.js?v=20260329c" defer></script>
+    <script src="js/stories.js?v=20260329c" defer></script>
+    <script src="js/carousel-manifest.js?v=20260329c" defer></script>
+    <script src="js/carousel.js?v=20260329c" defer></script>
   </head>
 
   <body>

@@ -234,9 +234,9 @@
   }
 
   const presets = {
-    "rose-cream": createThemePreset({
-      id: "rose-cream",
-      label: "Rose Cream",
+    "default-rose": createThemePreset({
+      id: "default-rose",
+      label: "Default Rose",
       light: {
         pageBg: "#fffcfe",
         surface: "#fff8fb",
@@ -368,14 +368,12 @@
   };
 
   window.KomfiKatThemeConfig = {
-    defaultPreset: "rose-cream",
+    defaultPreset: "default-rose",
     allowStoredPresetOverride: false,
   };
 
   window.KomfiKatThemeTokenKeys = Array.from(
-    new Set(
-      Object.values(presets).flatMap((preset) => [...Object.keys(preset.light), ...Object.keys(preset.dark)]),
-    ),
+    new Set(Object.values(presets).flatMap((preset) => [...Object.keys(preset.light), ...Object.keys(preset.dark)])),
   );
   window.KomfiKatThemePresets = presets;
   ensureThemePresetStyles(presets);
