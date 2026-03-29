@@ -2,7 +2,7 @@ param(
   [string]$ManifestPath = "js/carousel-manifest.js",
   [string]$CarouselDir = "img/carousel",
   [int]$WebpQuality = 92,
-  [int]$CarouselDesktopDimension = 1200,
+  [int]$CarouselDesktopDimension = 1152,
   [int]$CarouselMobileDimension = 768,
   [switch]$RebuildWebp
 )
@@ -190,11 +190,11 @@ function Update-CarouselManifest {
   }
 
   $slideSourceFiles = Get-ChildItem -LiteralPath $DirectoryPath -File |
-    Where-Object { $_.BaseName -match '^\d+(?:-(768|1200))?$' -and $_.Extension -match '^\.(png|jpe?g|webp|avif)$' }
+    Where-Object { $_.BaseName -match '^\d+(?:-\d+)?$' -and $_.Extension -match '^\.(png|jpe?g|webp|avif)$' }
 
   $slideNumbers = $slideSourceFiles |
     ForEach-Object {
-      if ($_.BaseName -match '^(?<number>\d+)(?:-(768|1200))?$') {
+      if ($_.BaseName -match '^(?<number>\d+)(?:-\d+)?$') {
         [int]$Matches["number"]
       }
     } |
@@ -202,19 +202,20 @@ function Update-CarouselManifest {
 
   $slideFiles = foreach ($slideNumber in $slideNumbers) {
     $slideSourceFiles |
-      Where-Object { $_.BaseName -match "^$slideNumber(?:-(768|1200))?$" } |
+      Where-Object { $_.BaseName -match "^$slideNumber(?:-(?:$CarouselMobileDimension|$CarouselDesktopDimension))?$" } |
+      Where-Object { $_.BaseName -match "^$slideNumber(?:-\\d+)?$" } |
       Sort-Object { $extensionPriority[$_.Extension.ToLowerInvariant()] } |
       Select-Object -First 1
   }
 
   $lines = foreach ($slideNumber in $slideNumbers) {
     $file = $slideFiles | Where-Object {
-      $_ -and $_.BaseName -match "^$slideNumber(?:-(768|1200))?$"
+      $_ -and $_.BaseName -match "^$slideNumber(?:-\d+)?$"
     } | Select-Object -First 1
 
-    $desktopRelativeSrc = "img/carousel/$slideNumber-1200.webp"
-    $mobileRelativeSrc = "img/carousel/$slideNumber-768.webp"
-    $relativeSrc = if (Test-Path -LiteralPath (Join-Path $DirectoryPath "$slideNumber-1200.webp")) {
+    $desktopRelativeSrc = "img/carousel/$slideNumber-$CarouselDesktopDimension.webp"
+    $mobileRelativeSrc = "img/carousel/$slideNumber-$CarouselMobileDimension.webp"
+    $relativeSrc = if (Test-Path -LiteralPath (Join-Path $DirectoryPath "$slideNumber-$CarouselDesktopDimension.webp")) {
       $desktopRelativeSrc
     } else {
       "img/carousel/$($file.Name)"
@@ -239,10 +240,10 @@ function Update-CarouselManifest {
       $alt = "Instagram carousel image $slideNumber"
     }
 
-    if ((Test-Path -LiteralPath (Join-Path $DirectoryPath "$slideNumber-1200.webp")) -and (Test-Path -LiteralPath (Join-Path $DirectoryPath "$slideNumber-768.webp"))) {
-      '      { src: "' + (Escape-JsString $desktopRelativeSrc) + '", srcset: "' + (Escape-JsString "$mobileRelativeSrc 768w, $desktopRelativeSrc 1200w") + '", sizes: "(max-width: 30rem) 91vw, 575px", width: 1200, height: 1200, alt: "' + (Escape-JsString $alt) + '" },'
+    if ((Test-Path -LiteralPath (Join-Path $DirectoryPath "$slideNumber-$CarouselDesktopDimension.webp")) -and (Test-Path -LiteralPath (Join-Path $DirectoryPath "$slideNumber-$CarouselMobileDimension.webp"))) {
+      '      { src: "' + (Escape-JsString $desktopRelativeSrc) + '", srcset: "' + (Escape-JsString "$mobileRelativeSrc ${CarouselMobileDimension}w, $desktopRelativeSrc ${CarouselDesktopDimension}w") + '", sizes: "(max-width: 30rem) 91vw, 575px", width: ' + $CarouselDesktopDimension + ', height: ' + $CarouselDesktopDimension + ', alt: "' + (Escape-JsString $alt) + '" },'
     } else {
-      '      { src: "' + (Escape-JsString $relativeSrc) + '", width: 1200, height: 1200, alt: "' + (Escape-JsString $alt) + '" },'
+      '      { src: "' + (Escape-JsString $relativeSrc) + '", width: ' + $CarouselDesktopDimension + ', height: ' + $CarouselDesktopDimension + ', alt: "' + (Escape-JsString $alt) + '" },'
     }
   }
 
@@ -281,7 +282,7 @@ Write-Host "Updating site images..."
 $didConvertLogo = Convert-ToWebp `
   -SourcePath $logoSource `
   -OutputPath $logoWebp `
-  -ScaleFilter "scale='min(1200,iw)':'min(1200,ih)':force_original_aspect_ratio=decrease" `
+  -ScaleFilter "scale='min(1152,iw)':'min(1152,ih)':force_original_aspect_ratio=decrease" `
   -ForceRebuild:$RebuildWebp
 
 if ($didConvertLogo) {
@@ -315,8 +316,8 @@ $carouselSources = Get-ChildItem -LiteralPath $resolvedCarouselDir -File |
   Sort-Object { [int]$_.BaseName }
 
 foreach ($file in $carouselSources) {
-  $desktopOutputPath = Join-Path $resolvedCarouselDir ($file.BaseName + "-1200.webp")
-  $mobileOutputPath = Join-Path $resolvedCarouselDir ($file.BaseName + "-768.webp")
+  $desktopOutputPath = Join-Path $resolvedCarouselDir ($file.BaseName + "-$CarouselDesktopDimension.webp")
+  $mobileOutputPath = Join-Path $resolvedCarouselDir ($file.BaseName + "-$CarouselMobileDimension.webp")
 
   $didConvertDesktop = Convert-ToWebp `
     -SourcePath $file.FullName `
@@ -333,11 +334,11 @@ foreach ($file in $carouselSources) {
     -ForceRebuild:$RebuildWebp
 
   if ($didConvertDesktop) {
-    Write-Host "Created or refreshed img/carousel/$($file.BaseName)-1200.webp"
+    Write-Host "Created or refreshed img/carousel/$($file.BaseName)-$CarouselDesktopDimension.webp"
   }
 
   if ($didConvertMobile) {
-    Write-Host "Created or refreshed img/carousel/$($file.BaseName)-768.webp"
+    Write-Host "Created or refreshed img/carousel/$($file.BaseName)-$CarouselMobileDimension.webp"
   }
 }
 
@@ -353,7 +354,7 @@ Write-Host ""
 Write-Host "Optimized automatically:"
 Write-Host " - img/logo.png -> img/logo.webp (max 1200 px)"
 Write-Host " - img/stories/*.png/jpg -> .webp (max 1080x1350)"
-Write-Host " - img/carousel/*.png/jpg -> responsive WebP files (768 px and 1200 px)"
+Write-Host " - img/carousel/*.png/jpg -> responsive WebP files ($CarouselMobileDimension px and $CarouselDesktopDimension px)"
 Write-Host ""
 Write-Host "Kept as original formats:"
 Write-Host " - SVG icons"

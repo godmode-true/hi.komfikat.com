@@ -1,6 +1,6 @@
 @font-face {
   font-family: "Comic Story";
-  src: url("../fonts/comic-story.ttf") format("truetype");
+  src: url("../fonts/comic-story.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -2207,14 +2207,8 @@ a {
   .story-viewer__control:focus-visible,
   .story-viewer__close:hover,
   .story-viewer__close:focus-visible {
-    box-shadow: var(--top-control-shadow-hover);
-  }
-
-  .story-viewer__control:hover,
-  .story-viewer__control:focus-visible,
-  .story-viewer__close:hover,
-  .story-viewer__close:focus-visible {
     background-color: var(--top-control-bg-hover);
+    box-shadow: var(--top-control-shadow-hover);
   }
 
   .story-viewer__cta:hover,
@@ -2326,14 +2320,8 @@ a {
   :root[data-theme="dark"] .story-viewer__control:focus-visible,
   :root[data-theme="dark"] .story-viewer__close:hover,
   :root[data-theme="dark"] .story-viewer__close:focus-visible {
-    box-shadow: var(--top-control-shadow-hover);
-  }
-
-  :root[data-theme="dark"] .story-viewer__control:hover,
-  :root[data-theme="dark"] .story-viewer__control:focus-visible,
-  :root[data-theme="dark"] .story-viewer__close:hover,
-  :root[data-theme="dark"] .story-viewer__close:focus-visible {
     background-color: var(--top-control-bg-hover);
+    box-shadow: var(--top-control-shadow-hover);
   }
 
   :root[data-theme="dark"] .story-viewer__cta:hover,
@@ -2369,17 +2357,8 @@ a {
   :root[data-theme="dark"] .action-button--subscribe[data-tooltip]::after,
   :root[data-theme="dark"] .theme-toggle[data-tooltip]::after {
     color: var(--profile-text);
-  }
-
-  :root[data-theme="dark"] .action-button--icon-only[data-tooltip]::after,
-  :root[data-theme="dark"] .action-button--subscribe[data-tooltip]::after,
-  :root[data-theme="dark"] .theme-toggle[data-tooltip]::after {
     border-color: var(--surface-border-soft);
     background-color: var(--hint-surface-dark);
-  }
-
-  :root[data-theme="dark"] .share-rail__button {
-    background-color: rgba(60, 49, 43, 0.96);
   }
 
   :root[data-theme="dark"] .share-rail__hint {
@@ -2390,6 +2369,7 @@ a {
   }
 
   :root[data-theme="dark"] .share-rail__button {
+    background-color: rgba(60, 49, 43, 0.96);
     color: var(--profile-text);
   }
 
