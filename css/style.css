@@ -2445,7 +2445,7 @@ a {
 
 @media (hover: none), (pointer: coarse) {
   .profile__story-mobile-hint {
-    display: inline-flex;
+    display: none;
     align-items: center;
     justify-content: center;
     align-self: center;
@@ -2487,8 +2487,13 @@ a {
   }
 
   .profile__story-mobile-hint[data-story-hint="visible"] {
+    display: inline-flex;
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+
+  .profile__story-mobile-hint[data-story-hint="closing"] {
+    display: inline-flex;
   }
 
   :root[data-theme="dark"] .profile__story-mobile-hint {
@@ -2751,12 +2756,7 @@ a {
   }
 
   .profile__story-trigger {
-    margin-top: 0.2rem;
-  }
-
-  .profile__story-trigger[data-story-state="viewed"],
-  .profile__story-trigger[data-story-hint-state="dismissed"] {
-    margin-top: -0.16rem;
+    margin-top: 0;
   }
 
   .story-viewer__surface {
