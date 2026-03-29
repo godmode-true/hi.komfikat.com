@@ -25,7 +25,10 @@ window.KomfiKatCarouselManifest = {
     },
   ],
 
-  // Slide files are synced by .\scripts\sync-carousel-manifest.ps1
+  // Main image pipeline: run .\scripts\update-site-images.ps1 after dropping new source PNG/JPG files into image folders.
+  // Recommended source size for square carousel art: about 1400x1400 px.
+  // That is enough for this layout on high-DPI screens without the weight of oversized 2500+ px exports.
+  // You can keep dropping in PNGs/JPGs; the script will downscale larger files to max 1400 px and prefer lighter WebP automatically.
   // This avoids runtime probing and lets the carousel render immediately on mobile.
   slides: {
     files: [

@@ -13,6 +13,8 @@
   };
 
   // Recommended story artwork size: 1080 x 1350 px.
+  // For raster story art, drop PNG/JPG files into img/stories and run .\scripts\update-site-images.ps1.
+  // That script will generate smaller WebP versions automatically and update js/stories.js to prefer them.
   // Use publishedAt in ISO format: "2026-03-27".
   // It will render as: "Mar 27, 2026".
   // Month abbreviations: Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec.
