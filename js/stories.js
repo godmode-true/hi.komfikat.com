@@ -72,6 +72,8 @@
   let storyNavHoldTriggered = false;
   let activeStoryNavTarget = null;
   let storyHintCleanupTimeout = 0;
+  let storyHintShowTimeout = 0;
+  let storyCloseTimeout = 0;
 
   function getSeenStorySignature() {
     return helpers.readStorageValue(storageKeys.storyViewed);
@@ -94,6 +96,7 @@
       return;
     }
 
+    window.clearTimeout(storyHintShowTimeout);
     window.clearTimeout(storyHintCleanupTimeout);
 
     if (!dom.storyMobileHint.dataset.storyHint) {
@@ -118,7 +121,10 @@
     }
 
     window.clearTimeout(storyHintCleanupTimeout);
-    dom.storyMobileHint.dataset.storyHint = "visible";
+    window.clearTimeout(storyHintShowTimeout);
+    storyHintShowTimeout = window.setTimeout(() => {
+      dom.storyMobileHint.dataset.storyHint = "visible";
+    }, 200);
   }
 
   function dismissCurrentStoryHint() {
@@ -278,6 +284,8 @@
 
   function resetStorySessionState() {
     clearStoryNavHoldTimer();
+    window.clearTimeout(storyHintShowTimeout);
+    window.clearTimeout(storyCloseTimeout);
     storyNavHoldTriggered = false;
     activeStoryNavTarget = null;
     stopStoryTimer();
@@ -286,7 +294,11 @@
     isStoryManuallyPaused = false;
     storyElapsedBeforePause = 0;
     syncPlaybackToggle();
-    document.body.classList.remove("story-viewer-is-open");
+    document.body.classList.add("story-viewer-is-closing");
+    storyCloseTimeout = window.setTimeout(() => {
+      document.body.classList.remove("story-viewer-is-open");
+      document.body.classList.remove("story-viewer-is-closing");
+    }, 240);
   }
 
   function closeStories() {
@@ -364,6 +376,8 @@
     isStoryManuallyPaused = false;
     syncPlaybackToggle();
     renderStory(startIndex);
+    window.clearTimeout(storyCloseTimeout);
+    document.body.classList.remove("story-viewer-is-closing");
     document.body.classList.add("story-viewer-is-open");
     dom.storyViewer.showModal();
     startStoryTimer();
