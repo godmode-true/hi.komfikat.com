@@ -204,6 +204,35 @@
     };
   }
 
+  function serializeThemeTokens(tokens) {
+    return Object.entries(tokens)
+      .map(([token, value]) => `  ${token}: ${value};`)
+      .join("\n");
+  }
+
+  function ensureThemePresetStyles(presets) {
+    const styleId = "komfi-theme-presets";
+    const existingStyle = document.getElementById(styleId);
+    const rules = Object.values(presets)
+      .flatMap((preset) => {
+        return [
+          `:root[data-theme="light"][data-theme-preset="${preset.id}"] {\n${serializeThemeTokens(preset.light)}\n}`,
+          `:root[data-theme="dark"][data-theme-preset="${preset.id}"] {\n${serializeThemeTokens(preset.dark)}\n}`,
+        ];
+      })
+      .join("\n\n");
+
+    if (existingStyle) {
+      existingStyle.textContent = rules;
+      return;
+    }
+
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.textContent = rules;
+    document.head.append(style);
+  }
+
   const presets = {
     "rose-cream": createThemePreset({
       id: "rose-cream",
@@ -343,5 +372,11 @@
     allowStoredPresetOverride: false,
   };
 
+  window.KomfiKatThemeTokenKeys = Array.from(
+    new Set(
+      Object.values(presets).flatMap((preset) => [...Object.keys(preset.light), ...Object.keys(preset.dark)]),
+    ),
+  );
   window.KomfiKatThemePresets = presets;
+  ensureThemePresetStyles(presets);
 })();

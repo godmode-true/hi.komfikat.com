@@ -7,7 +7,9 @@
 
   const { dom, helpers, storageKeys } = App;
   const themePresets = window.KomfiKatThemePresets || {};
-  const defaultPresetName = window.KomfiKatThemeConfig?.defaultPreset || "rose-cream";
+  const managedThemeTokenKeys = window.KomfiKatThemeTokenKeys || [];
+  const htmlDefaultPresetName = dom.root.dataset.defaultPreset || dom.root.dataset.themePreset || "rose-cream";
+  const defaultPresetName = htmlDefaultPresetName || window.KomfiKatThemeConfig?.defaultPreset || "rose-cream";
   const allowStoredPresetOverride = window.KomfiKatThemeConfig?.allowStoredPresetOverride === true;
 
   function updateThemeColor() {
@@ -42,6 +44,12 @@
     return resolvePresetName(savedPreset || defaultPresetName);
   }
 
+  function clearManagedTokenOverrides() {
+    managedThemeTokenKeys.forEach((token) => {
+      dom.root.style.removeProperty(token);
+    });
+  }
+
   function applyPresetTokens(theme, presetName) {
     const resolvedTheme = theme === "dark" ? "dark" : "light";
     const resolvedPresetName = resolvePresetName(presetName);
@@ -52,10 +60,8 @@
       return resolvedPresetName;
     }
 
-    Object.entries(tokens).forEach(([token, value]) => {
-      dom.root.style.setProperty(token, value);
-    });
-
+    clearManagedTokenOverrides();
+    dom.root.dataset.theme = resolvedTheme;
     dom.root.dataset.themePreset = resolvedPresetName;
     return resolvedPresetName;
   }
@@ -76,7 +82,6 @@
     const resolvedTheme = theme === "dark" ? "dark" : "light";
     const presetName = getStoredPresetName();
 
-    dom.root.dataset.theme = resolvedTheme;
     helpers.writeStorageValue(storageKeys.theme, resolvedTheme);
     applyPresetTokens(resolvedTheme, presetName);
     syncThemeToggle(resolvedTheme);
@@ -120,8 +125,8 @@
       helpers.removeStorageValue(storageKeys.themePreset);
     }
 
+    clearManagedTokenOverrides();
     applyPresetTokens(initialTheme, initialPreset);
-    dom.root.dataset.theme = initialTheme;
     syncThemeToggle(initialTheme);
     updateThemeColor();
 
