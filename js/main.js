@@ -105,6 +105,11 @@
     return hasCoarsePointer || hasTouchPoints || !isDesktopPointerDevice();
   }
 
+  function isDevPreviewHost() {
+    const host = window.location.hostname || "";
+    return host === "localhost" || host === "127.0.0.1" || host.startsWith("192.168.");
+  }
+
   function createShareHintText(text) {
     const textElement = document.createElement("span");
     textElement.className = "share-rail__hint-text";
@@ -185,6 +190,7 @@
     removeStorageValue,
     isDesktopPointerDevice,
     isTouchLikeDevice,
+    isDevPreviewHost,
     createShareHintText,
     createShareHintIcon,
     createShareHintStatusIcon,
@@ -193,6 +199,12 @@
   };
 
   document.addEventListener("DOMContentLoaded", () => {
+    if (App.helpers.isDevPreviewHost()) {
+      App.helpers.removeStorageValue(App.storageKeys.storyViewed);
+      App.helpers.removeStorageValue(App.storageKeys.storyHintDismissed);
+      App.dom.root.dataset.devStoryReset = "true";
+    }
+
     [App.dom.storyTrigger, App.dom.profileLogo].forEach((element) => {
       if (!element) {
         return;
