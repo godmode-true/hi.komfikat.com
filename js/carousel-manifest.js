@@ -26,16 +26,16 @@ window.KomfiKatCarouselManifest = {
   ],
 
   // Main image pipeline: run .\scripts\update-site-images.ps1 after dropping new source PNG/JPG files into image folders.
-  // Recommended source size for square carousel art: about 1400x1400 px.
-  // That is enough for this layout on high-DPI screens without the weight of oversized 2500+ px exports.
-  // You can keep dropping in PNGs/JPGs; the script will downscale larger files to max 1400 px and prefer lighter WebP automatically.
-  // This avoids runtime probing and lets the carousel render immediately on mobile.
+  // Recommended source size for square carousel art: about 1200x1200 px.
+  // That is enough for this layout on high-DPI screens without shipping oversized 2500+ px exports to mobile.
+  // You can keep dropping in PNGs/JPGs; the script will generate 768w and 1200w WebP variants automatically.
+  // The carousel uses srcset so phones get the smaller file and desktop still gets the sharper version.
   slides: {
     files: [
-      { src: "img/carousel/1.webp", alt: "Hobby Girl cover" },
-      { src: "img/carousel/2.webp", alt: "Instagram carousel image 2" },
-      { src: "img/carousel/3.webp", alt: "Instagram carousel image 3" },
-      { src: "img/carousel/4.webp", alt: "Instagram carousel image 4" },
+      { src: "img/carousel/1-1200.webp", srcset: "img/carousel/1-768.webp 768w, img/carousel/1-1200.webp 1200w", sizes: "(max-width: 30rem) 91vw, 575px", width: 1200, height: 1200, alt: "Hobby Girl cover" },
+      { src: "img/carousel/2-1200.webp", srcset: "img/carousel/2-768.webp 768w, img/carousel/2-1200.webp 1200w", sizes: "(max-width: 30rem) 91vw, 575px", width: 1200, height: 1200, alt: "Instagram carousel image 2" },
+      { src: "img/carousel/3-1200.webp", srcset: "img/carousel/3-768.webp 768w, img/carousel/3-1200.webp 1200w", sizes: "(max-width: 30rem) 91vw, 575px", width: 1200, height: 1200, alt: "Instagram carousel image 3" },
+      { src: "img/carousel/4-1200.webp", srcset: "img/carousel/4-768.webp 768w, img/carousel/4-1200.webp 1200w", sizes: "(max-width: 30rem) 91vw, 575px", width: 1200, height: 1200, alt: "Instagram carousel image 4" },
     ],
   },
 };

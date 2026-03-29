@@ -2754,6 +2754,11 @@ a {
     margin-top: 0.2rem;
   }
 
+  .profile__story-trigger[data-story-state="viewed"],
+  .profile__story-trigger[data-story-hint-state="dismissed"] {
+    margin-top: -0.16rem;
+  }
+
   .story-viewer__surface {
     width: min(100%, var(--story-viewer-shell-width));
     height: var(--story-viewer-shell-height);
