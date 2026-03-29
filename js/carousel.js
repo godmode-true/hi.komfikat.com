@@ -231,16 +231,10 @@
     }
 
     card.setAttribute("aria-label", item.alt || `Carousel preview ${index + 1}`);
+    card.dataset.imageState = "loading";
 
     const image = document.createElement("img");
     image.className = "promo-carousel__image";
-    image.src = item.image;
-    if (item.srcset) {
-      image.srcset = item.srcset;
-    }
-    if (item.sizes) {
-      image.sizes = item.sizes;
-    }
     image.alt = item.alt || "";
     image.width = item.width || 1152;
     image.height = item.height || 1152;
@@ -248,6 +242,53 @@
     image.decoding = "async";
     image.fetchPriority = item.priority ? "high" : "auto";
     image.draggable = false;
+
+    let imageRevealed = false;
+
+    const revealImage = () => {
+      if (imageRevealed) {
+        return;
+      }
+
+      imageRevealed = true;
+
+      const commitReveal = () => {
+        card.dataset.imageState = "ready";
+        image.classList.add("promo-carousel__image--ready");
+      };
+
+      if (typeof image.decode === "function") {
+        image.decode().catch(() => {}).finally(() => {
+          window.requestAnimationFrame(commitReveal);
+        });
+        return;
+      }
+
+      window.requestAnimationFrame(commitReveal);
+    };
+
+    image.addEventListener("load", revealImage, { once: true });
+    image.addEventListener(
+      "error",
+      () => {
+        card.dataset.imageState = "ready";
+        image.classList.add("promo-carousel__image--ready");
+      },
+      { once: true },
+    );
+
+    if (item.srcset) {
+      image.srcset = item.srcset;
+    }
+    if (item.sizes) {
+      image.sizes = item.sizes;
+    }
+    image.src = item.image;
+
+    if (image.complete && image.naturalWidth > 0) {
+      revealImage();
+    }
+
     card.append(image);
 
     return card;

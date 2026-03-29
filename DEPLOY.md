@@ -18,6 +18,11 @@ The production workflow now also runs the image pipeline automatically before bu
 - it updates the carousel manifest
 - it keeps production from accidentally shipping raw oversized `png/jpg` files
 
+The build now also runs the font pipeline automatically before build:
+- it scans [fonts](/c:/Users/vladi/Desktop/github-projects/hi.komfikat.com/fonts) for `*.ttf`
+- it converts them to matching `*.woff2`
+- it lets production keep using compressed web fonts without manual conversion
+
 That means for deployment you can just:
 - add images to the source folders in the repo
 - push to `main`
@@ -40,7 +45,7 @@ If you want to build locally before pushing:
 npm run build
 ```
 
-`npm run build` now also runs `update-site-images.ps1` automatically before building `dist`.
+`npm run build` now also runs the font and image pipelines automatically before building `dist`.
 
 or run [build-production.cmd](/c:/Users/vladi/Desktop/github-projects/hi.komfikat.com/scripts/build-production.cmd).
 
