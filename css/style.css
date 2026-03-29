@@ -2377,6 +2377,33 @@ a {
   }
 }
 
+@media (hover: hover) and (pointer: fine) and (max-width: 72rem) {
+  .top-bar {
+    gap: 0.55rem;
+  }
+
+  .top-bar__actions {
+    gap: 0.35rem;
+  }
+
+  .top-bar__share {
+    --share-rail-button-size: 1.52rem;
+    --share-rail-gap: 0.3rem;
+    --share-rail-offset: 0.36rem;
+  }
+
+  .share-rail__hint {
+    gap: 0.18rem;
+    padding: 0.36rem 0.56rem 0.3rem 0.64rem;
+    font-size: 0.86rem;
+    letter-spacing: 0.02em;
+  }
+
+  .share-rail__hint-icon {
+    font-size: 0.56rem;
+  }
+}
+
 /* Touch and Mobile Share / Hint Behavior */
 @media (hover: none), (pointer: coarse) {
   .share-rail {
@@ -2653,12 +2680,6 @@ a {
 
 /* Tablet compaction */
 @media (max-width: 48rem) {
-  .top-bar__share .share-rail__hint,
-  .top-bar__share .share-rail__hover-bridge,
-  .top-bar__share .action-button--icon-only[data-tooltip]::after {
-    display: none !important;
-  }
-
   .promo-carousel__shell {
     --promo-shell-pad-top: 0.86rem;
     --promo-shell-pad-inline: 0.92rem;
