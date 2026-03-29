@@ -29,6 +29,7 @@
     <link rel="icon" href="img/icons/favicon-32x32.png?v=2" sizes="32x32" type="image/png" />
     <link rel="icon" href="img/icons/favicon-16x16.png?v=2" sizes="16x16" type="image/png" />
     <link rel="apple-touch-icon" href="img/icons/apple-touch-icon.png" sizes="180x180" />
+    <link rel="preload" as="image" href="img/logo.webp" type="image/webp" fetchpriority="high" />
     <script>
       try {
         const savedTheme = localStorage.getItem("komfi-theme");
@@ -45,7 +46,15 @@
       href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap"
     />
     <link rel="preload" href="fonts/comic-story.ttf" as="font" type="font/ttf" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap" />
+    </noscript>
 
     <link rel="stylesheet" href="css/style.css" />
     <script src="js/main.js" defer></script>
@@ -248,7 +257,16 @@
             <span class="profile__story-ring" aria-hidden="true">
               <span class="profile__story-core">
                 <span class="profile__logo-frame">
-                  <img class="profile__logo" src="img/logo.webp" alt="" draggable="false" />
+                  <img
+                    class="profile__logo"
+                    src="img/logo.webp"
+                    alt=""
+                    width="1200"
+                    height="1200"
+                    decoding="async"
+                    fetchpriority="high"
+                    draggable="false"
+                  />
                 </span>
               </span>
             </span>
@@ -422,7 +440,14 @@
                 aria-label="Shop on Etsy for digital coloring books"
               >
                 <span class="link-card__badge" aria-hidden="true">
-                  <img class="link-card__brand-icon link-card__brand-icon--etsy" src="img/icons/etsy.svg" alt="" />
+                  <img
+                    class="link-card__brand-icon link-card__brand-icon--etsy"
+                    src="img/icons/etsy.svg"
+                    alt=""
+                    width="24"
+                    height="24"
+                    decoding="async"
+                  />
                 </span>
                 <span class="link-card__content">
                   <span class="link-card__title">Etsy Shop</span>
@@ -438,7 +463,14 @@
                 aria-disabled="true"
               >
                 <span class="link-card__badge" aria-hidden="true">
-                  <img class="link-card__brand-icon link-card__brand-icon--amazon" src="img/icons/amazon.svg" alt="" />
+                  <img
+                    class="link-card__brand-icon link-card__brand-icon--amazon"
+                    src="img/icons/amazon.svg"
+                    alt=""
+                    width="24"
+                    height="24"
+                    decoding="async"
+                  />
                 </span>
                 <span class="link-card__content">
                   <span class="link-card__title">Amazon Shop</span>
@@ -458,6 +490,9 @@
                     class="link-card__brand-icon link-card__brand-icon--website"
                     src="img/icons/favicon.png"
                     alt=""
+                    width="200"
+                    height="200"
+                    decoding="async"
                   />
                 </span>
                 <span class="link-card__content">
@@ -481,7 +516,7 @@
             <div class="story-viewer__header">
               <div class="story-viewer__brand">
                 <span class="story-viewer__brand-mark" aria-hidden="true">
-                  <img src="img/logo.webp" alt="" />
+                  <img src="img/logo.webp" alt="" width="1200" height="1200" decoding="async" />
                 </span>
                 <div class="story-viewer__brand-copy">
                   <p class="story-viewer__eyebrow" data-story-eyebrow>Komfi Kat</p>
@@ -541,7 +576,16 @@
                   data-story-prev
                 ></button>
                 <div class="story-viewer__media-frame" data-story-frame>
-                  <img class="story-viewer__image" src="img/logo.webp" alt="" data-story-image draggable="false" />
+                  <img
+                    class="story-viewer__image"
+                    src="img/logo.webp"
+                    alt=""
+                    width="1080"
+                    height="1350"
+                    decoding="async"
+                    data-story-image
+                    draggable="false"
+                  />
                 </div>
                 <button
                   class="story-viewer__nav story-viewer__nav--next"
