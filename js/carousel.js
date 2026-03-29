@@ -147,12 +147,15 @@
     badge.className = "promo-carousel__shop-button-badge";
     badge.setAttribute("aria-hidden", "true");
 
-    const icon = document.createElement("img");
-    icon.className = "promo-carousel__shop-button-icon";
-    icon.src = action.icon;
-    icon.alt = "";
-    icon.draggable = false;
-    badge.append(icon);
+        const icon = document.createElement("img");
+        icon.className = "promo-carousel__shop-button-icon";
+        icon.src = action.icon;
+        icon.alt = "";
+        icon.width = action.className?.includes("--website") ? 200 : 24;
+        icon.height = action.className?.includes("--website") ? 200 : 24;
+        icon.decoding = "async";
+        icon.draggable = false;
+        badge.append(icon);
 
     const copy = document.createElement("span");
     copy.className = "promo-carousel__shop-button-copy";
@@ -219,6 +222,8 @@
     image.className = "promo-carousel__image";
     image.src = item.image;
     image.alt = item.alt || "";
+    image.width = 1400;
+    image.height = 1400;
     image.loading = item.preload ? "eager" : "lazy";
     image.decoding = "async";
     image.fetchPriority = item.priority ? "high" : "auto";

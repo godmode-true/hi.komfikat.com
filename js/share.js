@@ -13,14 +13,12 @@
 
   let shareTooltipTimeout = 0;
   let shareRailHintTimeout = 0;
+  let shareFeedbackCleanupTimeout = 0;
   let shareHintSuppressed = false;
+  let shareCopyFeedbackActive = false;
 
   function shouldUseNativeShare() {
-    if (typeof navigator.share !== "function") {
-      return false;
-    }
-
-    return helpers.isTouchLikeDevice();
+    return typeof navigator.share === "function";
   }
 
   function shouldUseDesktopShareRail() {
@@ -49,6 +47,8 @@
       return;
     }
 
+    window.clearTimeout(shareFeedbackCleanupTimeout);
+
     if (text === shareMessages.copiedHint) {
       helpers.setShareHintContent({ text, success: true });
     } else if (text.endsWith("👉")) {
@@ -63,6 +63,14 @@
   function resetShareRailHint() {
     if (dom.shareMenu) {
       delete dom.shareMenu.dataset.shareHintVisible;
+      delete dom.shareMenu.dataset.shareFeedbackVisible;
+
+      if (dom.shareMenu.dataset.shareFeedbackMode) {
+        window.clearTimeout(shareFeedbackCleanupTimeout);
+        shareFeedbackCleanupTimeout = window.setTimeout(() => {
+          delete dom.shareMenu.dataset.shareFeedbackMode;
+        }, 220);
+      }
     }
 
     window.clearTimeout(shareRailHintTimeout);
@@ -73,7 +81,6 @@
       return;
     }
 
-    dom.shareButton.dataset.shareState = "";
     dom.shareButton.setAttribute("data-tooltip", "Share with a friend");
     dom.shareButton.setAttribute("aria-label", "Share");
   }
@@ -97,6 +104,9 @@
     resetShareButtonState();
     delete dom.shareMenu.dataset.shareTooltipSuppressed;
     delete dom.shareMenu.dataset.shareHintVisible;
+    delete dom.shareMenu.dataset.shareFeedbackVisible;
+    delete dom.shareMenu.dataset.shareFeedbackMode;
+    window.clearTimeout(shareFeedbackCleanupTimeout);
     dom.shareMenu.dataset.shareMenuOpen = "true";
     dom.shareButton.setAttribute("aria-expanded", "true");
 
@@ -121,35 +131,24 @@
     openShareMenu();
   }
 
-  function showShareCopyButtonState() {
-    if (!dom.shareCopyButton || !shouldUseDesktopShareRail()) {
-      return;
-    }
-
-    window.clearTimeout(shareRailHintTimeout);
-    setShareRailHint(shareMessages.copiedHint);
-    shareRailHintTimeout = window.setTimeout(() => {
-      if (!isShareMenuOpen()) {
-        return;
-      }
-
-      resetShareRailHint();
-    }, 1800);
-  }
-
   function showShareCopiedState() {
-    if (!dom.shareButton) {
+    if (!dom.shareButton || !dom.shareMenu) {
       return;
     }
 
+    shareCopyFeedbackActive = true;
     closeShareMenu();
+    delete dom.shareMenu.dataset.shareTooltipSuppressed;
     window.clearTimeout(shareTooltipTimeout);
-    dom.shareButton.dataset.shareState = "copied";
-    dom.shareButton.setAttribute("data-tooltip", shareMessages.copiedHint);
     dom.shareButton.setAttribute("aria-label", shareMessages.copiedHint);
+    setShareRailHint(shareMessages.copiedHint);
+    dom.shareMenu.dataset.shareFeedbackVisible = "true";
+    dom.shareMenu.dataset.shareFeedbackMode = "copied";
     shareTooltipTimeout = window.setTimeout(() => {
+      shareCopyFeedbackActive = false;
+      resetShareRailHint();
       resetShareButtonState();
-    }, 1800);
+    }, 2600);
   }
 
   function bindShareOptionEvents(shareOption) {
@@ -166,6 +165,10 @@
 
     shareOption.addEventListener("mouseleave", (event) => {
       if (!shouldUseDesktopShareRail() || !isShareMenuOpen()) {
+        return;
+      }
+
+      if (shareCopyFeedbackActive) {
         return;
       }
 
@@ -209,6 +212,10 @@
         return;
       }
 
+      if (shareCopyFeedbackActive) {
+        return;
+      }
+
       const nextTarget = event.relatedTarget;
 
       if (nextTarget && dom.shareRail?.contains(nextTarget)) {
@@ -243,7 +250,7 @@
         const didCopy = await helpers.copyText(sharePayload.url);
 
         if (didCopy) {
-          showShareCopyButtonState();
+          showShareCopiedState();
         }
         return;
       }
@@ -284,11 +291,18 @@
 
         if (shouldUseNativeShare()) {
           try {
-            await navigator.share({
+            const fullPayload = {
               title: sharePayload.title,
               text: sharePayload.text,
               url: sharePayload.url,
-            });
+            };
+
+            if (typeof navigator.canShare !== "function" || navigator.canShare(fullPayload)) {
+              await navigator.share(fullPayload);
+              return;
+            }
+
+            await navigator.share({ url: sharePayload.url });
             return;
           } catch (error) {
             if (error?.name === "AbortError") {
@@ -326,7 +340,7 @@
         dom.shareButton.addEventListener("mouseleave", () => {
           shareHintSuppressed = false;
           delete dom.shareMenu.dataset.shareTooltipSuppressed;
-          if (shouldUseDesktopShareRail() && isShareMenuOpen()) {
+          if (shouldUseDesktopShareRail() && isShareMenuOpen() && !shareCopyFeedbackActive) {
             resetShareRailHint();
           }
         });
@@ -334,7 +348,7 @@
         dom.shareButton.addEventListener("blur", () => {
           shareHintSuppressed = false;
           delete dom.shareMenu.dataset.shareTooltipSuppressed;
-          if (shouldUseDesktopShareRail() && isShareMenuOpen()) {
+          if (shouldUseDesktopShareRail() && isShareMenuOpen() && !shareCopyFeedbackActive) {
             resetShareRailHint();
           }
         });
@@ -348,6 +362,10 @@
 
       dom.shareMenu.addEventListener("mouseleave", () => {
         if (shouldUseDesktopShareRail()) {
+          if (shareCopyFeedbackActive) {
+            return;
+          }
+
           closeShareMenu();
         }
       });

@@ -94,11 +94,15 @@
   }
 
   function isDesktopPointerDevice() {
-    return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    const hasCoarsePointer = window.matchMedia("(any-pointer: coarse)").matches;
+    const hasTouchPoints = typeof navigator.maxTouchPoints === "number" && navigator.maxTouchPoints > 0;
+    return window.matchMedia("(hover: hover) and (pointer: fine)").matches && !hasCoarsePointer && !hasTouchPoints;
   }
 
   function isTouchLikeDevice() {
-    return !isDesktopPointerDevice();
+    const hasCoarsePointer = window.matchMedia("(any-pointer: coarse)").matches;
+    const hasTouchPoints = typeof navigator.maxTouchPoints === "number" && navigator.maxTouchPoints > 0;
+    return hasCoarsePointer || hasTouchPoints || !isDesktopPointerDevice();
   }
 
   function createShareHintText(text) {
@@ -120,6 +124,9 @@
     iconElement.className = "share-rail__hint-status-icon";
     iconElement.src = "img/icons/success.svg";
     iconElement.alt = "";
+    iconElement.width = 18;
+    iconElement.height = 18;
+    iconElement.decoding = "async";
     iconElement.setAttribute("aria-hidden", "true");
     return iconElement;
   }
