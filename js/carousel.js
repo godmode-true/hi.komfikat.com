@@ -46,8 +46,8 @@
             src: slide.src.trim(),
             srcset: typeof slide.srcset === "string" && slide.srcset.trim() ? slide.srcset.trim() : "",
             sizes: typeof slide.sizes === "string" && slide.sizes.trim() ? slide.sizes.trim() : "",
-            width: Number.isFinite(slide.width) ? slide.width : 1200,
-            height: Number.isFinite(slide.height) ? slide.height : 1200,
+            width: Number.isFinite(slide.width) ? slide.width : 1152,
+            height: Number.isFinite(slide.height) ? slide.height : 1152,
             alt:
               typeof slide.alt === "string" && slide.alt.trim()
                 ? slide.alt.trim()
@@ -242,8 +242,8 @@
       image.sizes = item.sizes;
     }
     image.alt = item.alt || "";
-    image.width = item.width || 1200;
-    image.height = item.height || 1200;
+    image.width = item.width || 1152;
+    image.height = item.height || 1152;
     image.loading = item.preload ? "eager" : "lazy";
     image.decoding = "async";
     image.fetchPriority = item.priority ? "high" : "auto";
