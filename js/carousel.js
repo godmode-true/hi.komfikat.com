@@ -44,6 +44,10 @@
           .filter((slide) => slide && typeof slide.src === "string" && slide.src.trim())
           .map((slide, index) => ({
             src: slide.src.trim(),
+            srcset: typeof slide.srcset === "string" && slide.srcset.trim() ? slide.srcset.trim() : "",
+            sizes: typeof slide.sizes === "string" && slide.sizes.trim() ? slide.sizes.trim() : "",
+            width: Number.isFinite(slide.width) ? slide.width : 1200,
+            height: Number.isFinite(slide.height) ? slide.height : 1200,
             alt:
               typeof slide.alt === "string" && slide.alt.trim()
                 ? slide.alt.trim()
@@ -64,8 +68,12 @@
     return slideConfig.files.map((slide, index) => ({
       type: "image",
       image: slide.src,
+      srcset: slide.srcset,
+      sizes: slide.sizes,
+      width: slide.width,
+      height: slide.height,
       alt: slide.alt,
-      preload: index < 2,
+      preload: index === 0,
       priority: index === 0,
     }));
   }
@@ -82,6 +90,12 @@
         preload.rel = "preload";
         preload.as = "image";
         preload.href = slide.image;
+        if (slide.srcset) {
+          preload.setAttribute("imagesrcset", slide.srcset);
+        }
+        if (slide.sizes) {
+          preload.setAttribute("imagesizes", slide.sizes);
+        }
         document.head.append(preload);
       });
   }
@@ -221,9 +235,15 @@
     const image = document.createElement("img");
     image.className = "promo-carousel__image";
     image.src = item.image;
+    if (item.srcset) {
+      image.srcset = item.srcset;
+    }
+    if (item.sizes) {
+      image.sizes = item.sizes;
+    }
     image.alt = item.alt || "";
-    image.width = 1400;
-    image.height = 1400;
+    image.width = item.width || 1200;
+    image.height = item.height || 1200;
     image.loading = item.preload ? "eager" : "lazy";
     image.decoding = "async";
     image.fetchPriority = item.priority ? "high" : "auto";
@@ -274,7 +294,9 @@
     let pointerDragReady = false;
     let pendingSnapIndex = null;
     let dragStartX = 0;
+    let dragStartY = 0;
     let dragOffset = 0;
+    let gestureAxis = "";
     let suppressClick = false;
     let stepSize = 0;
     let activeNavButton = null;
@@ -373,11 +395,13 @@
       return target instanceof Element && Boolean(target.closest(".promo-carousel__nav, .promo-carousel__dot"));
     }
 
-    function prepareDrag(clientX) {
+    function prepareDrag(clientX, clientY = 0) {
       suppressClick = false;
       pointerDragReady = true;
       dragStartX = clientX;
+      dragStartY = clientY;
       dragOffset = 0;
+      gestureAxis = "";
     }
 
     function updateDrag(clientX, capturePointerId = null) {
@@ -485,6 +509,7 @@
       if (!isDragging) {
         pointerDragReady = false;
         dragOffset = 0;
+        gestureAxis = "";
         return;
       }
 
@@ -494,6 +519,7 @@
       isDragging = false;
       pointerId = null;
       pointerDragReady = false;
+      gestureAxis = "";
       delete shell.dataset.dragging;
 
       if (dragOffset > threshold) {
@@ -561,7 +587,7 @@
       }
 
       pointerId = event.pointerId;
-      prepareDrag(event.clientX);
+      prepareDrag(event.clientX, event.clientY);
     });
 
     viewport.addEventListener(
@@ -581,7 +607,7 @@
         }
 
         touchId = touch.identifier;
-        prepareDrag(touch.clientX);
+        prepareDrag(touch.clientX, touch.clientY);
       },
       { passive: true },
     );
@@ -620,9 +646,33 @@
         return;
       }
 
+      const deltaX = touch.clientX - dragStartX;
+      const deltaY = touch.clientY - dragStartY;
+      const absDeltaX = Math.abs(deltaX);
+      const absDeltaY = Math.abs(deltaY);
+
+      if (!gestureAxis) {
+        if (Math.max(absDeltaX, absDeltaY) < 6) {
+          return;
+        }
+
+        gestureAxis = absDeltaX >= absDeltaY ? "x" : "y";
+
+        if (gestureAxis === "y") {
+          touchId = null;
+          pointerDragReady = false;
+          dragOffset = 0;
+          return;
+        }
+      }
+
+      if (gestureAxis !== "x") {
+        return;
+      }
+
       const didUpdate = updateDrag(touch.clientX);
 
-      if (didUpdate && event.cancelable && Math.abs(dragOffset) > 4) {
+      if ((didUpdate || absDeltaX > 4) && event.cancelable) {
         event.preventDefault();
       }
     }
