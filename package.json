@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "node scripts/sync-default-theme-preset.mjs && node scripts/build-production.mjs",
+    "update:images": "node scripts/run-update-site-images.mjs",
+    "build": "npm run update:images && node scripts/sync-default-theme-preset.mjs && node scripts/build-production.mjs",
     "sync:theme-preset": "node scripts/sync-default-theme-preset.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

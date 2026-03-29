@@ -13,6 +13,16 @@ This project is set up to publish the production build from [dist](/c:/Users/vla
 
 After that, the workflow in [.github/workflows/deploy-pages.yml](/c:/Users/vladi/Desktop/github-projects/hi.komfikat.com/.github/workflows/deploy-pages.yml) will handle deployment automatically.
 
+The production workflow now also runs the image pipeline automatically before build:
+- it generates/refreshes `webp` files
+- it updates the carousel manifest
+- it keeps production from accidentally shipping raw oversized `png/jpg` files
+
+That means for deployment you can just:
+- add images to the source folders in the repo
+- push to `main`
+- let GitHub Actions build `dist` and publish it
+
 ### What happens on deploy
 
 On every push to `main`, GitHub Actions will:
@@ -29,6 +39,8 @@ If you want to build locally before pushing:
 ```powershell
 npm run build
 ```
+
+`npm run build` now also runs `update-site-images.ps1` automatically before building `dist`.
 
 or run [build-production.cmd](/c:/Users/vladi/Desktop/github-projects/hi.komfikat.com/scripts/build-production.cmd).
 
