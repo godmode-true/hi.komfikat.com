@@ -25,7 +25,7 @@ By default, the active theme for all users comes from `defaultPreset` in [theme-
 
 ## Current presets
 
-- `rose-cream`
+- `default-rose`
 - `burgundy-blush`
 - `mocha-petal`
 - `holiday-spruce`

@@ -8,8 +8,8 @@
   const { dom, helpers, storageKeys } = App;
   const themePresets = window.KomfiKatThemePresets || {};
   const managedThemeTokenKeys = window.KomfiKatThemeTokenKeys || [];
-  const htmlDefaultPresetName = dom.root.dataset.defaultPreset || dom.root.dataset.themePreset || "rose-cream";
-  const defaultPresetName = htmlDefaultPresetName || window.KomfiKatThemeConfig?.defaultPreset || "rose-cream";
+  const htmlDefaultPresetName = dom.root.dataset.defaultPreset || dom.root.dataset.themePreset || "default-rose";
+  const defaultPresetName = window.KomfiKatThemeConfig?.defaultPreset || htmlDefaultPresetName || "default-rose";
   const allowStoredPresetOverride = window.KomfiKatThemeConfig?.allowStoredPresetOverride === true;
 
   function updateThemeColor() {
