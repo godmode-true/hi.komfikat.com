@@ -276,7 +276,12 @@
   }
 
   function fitPromoRedirectOverlay(ui = activePromoRedirectUi) {
-    if (!(ui?.overlay instanceof HTMLElement) || !(ui.content instanceof HTMLElement)) {
+    if (
+      !(ui?.overlay instanceof HTMLElement) ||
+      !(ui.content instanceof HTMLElement) ||
+      !(ui.redirectBody instanceof HTMLElement) ||
+      !(ui.redirectActions instanceof HTMLElement)
+    ) {
       return;
     }
 
@@ -291,16 +296,27 @@
     const paddingInline =
       (Number.parseFloat(overlayStyles.paddingLeft || "0") || 0) +
       (Number.parseFloat(overlayStyles.paddingRight || "0") || 0);
-    const fitGutter =
-      (Number.parseFloat(overlayStyles.getPropertyValue("--promo-redirect-fit-gutter-inline") || "0") || 0) * 2;
-    const availableWidth = Math.max(0, overlayWidth - paddingInline - fitGutter);
-    const contentWidth = Math.ceil(ui.content.scrollWidth);
+    const configuredGap = Number.parseFloat(overlayStyles.getPropertyValue("--promo-redirect-inline-gap") || "0") || 0;
+    const availableWidth = Math.max(0, overlayWidth - paddingInline);
+    const bodyWidth = Math.ceil(ui.redirectBody.scrollWidth);
+    const actionsWidth = Math.ceil(ui.redirectActions.scrollWidth);
+    const baseContentWidth = bodyWidth + actionsWidth;
 
-    if (availableWidth <= 0 || contentWidth <= 0) {
+    if (availableWidth <= 0 || baseContentWidth <= 0) {
       return;
     }
 
-    const nextScale = Math.max(0.64, Math.min(1, availableWidth / contentWidth));
+    const expandedGap = Math.max(configuredGap, (availableWidth - baseContentWidth) / 3);
+    let nextGap = expandedGap;
+    let nextScale = 1;
+    const widthWithExpandedGap = baseContentWidth + nextGap * 3;
+
+    if (widthWithExpandedGap > availableWidth) {
+      nextGap = configuredGap;
+      nextScale = Math.max(0.64, Math.min(1, availableWidth / (baseContentWidth + nextGap * 3)));
+    }
+
+    ui.overlay.style.setProperty("--promo-redirect-inline-gap", `${nextGap.toFixed(3)}px`);
     ui.overlay.style.setProperty("--promo-redirect-content-scale", nextScale.toFixed(4));
   }
 
@@ -384,6 +400,7 @@
     window.clearTimeout(ui.copyFeedbackTimeout);
     ui.copyFeedbackTimeout = 0;
     ui.overlay?.style.removeProperty("--promo-redirect-content-scale");
+    ui.overlay?.style.removeProperty("--promo-redirect-inline-gap");
 
     delete ui.root.dataset.promoRedirectActive;
 
@@ -570,6 +587,8 @@
       control,
       overlay,
       content,
+      redirectBody,
+      redirectActions,
       redirectCode,
       redirectCountdown,
       openNow,

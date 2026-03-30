@@ -1448,12 +1448,12 @@ input[type="reset"] {
 .promo-redirect-local-overlay,
 .promo-carousel__shop-button-redirect {
   --promo-redirect-content-scale: 1;
-  --promo-redirect-fit-gutter-inline: 0.9rem;
+  --promo-redirect-inline-gap: 0.52rem;
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
-  padding: 0.3rem 0.52rem;
+  padding: 0.3rem 0;
   border: 1.5px solid var(--accent-ui-outline);
   border-radius: var(--promo-redirect-host-radius, var(--promo-content-radius));
   background: var(--surface-panel-hover);
@@ -1478,13 +1478,13 @@ input[type="reset"] {
   align-items: center;
   justify-content: center;
   justify-items: center;
-  column-gap: calc(0.42rem * var(--promo-redirect-content-scale));
+  column-gap: var(--promo-redirect-inline-gap);
   row-gap: 0;
   width: max-content;
   max-width: none;
   min-width: 0;
   transform: scale(var(--promo-redirect-content-scale));
-  transform-origin: center;
+  transform-origin: center center;
   transition:
     transform 180ms ease,
     column-gap 180ms ease;
@@ -4794,17 +4794,16 @@ input[type="reset"] {
   .promo-redirect-local-overlay,
   .promo-carousel__shop-button-redirect {
     --promo-redirect-local-action-size: calc((0.92rem * 0.94) + (1.38rem * 0.98) + 0.12rem);
-    --promo-redirect-fit-gutter-inline: 0.78rem;
+    --promo-redirect-inline-gap: 0.36rem;
     padding-block: 0.18rem;
-    padding-inline: 0.32rem;
+    padding-inline: 0;
     border-radius: calc(var(--promo-redirect-host-radius, var(--promo-content-radius)) + 0.34rem);
   }
 
   .promo-redirect-local-overlay__content {
     align-items: stretch;
-    justify-content: space-evenly;
+    justify-content: center;
     justify-items: center;
-    column-gap: calc(0.36rem * var(--promo-redirect-content-scale));
   }
 
   .promo-redirect-local-overlay__content > .promo-redirect-toast__body,
