@@ -211,7 +211,7 @@
     delete dom.shareMenu.dataset.shareTooltipSuppressed;
     window.clearTimeout(shareTooltipTimeout);
     dom.shareButton.setAttribute("aria-label", message);
-    helpers.showTopBarTooltip(message, "share-feedback");
+    helpers.showTopBarTooltip(message, "share-feedback", "center", { trigger: "click" });
     shareTooltipTimeout = window.setTimeout(() => {
       shareCopyFeedbackActive = false;
       resetShareRailHint();

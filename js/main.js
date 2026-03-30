@@ -66,8 +66,10 @@
 
   let promoViewportFitFrame = 0;
   let topBarTooltipOwner = "";
+  let topBarTooltipStickyOwner = "";
   let topBarTooltipCleanupTimeout = 0;
   const topBarTooltipTransitionMs = 180;
+  const topBarTooltipStickyBlockedHoverOwners = new Set(["story-hint", "profile-title"]);
 
   const monthMap = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -343,8 +345,20 @@
     return true;
   }
 
-  function showTopBarTooltip(content, owner = "default", anchor = "center") {
+  function showTopBarTooltip(content, owner = "default", anchor = "center", options = {}) {
     if (!App.dom.topBarTooltip || !isDesktopPointerDevice()) {
+      return;
+    }
+
+    const trigger = options.trigger === "click" ? "click" : "hover";
+
+    if (
+      App.dom.topBarTooltip.dataset.visible === "true" &&
+      topBarTooltipStickyOwner &&
+      topBarTooltipStickyOwner !== owner &&
+      trigger !== "click" &&
+      topBarTooltipStickyBlockedHoverOwners.has(owner)
+    ) {
       return;
     }
 
@@ -356,6 +370,18 @@
     window.clearTimeout(topBarTooltipCleanupTimeout);
     topBarTooltipOwner = owner;
     App.dom.topBarTooltip.dataset.anchor = anchor;
+    if (options.interactive) {
+      App.dom.topBarTooltip.dataset.interactive = "true";
+    } else {
+      delete App.dom.topBarTooltip.dataset.interactive;
+    }
+    if (options.sticky) {
+      topBarTooltipStickyOwner = owner;
+    } else if (topBarTooltipStickyOwner && topBarTooltipStickyOwner !== owner) {
+      topBarTooltipStickyOwner = "";
+    } else if (trigger === "click") {
+      topBarTooltipStickyOwner = "";
+    }
     App.dom.topBarTooltip.dataset.visible = "true";
   }
 
@@ -367,6 +393,7 @@
       }
 
       delete App.dom.topBarTooltip.dataset.anchor;
+      delete App.dom.topBarTooltip.dataset.interactive;
       App.dom.topBarTooltip.replaceChildren();
     }, topBarTooltipTransitionMs);
   }
@@ -377,7 +404,9 @@
     }
 
     topBarTooltipOwner = "";
+    topBarTooltipStickyOwner = "";
     delete App.dom.topBarTooltip.dataset.visible;
+    delete App.dom.topBarTooltip.dataset.interactive;
     scheduleTopBarTooltipCleanup();
   }
 
@@ -391,7 +420,9 @@
     }
 
     topBarTooltipOwner = "";
+    topBarTooltipStickyOwner = "";
     delete App.dom.topBarTooltip.dataset.visible;
+    delete App.dom.topBarTooltip.dataset.interactive;
     scheduleTopBarTooltipCleanup();
   }
 
@@ -588,45 +619,88 @@
       }
 
       link.addEventListener("mouseenter", () => {
-        App.helpers.showTopBarTooltip(createTooltipContent(), tooltipOwner);
-      });
-
-      link.addEventListener("mouseleave", () => {
-        App.helpers.hideTopBarTooltip(tooltipOwner);
+        App.helpers.showTopBarTooltip(createTooltipContent(), tooltipOwner, "center", { sticky: true });
       });
 
       link.addEventListener("focus", () => {
-        App.helpers.showTopBarTooltip(createTooltipContent(), tooltipOwner);
-      });
-
-      link.addEventListener("blur", () => {
-        App.helpers.hideTopBarTooltip(tooltipOwner);
+        App.helpers.showTopBarTooltip(createTooltipContent(), tooltipOwner, "center", { sticky: true });
       });
     });
+
+    const createHashtagTooltipPlatforms = (link) => {
+      const platforms = document.createElement("span");
+      const platformConfigs = [
+        { label: "Instagram", url: link.dataset.hashtagInstagramUrl?.trim() || "" },
+        { label: "YouTube", url: link.dataset.hashtagYoutubeUrl?.trim() || "" },
+        { label: "TikTok", url: link.dataset.hashtagTiktokUrl?.trim() || "" },
+      ];
+
+      platforms.className = "top-bar__tooltip-platforms";
+
+      platformConfigs.forEach(({ label: platformLabel, url }) => {
+        const sourceIcon = document.querySelector(
+          `.social-links__link[aria-label="${platformLabel}"] .social-links__icon`,
+        )?.cloneNode(true);
+
+        if (!(sourceIcon instanceof SVGElement) || !url) {
+          return;
+        }
+
+        const platform = document.createElement("a");
+
+        platform.className = "top-bar__tooltip-platform";
+        platform.href = url;
+        platform.target = "_blank";
+        platform.rel = "noopener noreferrer";
+        platform.setAttribute("aria-label", `Open ${platformLabel} posts for ${link.textContent?.trim() || "this hashtag"}`);
+        sourceIcon.classList.remove("social-links__icon");
+        sourceIcon.classList.add("top-bar__tooltip-platform-icon");
+        sourceIcon.setAttribute("aria-hidden", "true");
+        platform.append(sourceIcon);
+        platforms.append(platform);
+      });
+
+      return platforms.childElementCount ? platforms : null;
+    };
 
     App.dom.socialHashtagLinks?.forEach((link, index) => {
       const tooltipText = link.dataset.hashtagTooltip?.trim() || "";
       const tooltipOwner = `social-hashtag-${index}`;
+      const createTooltipContent = () => {
+        const label = document.createElement("span");
+        const platforms = createHashtagTooltipPlatforms(link);
+
+        label.className = "top-bar__tooltip-label";
+        label.textContent = tooltipText;
+
+        return platforms ? [label, platforms] : [label];
+      };
 
       if (!tooltipText) {
         return;
       }
 
       link.addEventListener("mouseenter", () => {
-        App.helpers.showTopBarTooltip(tooltipText, tooltipOwner);
-      });
-
-      link.addEventListener("mouseleave", () => {
-        App.helpers.hideTopBarTooltip(tooltipOwner);
+        App.helpers.showTopBarTooltip(createTooltipContent(), tooltipOwner, "center", { sticky: true, interactive: true });
       });
 
       link.addEventListener("focus", () => {
-        App.helpers.showTopBarTooltip(tooltipText, tooltipOwner);
+        App.helpers.showTopBarTooltip(createTooltipContent(), tooltipOwner, "center", { sticky: true, interactive: true });
       });
+    });
 
-      link.addEventListener("blur", () => {
-        App.helpers.hideTopBarTooltip(tooltipOwner);
+    App.dom.socialHandleLinks?.forEach((link) => {
+      link.addEventListener("click", () => {
+        App.helpers.hideTopBarTooltip();
       });
+    });
+
+    document.addEventListener("click", () => {
+      if (!topBarTooltipStickyOwner.startsWith("social-hashtag-")) {
+        return;
+      }
+
+      App.helpers.hideTopBarTooltip();
     });
 
     if (App.helpers.isDevPreviewHost()) {

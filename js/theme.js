@@ -165,6 +165,7 @@
           dom.themeToggle.dataset.tooltip || dom.themeToggle.ariaLabel || "",
           "theme-toggle",
           "share-button-left",
+          { trigger: "click" },
         );
       }
     });
