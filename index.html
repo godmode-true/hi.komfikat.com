@@ -105,35 +105,6 @@
         }
       ]
     </script>
-    <script>
-      try {
-        const root = document.documentElement;
-        const storyStorageKeys = {
-          storyViewed: "komfi-story-viewed-signature-v2",
-          storyHintDismissed: "komfi-story-hint-dismissed-signature-v1",
-        };
-        const storyDataElement = document.getElementById("komfi-story-data");
-        const stories = JSON.parse(storyDataElement?.textContent || "[]");
-        const storySignature = JSON.stringify(
-          (Array.isArray(stories) ? stories : []).map(
-            ({ eyebrow, publishedAt, meta, description, ctaLabel, url, image, imageAlt, imageFit, layout }) => ({
-              eyebrow,
-              publishedAt,
-              meta,
-              description,
-              ctaLabel,
-              url,
-              image,
-              imageAlt,
-              imageFit: imageFit || "cover",
-              layout: layout || "caption",
-            }),
-          ),
-        );
-        root.dataset.storyHintLayout = "collapsed";
-      } catch {}
-    </script>
-
     <link rel="stylesheet" href="css/style.css?v=20260330a" />
     <script src="js/main.js?v=20260330a" defer></script>
     <script src="js/theme.js?v=20260330a" defer></script>
@@ -144,7 +115,7 @@
   </head>
 
   <body>
-    <main class="page">
+    <main class="page" id="page-top">
       <div class="container">
         <div class="home-hero" data-home-hero>
           <header class="top-bar" aria-label="Page actions">
@@ -217,35 +188,6 @@
                       <path
                         d="M12.84 18.65V12.94H14.77L15.05 10.83H12.84V9.41C12.84 8.81 13.01 8.39 13.95 8.39H15.11V6.49C14.91 6.46 14.22 6.4 13.42 6.4C11.73 6.4 10.57 7.41 10.57 9.16V10.83H8.83V12.94H10.57V18.65H12.84Z"
                         fill="currentColor"
-                      />
-                    </svg>
-                  </button>
-                </div>
-
-                <div class="promo-redirect-toast" data-promo-redirect-toast aria-hidden="true" role="status" aria-live="polite">
-                  <span class="promo-redirect-toast__text">
-                    Redirecting to Etsy in <span class="promo-redirect-toast__countdown" data-promo-redirect-countdown>5</span>s
-                  </span>
-                  <button
-                    class="promo-redirect-toast__cancel"
-                    type="button"
-                    aria-label="Cancel Etsy redirect"
-                    data-promo-redirect-cancel
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-                      <path
-                        d="M8 8L16 16"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                      <path
-                        d="M16 8L8 16"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
                       />
                     </svg>
                   </button>
@@ -335,19 +277,7 @@
           </header>
 
           <section class="profile stack" aria-label="Brand profile">
-          <button
-            class="profile__story-mobile-hint"
-            type="button"
-            aria-label="Open Komfi Kat stories with new updates"
-            data-story-open-hint
-          >
-            <span class="profile__story-mobile-hint-text">New story</span>
-            <span class="profile__story-mobile-hint-icon">👇</span>
-          </button>
           <button class="profile__story-trigger" type="button" aria-label="Open Komfi Kat stories" data-story-open>
-            <span class="profile__story-desktop-hint" aria-hidden="true">
-              <span class="profile__story-desktop-hint-text">Click to see new Komfi Kat stories!</span>
-            </span>
             <span class="profile__story-ring" aria-hidden="true">
               <span class="profile__story-core">
                 <span class="profile__logo-frame" data-profile-logo-frame>
@@ -367,7 +297,7 @@
           </button>
           <div class="profile__copy stack">
             <h1>
-              <a class="profile__title" href="#" aria-label="Visit home page" data-copy-profile-title>Komfi Kat</a>
+              <a class="profile__title" href="#page-top" aria-label="Visit home page" data-copy-profile-title>Komfi Kat</a>
             </h1>
             <p class="profile__tagline">Cozy &amp; Relaxing Coloring Books</p>
           </div>
@@ -395,6 +325,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
+                data-platform="instagram"
                 data-handle-label="komfikat"
               >
                 <svg
@@ -417,6 +348,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="TikTok"
+                data-platform="tiktok"
                 data-handle-label="komfikat"
               >
                 <svg
@@ -439,6 +371,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="YouTube"
+                data-platform="youtube"
                 data-handle-label="komfikatcoloring"
               >
                 <svg
@@ -604,7 +537,7 @@
                 </span>
                 <span class="link-card__content">
                   <span class="link-card__title">Amazon Shop</span>
-                  <span class="link-card__subtitle">Paperback Version</span>
+                  <span class="link-card__subtitle">Hobby Girl Paperback Version</span>
                 </span>
                 <span class="link-card__spacer" aria-hidden="true"></span>
               </a>
@@ -738,6 +671,45 @@
             </div>
           </div>
         </dialog>
+
+        <footer class="footer-bar" aria-label="Page footer">
+          <button
+            class="action-button action-button--icon-only footer-bar__side-action"
+            type="button"
+            aria-label="Email updates coming soon"
+          >
+            <span class="action-button__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M5.75 8.25C5.75 7.42 6.42 6.75 7.25 6.75H16.75C17.58 6.75 18.25 7.42 18.25 8.25V15.75C18.25 16.58 17.58 17.25 16.75 17.25H7.25C6.42 17.25 5.75 16.58 5.75 15.75V8.25Z"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                />
+                <path
+                  d="M6.5 8L11.12 11.47C11.65 11.87 12.35 11.87 12.88 11.47L17.5 8"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </span>
+          </button>
+          <p class="footer-bar__copy">&copy; 2026 Komfi Kat. All rights reserved.</p>
+          <a
+            class="action-button action-button--icon-only footer-bar__back-to-top"
+            href="#page-top"
+            aria-label="Scroll to top"
+            data-scroll-top
+          >
+            <span class="action-button__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 17.25V7.25" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" />
+                <path d="M8.2 10.95L12 7.15L15.8 10.95" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+          </a>
+        </footer>
 
       </div>
     </main>

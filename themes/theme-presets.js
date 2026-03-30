@@ -406,7 +406,7 @@
   };
 
   window.KomfiKatThemeConfig = {
-    defaultPreset: "holiday-spruce",
+    defaultPreset: "default-rose",
     allowStoredPresetOverride: false,
   };
 

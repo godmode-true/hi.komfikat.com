@@ -56,6 +56,10 @@
       return;
     }
 
+    if (isPromoRedirectVisible()) {
+      return;
+    }
+
     helpers.dismissStickyMenuPrompts?.("share");
     window.clearTimeout(shareFeedbackCleanupTimeout);
 
@@ -111,7 +115,6 @@
     delete dom.shareMenu.dataset.shareHintVisible;
     delete dom.shareMenu.dataset.shareFeedbackVisible;
     delete dom.shareMenu.dataset.shareFeedbackMode;
-    delete dom.shareMenu.dataset.storyHintVisible;
     helpers.hideTopBarTooltip("share-feedback");
     resetShareButtonState();
   }
@@ -166,6 +169,11 @@
 
   function openShareMenu() {
     if (!dom.shareMenu || !dom.shareButton) {
+      return;
+    }
+
+    if (isPromoRedirectVisible()) {
+      closeShareMenu();
       return;
     }
 
