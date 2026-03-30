@@ -103,7 +103,8 @@
   --profile-tagline-font-size: clamp(1.3rem, 5vw, 1.7rem);
   --social-hashtag-font-size: var(--sticky-menu-hint-font-size);
   --social-link-bg: #fff8fb;
-  --link-section-space: clamp(1rem, 4vw, 1.35rem);
+  --section-stack-gap: clamp(1rem, 4vw, 1.35rem);
+  --link-list-gap: 0.76rem;
   --link-card-radius: 999px;
   --link-card-padding-inline: clamp(1rem, 4vw, 1.25rem);
   --link-card-min-height: 4.1rem;
@@ -405,6 +406,9 @@ input[type="reset"] {
 }
 
 .container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--section-stack-gap);
   width: min(100%, var(--content-max-width));
   margin-inline: auto;
 }
@@ -459,6 +463,42 @@ input[type="reset"] {
   align-items: center;
   gap: var(--top-bar-actions-gap);
   margin-left: auto;
+}
+
+.footer-bar {
+  display: grid;
+  grid-template-columns: var(--top-control-height) minmax(0, 1fr) var(--top-control-height);
+  align-items: center;
+  gap: 0.75rem;
+  padding: max(0.12rem, calc(var(--sticky-bar-pad) - 0.08rem)) var(--sticky-bar-pad);
+  border: 1px solid var(--sticky-bar-border);
+  border-radius: var(--link-card-radius);
+  background: var(--sticky-bar-surface);
+  box-shadow: var(--sticky-bar-shadow);
+  backdrop-filter: blur(var(--sticky-bar-blur)) saturate(1.08);
+  -webkit-backdrop-filter: blur(var(--sticky-bar-blur)) saturate(1.08);
+  isolation: isolate;
+}
+
+.footer-bar__side-action {
+  justify-self: start;
+}
+
+.footer-bar__copy {
+  margin: 0;
+  min-width: 0;
+  color: var(--profile-text);
+  font-size: clamp(1.02rem, 3.7vw, 1.14rem);
+  line-height: 0.96;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-align: center;
+  transform: translateY(0.06rem);
+}
+
+.footer-bar__back-to-top {
+  justify-self: end;
+  text-decoration: none;
 }
 
 .top-bar__share {
@@ -2443,12 +2483,8 @@ input[type="reset"] {
 }
 
 /* Link Cards */
-.link-section {
-  margin-top: var(--link-section-space);
-}
-
 .link-list {
-  gap: 0.9rem;
+  gap: var(--link-list-gap);
 }
 
 .link-card {
@@ -4514,10 +4550,11 @@ input[type="reset"] {
     --hero-edge-gap: 0.48rem;
     --hero-stack-gap: 0.62rem;
     --hero-profile-top-gap: 1.42rem;
-    --hero-social-gap: 0.58rem;
-    --hero-carousel-gap: 0.58rem;
+    --hero-social-gap: var(--section-stack-gap);
+    --hero-carousel-gap: var(--section-stack-gap);
     --social-link-size: 2.42rem;
     --social-links-row-gap: 0.42rem;
+    --mobile-menu-icon-size: 1.22rem;
   }
 
   .top-bar {
@@ -4549,12 +4586,25 @@ input[type="reset"] {
   }
 
   .profile__tagline {
+    margin-top: 0;
     white-space: normal;
   }
 
   .social-links__icon {
     width: 1.38rem;
     height: 1.38rem;
+  }
+
+  .top-bar .action-button__icon,
+  .footer-bar .action-button__icon {
+    width: var(--mobile-menu-icon-size);
+    height: var(--mobile-menu-icon-size);
+  }
+
+  .top-bar .theme-toggle__icon,
+  .top-bar .theme-toggle__icon--moon {
+    width: var(--mobile-menu-icon-size);
+    height: var(--mobile-menu-icon-size);
   }
 
   .profile__story-trigger {
@@ -5046,7 +5096,8 @@ input[type="reset"] {
     --social-hashtag-pad: clamp(0.3rem, 0.38vw, 0.42rem);
     --social-hashtag-pad-inline: clamp(0.56rem, 0.7vw, 0.7rem);
     --social-hashtag-font-size: var(--sticky-menu-hint-font-size);
-    --link-section-space: clamp(1.45rem, 1.6vw, 2rem);
+    --section-stack-gap: clamp(1.45rem, 1.6vw, 2rem);
+    --link-list-gap: 0.68rem;
     --link-card-padding-inline: clamp(1.35rem, 1.35vw, 1.9rem);
     --link-card-min-height: 5rem;
     --link-card-badge-size: 3.2rem;

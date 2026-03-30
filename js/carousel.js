@@ -939,6 +939,7 @@
     enhanceLinkSectionRedirects();
 
     const shell = dom.promoCarousel;
+    const promoSection = shell?.closest(".promo-carousel");
     const viewport = dom.promoCarouselViewport;
     const track = dom.promoCarouselTrack;
     const dotsRoot = dom.promoCarouselDots;
@@ -991,6 +992,25 @@
     viewport.setAttribute("tabindex", "0");
     viewport.setAttribute("aria-label", "Instagram-style preview carousel");
 
+    function syncCarouselSectionBottomSpace() {
+      if (!(promoSection instanceof HTMLElement)) {
+        return;
+      }
+
+      const pager = shell.querySelector(".promo-carousel__pager");
+
+      if (!(pager instanceof HTMLElement)) {
+        promoSection.style.setProperty("--promo-carousel-bottom-space", "0px");
+        return;
+      }
+
+      const shellRect = shell.getBoundingClientRect();
+      const pagerRect = pager.getBoundingClientRect();
+      const protrusion = Math.max(0, pagerRect.bottom - shellRect.bottom);
+
+      promoSection.style.setProperty("--promo-carousel-bottom-space", `${Math.ceil(protrusion)}px`);
+    }
+
     function rebuildCarouselStructure() {
       if (activePromoRedirectUi) {
         hidePromoRedirectToast();
@@ -1021,6 +1041,7 @@
       renderedIndex = cloneCount + (pageStarts[activeIndex] ?? 0);
       track.replaceChildren(...renderedItems.map(createCard));
       syncShopButtonAlignment(track);
+      syncCarouselSectionBottomSpace();
 
       dotsRoot.replaceChildren();
       dots = Array.from({ length: pageCount }, (_, index) => {
@@ -1044,6 +1065,7 @@
 
       dotsRoot.hidden = !hasPagination;
       syncControls();
+      syncCarouselSectionBottomSpace();
     }
 
     function getGap() {
@@ -1108,6 +1130,7 @@
       }
 
       syncControls();
+      syncCarouselSectionBottomSpace();
     }
 
     function isPagerTarget(target) {
@@ -1500,6 +1523,7 @@
       }
 
       isAnimating = false;
+      syncCarouselSectionBottomSpace();
     });
 
     track.addEventListener(
@@ -1556,6 +1580,7 @@
         syncShopButtonAlignment(track);
         updateMetrics();
         syncPosition(true);
+        syncCarouselSectionBottomSpace();
       });
       resizeObserver.observe(viewport);
     } else {
@@ -1569,6 +1594,7 @@
         syncShopButtonAlignment(track);
         updateMetrics();
         syncPosition(true);
+        syncCarouselSectionBottomSpace();
       });
     }
 
@@ -1577,6 +1603,7 @@
         syncShopButtonAlignment(track);
         updateMetrics();
         syncPosition(true);
+        syncCarouselSectionBottomSpace();
       });
     }
 
@@ -1596,5 +1623,6 @@
     syncShopButtonAlignment(track);
     updateMetrics();
     syncPosition(true);
+    syncCarouselSectionBottomSpace();
   };
 })();

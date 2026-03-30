@@ -240,7 +240,7 @@
     delete promoSection.dataset.viewportFit;
     promoSection.style.removeProperty("--promo-screen-available-height");
 
-    if (viewportWidth > 1024) {
+    if (viewportWidth > 1024 || isTouchLikeDevice()) {
       promoViewportFitStableHeight = 0;
       promoViewportFitStableWidth = 0;
       return;

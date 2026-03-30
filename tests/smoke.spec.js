@@ -80,6 +80,17 @@ test("stories open and close from the avatar trigger", async ({ page }) => {
   await expect(storyViewer).not.toHaveAttribute("open", "");
 });
 
+test("footer back-to-top control returns the page to the start", async ({ page }) => {
+  await gotoHome(page);
+
+  const footerButton = page.locator("[data-scroll-top]");
+  await footerButton.scrollIntoViewIfNeeded();
+  await page.waitForFunction(() => window.scrollY > 0);
+  await footerButton.click();
+
+  await page.waitForFunction(() => window.scrollY < 24);
+});
+
 test("external buttons use local promo redirect overlays", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name.includes("mobile"), "CTA promo redirect is covered on desktop in the current smoke set");
 

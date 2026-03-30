@@ -56,6 +56,10 @@
       return;
     }
 
+    if (isPromoRedirectVisible()) {
+      return;
+    }
+
     helpers.dismissStickyMenuPrompts?.("share");
     window.clearTimeout(shareFeedbackCleanupTimeout);
 
@@ -166,6 +170,11 @@
 
   function openShareMenu() {
     if (!dom.shareMenu || !dom.shareButton) {
+      return;
+    }
+
+    if (isPromoRedirectVisible()) {
+      closeShareMenu();
       return;
     }
 

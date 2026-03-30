@@ -59,19 +59,11 @@
   let storyCloseTimeout = 0;
 
   function showDesktopStoryHint() {
-    if (
-      !helpers.isDesktopPointerDevice() ||
-      dom.storyTrigger?.dataset.storyState !== "new"
-    ) {
-      return;
-    }
-
-    const storyHintText = dom.storyDesktopHint?.textContent?.trim() || "Click to see new Komfi Kat stories!";
-    helpers.showTopBarTooltip(storyHintText, "story-hint");
+    return;
   }
 
   function hideDesktopStoryHint() {
-    helpers.hideTopBarTooltip("story-hint");
+    return;
   }
 
   function getSeenStorySignature() {
@@ -145,10 +137,6 @@
       hasSeenStories ? "Rewatch Komfi Kat stories" : "Open Komfi Kat stories with new updates",
     );
     dom.root.dataset.storyHintLayout = "collapsed";
-
-    if (dom.storyDesktopHint) {
-      dom.storyDesktopHint.dataset.storyHintState = hasSeenStories ? "hidden" : "visible";
-    }
 
     if (hasSeenStories || hasDismissedHint) {
       hideStoryHint();
@@ -514,11 +502,6 @@
 
     dom.storyTrigger.addEventListener("click", openStoriesFromTrigger);
     dom.storyMobileHint?.addEventListener("click", openStoriesFromTrigger);
-
-    dom.storyTrigger.addEventListener("mouseenter", showDesktopStoryHint);
-    dom.storyTrigger.addEventListener("mouseleave", hideDesktopStoryHint);
-    dom.storyTrigger.addEventListener("focus", showDesktopStoryHint);
-    dom.storyTrigger.addEventListener("blur", hideDesktopStoryHint);
 
     bindStoryNavigationEvents();
 
