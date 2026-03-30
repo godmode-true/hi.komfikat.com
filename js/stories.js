@@ -14,36 +14,19 @@
 
   // Recommended story artwork size: 1080 x 1350 px.
   // For raster story art, drop PNG/JPG files into img/stories and run .\scripts\update-site-images.ps1.
-  // That script will generate smaller WebP versions automatically and update js/stories.js to prefer them.
+  // That script will generate smaller WebP versions automatically; story entries themselves live in #komfi-story-data in index.html.
   // Use publishedAt in ISO format: "2026-03-27".
   // It will render as: "Mar 27, 2026".
   // Month abbreviations: Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec.
-  const stories = [
-    {
-      eyebrow: "Komfi Kat",
-      publishedAt: "2026-03-27",
-      meta: "Instagram Story",
-      description: "Fresh little peeks at new coloring pages, cute scenes, and what Komfi Kat is making next.",
-      ctaLabel: "Visit Instagram",
-      url: "https://www.instagram.com/komfikat/",
-      image: "img/stories/placeholder-white.svg",
-      imageAlt: "White story placeholder",
-      imageFit: "cover",
-      layout: "caption",
-    },
-    {
-      eyebrow: "Komfi Kat",
-      publishedAt: "2026-04-03",
-      meta: "",
-      description: "",
-      ctaLabel: "Open Reel on Instagram",
-      url: "https://www.instagram.com/komfikat/",
-      image: "img/stories/placeholder-white.svg",
-      imageAlt: "White story placeholder",
-      imageFit: "cover",
-      layout: "full",
-    },
-  ];
+  const storyDataElement = document.getElementById("komfi-story-data");
+  const stories = (() => {
+    try {
+      const parsedStories = JSON.parse(storyDataElement?.textContent || "[]");
+      return Array.isArray(parsedStories) ? parsedStories : [];
+    } catch {
+      return [];
+    }
+  })();
 
   const storySignature = JSON.stringify(
     stories.map(({ eyebrow, publishedAt, meta, description, ctaLabel, url, image, imageAlt, imageFit, layout }) => ({
@@ -74,6 +57,22 @@
   let storyHintCleanupTimeout = 0;
   let storyHintShowTimeout = 0;
   let storyCloseTimeout = 0;
+
+  function showDesktopStoryHint() {
+    if (
+      !helpers.isDesktopPointerDevice() ||
+      dom.storyTrigger?.dataset.storyState !== "new"
+    ) {
+      return;
+    }
+
+    const storyHintText = dom.storyDesktopHint?.textContent?.trim() || "Click to see new Komfi Kat stories!";
+    helpers.showTopBarTooltip(storyHintText, "story-hint");
+  }
+
+  function hideDesktopStoryHint() {
+    helpers.hideTopBarTooltip("story-hint");
+  }
 
   function getSeenStorySignature() {
     return helpers.readStorageValue(storageKeys.storyViewed);
@@ -145,9 +144,15 @@
       "aria-label",
       hasSeenStories ? "Rewatch Komfi Kat stories" : "Open Komfi Kat stories with new updates",
     );
+    dom.root.dataset.storyHintLayout = "collapsed";
+
+    if (dom.storyDesktopHint) {
+      dom.storyDesktopHint.dataset.storyHintState = hasSeenStories ? "hidden" : "visible";
+    }
 
     if (hasSeenStories || hasDismissedHint) {
       hideStoryHint();
+      hideDesktopStoryHint();
     }
   }
 
@@ -389,6 +394,13 @@
         return;
       }
 
+      if (event.button !== 0) {
+        if (event.cancelable) {
+          event.preventDefault();
+        }
+        return;
+      }
+
       clearStoryNavHoldTimer();
       storyNavHoldTriggered = false;
       activeStoryNavTarget = direction;
@@ -492,21 +504,58 @@
     }
 
     updateStoryTriggerState();
-    window.setTimeout(() => {
-      showStoryHint();
-    }, 420);
 
-    dom.storyTrigger.addEventListener("click", () => {
+    const openStoriesFromTrigger = () => {
       dismissCurrentStoryHint();
       hideStoryHint();
+      hideDesktopStoryHint();
       openStories(0);
-    });
+    };
+
+    dom.storyTrigger.addEventListener("click", openStoriesFromTrigger);
+    dom.storyMobileHint?.addEventListener("click", openStoriesFromTrigger);
+
+    dom.storyTrigger.addEventListener("mouseenter", showDesktopStoryHint);
+    dom.storyTrigger.addEventListener("mouseleave", hideDesktopStoryHint);
+    dom.storyTrigger.addEventListener("focus", showDesktopStoryHint);
+    dom.storyTrigger.addEventListener("blur", hideDesktopStoryHint);
 
     bindStoryNavigationEvents();
+
+    const shouldSuppressStoryContextMenu = (target) =>
+      target instanceof Element &&
+      Boolean(target.closest("[data-story-viewer]")) &&
+      (dom.storyViewer?.open ||
+        document.body.classList.contains("story-viewer-is-open") ||
+        document.body.classList.contains("story-viewer-is-closing"));
 
     dom.storyClose?.addEventListener("click", () => {
       closeStories();
     });
+
+    document.addEventListener(
+      "contextmenu",
+      (event) => {
+        if (shouldSuppressStoryContextMenu(event.target)) {
+          event.preventDefault();
+        }
+      },
+      true,
+    );
+
+    document.addEventListener(
+      "selectstart",
+      (event) => {
+        if (!dom.storyViewer?.open) {
+          return;
+        }
+
+        if (event.target instanceof Element && event.target.closest("[data-story-viewer]")) {
+          event.preventDefault();
+        }
+      },
+      true,
+    );
 
     dom.storyViewer.addEventListener("close", () => {
       finalizeStorySession();
@@ -522,6 +571,18 @@
       if (event.target === dom.storyViewer) {
         closeStories();
       }
+    });
+
+    dom.storyViewer.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+    });
+
+    dom.storyViewer.addEventListener("dragstart", (event) => {
+      if (!dom.storyViewer?.open) {
+        return;
+      }
+
+      event.preventDefault();
     });
 
     dom.storyViewer.addEventListener("keydown", (event) => {
@@ -561,6 +622,13 @@
         return;
       }
 
+      if (event.button !== 0) {
+        if (event.cancelable) {
+          event.preventDefault();
+        }
+        return;
+      }
+
       if (
         event.target instanceof Element &&
         event.target.closest(
@@ -568,6 +636,10 @@
         )
       ) {
         return;
+      }
+
+      if (event.pointerType === "touch" && event.cancelable) {
+        event.preventDefault();
       }
 
       beginHeldPause();

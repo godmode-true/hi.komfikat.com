@@ -25,30 +25,38 @@
 
     <meta name="theme-color" content="#fffcfe" />
     <!-- Bump this cache token whenever theme/style/script visuals change, so browsers do not mix old and new theme assets. -->
-    <link rel="icon" href="favicon.ico?v=20260329c" sizes="any" />
-    <link rel="shortcut icon" href="favicon.ico?v=20260329c" />
-    <link rel="icon" href="img/icons/favicon-32x32.png?v=20260329c" sizes="32x32" type="image/png" />
-    <link rel="icon" href="img/icons/favicon-16x16.png?v=20260329c" sizes="16x16" type="image/png" />
-    <link rel="apple-touch-icon" href="img/icons/apple-touch-icon.png?v=20260329c" sizes="180x180" />
-    <link rel="preload" as="image" href="img/logo.webp?v=20260329c" type="image/webp" fetchpriority="high" />
+    <link rel="icon" href="favicon.ico?v=20260330a" sizes="any" />
+    <link rel="shortcut icon" href="favicon.ico?v=20260330a" />
+    <link rel="icon" href="img/icons/favicon-32x32.png?v=20260330a" sizes="32x32" type="image/png" />
+    <link rel="icon" href="img/icons/favicon-16x16.png?v=20260330a" sizes="16x16" type="image/png" />
+    <link rel="apple-touch-icon" href="img/icons/apple-touch-icon.png?v=20260330a" sizes="180x180" />
+    <link rel="preload" as="image" href="img/logo.webp?v=20260330a" type="image/webp" fetchpriority="high" />
     <script>
       (() => {
         const isDevPreviewHost =
           location.hostname === "localhost" ||
           location.hostname === "127.0.0.1" ||
           location.hostname.startsWith("192.168.");
-        const assetVersion = isDevPreviewHost ? Date.now().toString() : "20260329c";
+        const assetVersion = isDevPreviewHost ? Date.now().toString() : "20260330a";
         document.write(`<script src="themes/theme-presets.js?v=${assetVersion}"><\/script>`);
       })();
     </script>
     <script>
       try {
         const root = document.documentElement;
+        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
         const savedTheme = localStorage.getItem("komfi-theme");
         const initialTheme = savedTheme === "dark" ? "dark" : "light";
         const defaultPreset = window.KomfiKatThemeConfig?.defaultPreset || root.dataset.defaultPreset || "default-rose";
+        const preset = window.KomfiKatThemePresets?.[defaultPreset];
+        const initialThemeTokens = preset?.[initialTheme];
+        const initialThemeColor =
+          initialThemeTokens?.["--browser-chrome-color"] || (initialTheme === "dark" ? "#4a3b40" : "#fde7ef");
         root.dataset.theme = initialTheme;
         root.dataset.themePreset = defaultPreset;
+        if (themeColorMeta) {
+          themeColorMeta.setAttribute("content", initialThemeColor);
+        }
       } catch {}
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -58,7 +66,7 @@
       as="style"
       href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap"
     />
-    <link rel="preload" href="fonts/comic-story.woff2?v=20260329c" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="fonts/comic-story.woff2?v=20260330a" as="font" type="font/woff2" crossorigin />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap"
@@ -69,206 +77,280 @@
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap" />
     </noscript>
 
-    <link rel="stylesheet" href="css/style.css?v=20260329c" />
-    <script src="js/main.js?v=20260329c" defer></script>
-    <script src="js/theme.js?v=20260329c" defer></script>
-    <script src="js/share.js?v=20260329c" defer></script>
-    <script src="js/stories.js?v=20260329c" defer></script>
-    <script src="js/carousel-manifest.js?v=20260329c" defer></script>
-    <script src="js/carousel.js?v=20260329c" defer></script>
+    <script id="komfi-story-data" type="application/json">
+      [
+        {
+          "eyebrow": "Komfi Kat",
+          "publishedAt": "2026-03-27",
+          "meta": "Instagram Story",
+          "description": "Fresh little peeks at new coloring pages, cute scenes, and what Komfi Kat is making next.",
+          "ctaLabel": "Visit Instagram",
+          "url": "https://www.instagram.com/komfikat/",
+          "image": "img/stories/placeholder-white.svg",
+          "imageAlt": "White story placeholder",
+          "imageFit": "cover",
+          "layout": "caption"
+        },
+        {
+          "eyebrow": "Komfi Kat",
+          "publishedAt": "2026-04-03",
+          "meta": "",
+          "description": "",
+          "ctaLabel": "Open Reel on Instagram",
+          "url": "https://www.instagram.com/komfikat/",
+          "image": "img/stories/placeholder-white.svg",
+          "imageAlt": "White story placeholder",
+          "imageFit": "cover",
+          "layout": "full"
+        }
+      ]
+    </script>
+    <script>
+      try {
+        const root = document.documentElement;
+        const storyStorageKeys = {
+          storyViewed: "komfi-story-viewed-signature-v2",
+          storyHintDismissed: "komfi-story-hint-dismissed-signature-v1",
+        };
+        const storyDataElement = document.getElementById("komfi-story-data");
+        const stories = JSON.parse(storyDataElement?.textContent || "[]");
+        const storySignature = JSON.stringify(
+          (Array.isArray(stories) ? stories : []).map(
+            ({ eyebrow, publishedAt, meta, description, ctaLabel, url, image, imageAlt, imageFit, layout }) => ({
+              eyebrow,
+              publishedAt,
+              meta,
+              description,
+              ctaLabel,
+              url,
+              image,
+              imageAlt,
+              imageFit: imageFit || "cover",
+              layout: layout || "caption",
+            }),
+          ),
+        );
+        root.dataset.storyHintLayout = "collapsed";
+      } catch {}
+    </script>
+
+    <link rel="stylesheet" href="css/style.css?v=20260330a" />
+    <script src="js/main.js?v=20260330a" defer></script>
+    <script src="js/theme.js?v=20260330a" defer></script>
+    <script src="js/share.js?v=20260330a" defer></script>
+    <script src="js/stories.js?v=20260330a" defer></script>
+    <script src="js/carousel-manifest.js?v=20260330a" defer></script>
+    <script src="js/carousel.js?v=20260330a" defer></script>
   </head>
 
   <body>
     <main class="page">
       <div class="container">
-        <header class="top-bar" aria-label="Page actions">
-          <button class="action-button action-button--subscribe" type="button">
-            <span class="action-button__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d="M12 4.25C9.93 4.25 8.25 5.93 8.25 8V10.28C8.25 10.76 8.08 11.23 7.76 11.59L6.82 12.66C6.01 13.58 6.66 15 7.88 15H16.12C17.34 15 17.99 13.58 17.18 12.66L16.24 11.59C15.92 11.23 15.75 10.76 15.75 10.28V8C15.75 5.93 14.07 4.25 12 4.25Z"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <path
-                  d="M10.2 17.2C10.55 17.85 11.22 18.25 12 18.25C12.78 18.25 13.45 17.85 13.8 17.2"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </span>
-            <span class="action-button__label">SUBSCRIBE</span>
-          </button>
-          <div class="top-bar__actions cluster">
-            <div class="top-bar__share" data-share-menu>
-              <div class="share-rail__hint" data-share-rail-hint aria-hidden="true">
-                <span class="share-rail__hint-text">Share with your friend</span>
-                <span class="share-rail__hint-icon">👉</span>
+        <div class="home-hero" data-home-hero>
+          <header class="top-bar" aria-label="Page actions">
+            <button class="action-button action-button--subscribe" type="button" aria-label="Subscribe">
+              <span class="action-button__label">SUBSCRIBE</span>
+            </button>
+            <div class="top-bar__actions cluster">
+              <div class="top-bar__share" data-share-menu>
+                <div class="share-rail__hint" data-share-rail-hint aria-hidden="true">
+                  <span class="share-rail__hint-text">Share with your friend</span>
+                  <span class="share-rail__hint-icon">👉</span>
+                </div>
+                <div class="share-rail" id="desktop-share-rail" data-share-rail role="group" aria-label="Share options">
+                  <button
+                    class="share-rail__button share-rail__button--copy"
+                    type="button"
+                    aria-label="Copy link"
+                    data-share-option="copy"
+                    data-share-hint="Copy link"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        class="share-rail__copy-sheet-back"
+                        d="M8.1 4.35C7.24 4.35 6.55 5.04 6.55 5.9V14.6C6.55 15.46 7.24 16.15 8.1 16.15H8.8V7.95C8.8 6.75 9.78 5.77 10.98 5.77H16.88V5.9C16.88 5.04 16.19 4.35 15.33 4.35H8.1Z"
+                        fill="currentColor"
+                      />
+                      <path
+                        class="share-rail__copy-sheet"
+                        d="M10.78 5.77C9.58 5.77 8.6 6.75 8.6 7.95V18.1C8.6 19.3 9.58 20.28 10.78 20.28H16.63C17.83 20.28 18.8 19.3 18.8 18.1V10.62C18.8 10.08 18.59 9.56 18.2 9.18L15.39 6.37C15.01 5.98 14.49 5.77 13.95 5.77H10.78Z"
+                        fill="currentColor"
+                      />
+                      <path
+                        class="share-rail__copy-fold"
+                        d="M14.12 6.28V9.06C14.12 9.68 14.63 10.19 15.25 10.19H18.03L14.12 6.28Z"
+                        fill="none"
+                      />
+                      <path
+                        class="share-rail__copy-fold-line"
+                        d="M14.12 6.28V9.06C14.12 9.68 14.63 10.19 15.25 10.19H18.03"
+                        fill="none"
+                      />
+                    </svg>
+                  </button>
+
+                  <button
+                    class="share-rail__button share-rail__button--whatsapp"
+                    type="button"
+                    aria-label="Share via WhatsApp"
+                    data-share-option="whatsapp"
+                    data-share-hint="Share via WhatsApp"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        fill="currentColor"
+                        fill-rule="evenodd"
+                        d="M12.08 4.2C7.68 4.2 4.15 7.62 4.15 11.9C4.15 13.42 4.6 14.82 5.44 16.06L4.65 18.92L7.61 18.15C8.8 18.88 10.22 19.27 11.81 19.27C16.2 19.27 19.74 15.86 19.74 11.57C19.74 7.61 16.43 4.2 12.08 4.2ZM10.24 8.1C10.43 8.1 10.63 8.11 10.81 8.56L11.44 10.08C11.5 10.22 11.47 10.38 11.35 10.53L10.87 11.11C10.8 11.2 10.78 11.34 10.85 11.45C11.41 12.33 12.18 13.05 13.12 13.53C13.24 13.6 13.37 13.57 13.46 13.48L14.14 12.8C14.29 12.66 14.46 12.64 14.61 12.7L16.02 13.3C16.24 13.39 16.32 13.56 16.29 13.76C16.14 14.88 15.13 15.57 14.21 15.57C13.95 15.57 13.68 15.52 13.42 15.43C11.91 14.92 10.64 14.08 9.62 12.91C8.64 11.78 8.03 10.63 7.79 9.45C7.55 8.33 8.68 8.1 9.53 8.1H10.24Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </button>
+
+                  <button
+                    class="share-rail__button share-rail__button--facebook"
+                    type="button"
+                    aria-label="Share on Facebook"
+                    data-share-option="facebook"
+                    data-share-hint="Share on Facebook"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        d="M12.84 18.65V12.94H14.77L15.05 10.83H12.84V9.41C12.84 8.81 13.01 8.39 13.95 8.39H15.11V6.49C14.91 6.46 14.22 6.4 13.42 6.4C11.73 6.4 10.57 7.41 10.57 9.16V10.83H8.83V12.94H10.57V18.65H12.84Z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                <div class="promo-redirect-toast" data-promo-redirect-toast aria-hidden="true" role="status" aria-live="polite">
+                  <span class="promo-redirect-toast__text">
+                    Redirecting to Etsy in <span class="promo-redirect-toast__countdown" data-promo-redirect-countdown>5</span>s
+                  </span>
+                  <button
+                    class="promo-redirect-toast__cancel"
+                    type="button"
+                    aria-label="Cancel Etsy redirect"
+                    data-promo-redirect-cancel
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        d="M8 8L16 16"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M16 8L8 16"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                <span class="share-rail__hover-bridge" aria-hidden="true"></span>
+
+                <button
+                  class="action-button action-button--icon-only"
+                  type="button"
+                  aria-label="Share"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                  aria-controls="desktop-share-rail"
+                  data-share-page
+                  data-tooltip="Share with a friend"
+                >
+                  <span class="action-button__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        d="M12 14.75V5.75"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M8.8 8.95L12 5.75L15.2 8.95"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M7.25 12.7V15.35C7.25 16.7 8.35 17.8 9.7 17.8H14.3C15.65 17.8 16.75 16.7 16.75 15.35V12.7"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </span>
+                </button>
               </div>
-              <div class="share-rail" id="desktop-share-rail" data-share-rail role="group" aria-label="Share options">
-                <button
-                  class="share-rail__button share-rail__button--copy"
-                  type="button"
-                  aria-label="Copy link"
-                  data-share-option="copy"
-                  data-share-hint="Copy link"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      class="share-rail__copy-sheet-back"
-                      d="M8.1 4.35C7.24 4.35 6.55 5.04 6.55 5.9V14.6C6.55 15.46 7.24 16.15 8.1 16.15H8.8V7.95C8.8 6.75 9.78 5.77 10.98 5.77H16.88V5.9C16.88 5.04 16.19 4.35 15.33 4.35H8.1Z"
-                      fill="currentColor"
-                    />
-                    <path
-                      class="share-rail__copy-sheet"
-                      d="M10.78 5.77C9.58 5.77 8.6 6.75 8.6 7.95V18.1C8.6 19.3 9.58 20.28 10.78 20.28H16.63C17.83 20.28 18.8 19.3 18.8 18.1V10.62C18.8 10.08 18.59 9.56 18.2 9.18L15.39 6.37C15.01 5.98 14.49 5.77 13.95 5.77H10.78Z"
-                      fill="currentColor"
-                    />
-                    <path
-                      class="share-rail__copy-fold"
-                      d="M14.12 6.28V9.06C14.12 9.68 14.63 10.19 15.25 10.19H18.03L14.12 6.28Z"
-                      fill="none"
-                    />
-                    <path
-                      class="share-rail__copy-fold-line"
-                      d="M14.12 6.28V9.06C14.12 9.68 14.63 10.19 15.25 10.19H18.03"
-                      fill="none"
-                    />
-                  </svg>
-                </button>
-
-                <button
-                  class="share-rail__button share-rail__button--whatsapp"
-                  type="button"
-                  aria-label="Share via WhatsApp"
-                  data-share-option="whatsapp"
-                  data-share-hint="Share via WhatsApp"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      fill="currentColor"
-                      fill-rule="evenodd"
-                      d="M12.08 4.2C7.68 4.2 4.15 7.62 4.15 11.9C4.15 13.42 4.6 14.82 5.44 16.06L4.65 18.92L7.61 18.15C8.8 18.88 10.22 19.27 11.81 19.27C16.2 19.27 19.74 15.86 19.74 11.57C19.74 7.61 16.43 4.2 12.08 4.2ZM10.24 8.1C10.43 8.1 10.63 8.11 10.81 8.56L11.44 10.08C11.5 10.22 11.47 10.38 11.35 10.53L10.87 11.11C10.8 11.2 10.78 11.34 10.85 11.45C11.41 12.33 12.18 13.05 13.12 13.53C13.24 13.6 13.37 13.57 13.46 13.48L14.14 12.8C14.29 12.66 14.46 12.64 14.61 12.7L16.02 13.3C16.24 13.39 16.32 13.56 16.29 13.76C16.14 14.88 15.13 15.57 14.21 15.57C13.95 15.57 13.68 15.52 13.42 15.43C11.91 14.92 10.64 14.08 9.62 12.91C8.64 11.78 8.03 10.63 7.79 9.45C7.55 8.33 8.68 8.1 9.53 8.1H10.24Z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                </button>
-
-                <button
-                  class="share-rail__button share-rail__button--facebook"
-                  type="button"
-                  aria-label="Share on Facebook"
-                  data-share-option="facebook"
-                  data-share-hint="Share on Facebook"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      d="M12.84 18.65V12.94H14.77L15.05 10.83H12.84V9.41C12.84 8.81 13.01 8.39 13.95 8.39H15.11V6.49C14.91 6.46 14.22 6.4 13.42 6.4C11.73 6.4 10.57 7.41 10.57 9.16V10.83H8.83V12.94H10.57V18.65H12.84Z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                </button>
-              </div>
-
-              <span class="share-rail__hover-bridge" aria-hidden="true"></span>
 
               <button
-                class="action-button action-button--icon-only"
+                class="theme-toggle"
                 type="button"
-                aria-label="Share"
-                aria-haspopup="true"
-                aria-expanded="false"
-                aria-controls="desktop-share-rail"
-                data-share-page
-                data-tooltip="Share with a friend"
+                aria-label="Switch to dark mode"
+                aria-pressed="false"
+                data-tooltip="Switch to dark mode"
+                data-theme-toggle
               >
-                <span class="action-button__icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      d="M12 14.75V5.75"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M8.8 8.95L12 5.75L15.2 8.95"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M7.25 12.7V15.35C7.25 16.7 8.35 17.8 9.7 17.8H14.3C15.65 17.8 16.75 16.7 16.75 15.35V12.7"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </span>
+                <svg
+                  class="theme-toggle__icon theme-toggle__icon--sun"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="3.6" stroke="currentColor" stroke-width="1.8" />
+                  <path d="M12 3.5V6.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                  <path d="M12 17.9V20.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                  <path d="M3.5 12H6.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                  <path d="M17.9 12H20.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                  <path d="M6 6L7.8 7.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                  <path d="M16.2 16.2L18 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                  <path d="M6 18L7.8 16.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                  <path d="M16.2 7.8L18 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                </svg>
+                <svg
+                  class="theme-toggle__icon theme-toggle__icon--moon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M15.25 4.95C14.35 4.6 13.37 4.4 12.35 4.4C7.97 4.4 4.42 7.95 4.42 12.33C4.42 16.71 7.97 20.26 12.35 20.26C15.95 20.26 19 17.86 19.98 14.58C19.22 14.93 18.37 15.12 17.48 15.12C14.15 15.12 11.45 12.42 11.45 9.09C11.45 7.52 12.05 6.1 13.04 5.04"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
               </button>
             </div>
+            <div class="top-bar__tooltip" data-top-bar-tooltip aria-hidden="true"></div>
+          </header>
 
-            <button
-              class="theme-toggle"
-              type="button"
-              aria-label="Switch to dark mode"
-              aria-pressed="false"
-              data-tooltip="Switch to dark mode"
-              data-theme-toggle
-            >
-              <svg
-                class="theme-toggle__icon theme-toggle__icon--sun"
-                viewBox="0 0 24 24"
-                fill="none"
-                aria-hidden="true"
-              >
-                <circle cx="12" cy="12" r="3.6" stroke="currentColor" stroke-width="1.8" />
-                <path d="M12 3.5V6.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-                <path d="M12 17.9V20.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-                <path d="M3.5 12H6.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-                <path d="M17.9 12H20.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-                <path d="M6 6L7.8 7.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-                <path d="M16.2 16.2L18 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-                <path d="M6 18L7.8 16.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-                <path d="M16.2 7.8L18 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-              </svg>
-              <svg
-                class="theme-toggle__icon theme-toggle__icon--moon"
-                viewBox="0 0 24 24"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path
-                  d="M15.25 4.95C14.35 4.6 13.37 4.4 12.35 4.4C7.97 4.4 4.42 7.95 4.42 12.33C4.42 16.71 7.97 20.26 12.35 20.26C15.95 20.26 19 17.86 19.98 14.58C19.22 14.93 18.37 15.12 17.48 15.12C14.15 15.12 11.45 12.42 11.45 9.09C11.45 7.52 12.05 6.1 13.04 5.04"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </button>
-          </div>
-        </header>
-
-        <section class="profile stack" aria-label="Brand profile">
-          <span class="profile__story-mobile-hint" aria-hidden="true">
+          <section class="profile stack" aria-label="Brand profile">
+          <button
+            class="profile__story-mobile-hint"
+            type="button"
+            aria-label="Open Komfi Kat stories with new updates"
+            data-story-open-hint
+          >
             <span class="profile__story-mobile-hint-text">New story</span>
             <span class="profile__story-mobile-hint-icon">👇</span>
-          </span>
+          </button>
           <button class="profile__story-trigger" type="button" aria-label="Open Komfi Kat stories" data-story-open>
             <span class="profile__story-desktop-hint" aria-hidden="true">
-              <span class="profile__story-desktop-hint-text">New story</span>
-              <span class="profile__story-desktop-hint-icon">👇</span>
+              <span class="profile__story-desktop-hint-text">Click to see new Komfi Kat stories!</span>
             </span>
             <span class="profile__story-ring" aria-hidden="true">
               <span class="profile__story-core">
-                <span class="profile__logo-frame">
+                <span class="profile__logo-frame" data-profile-logo-frame>
                   <img
                     class="profile__logo"
                     src="img/logo.webp"
@@ -284,13 +366,28 @@
             </span>
           </button>
           <div class="profile__copy stack">
-            <h1 class="profile__title">Komfi Kat</h1>
+            <h1>
+              <a class="profile__title" href="#" aria-label="Visit home page" data-copy-profile-title>Komfi Kat</a>
+            </h1>
             <p class="profile__tagline">Cozy &amp; Relaxing Coloring Books</p>
           </div>
-        </section>
+          </section>
 
-        <section class="social-links" aria-label="Social media links">
+          <section class="social-links" aria-label="Social media links">
           <ul class="social-links__list cluster">
+            <li class="social-links__hashtag-item social-links__hashtag-item--start">
+              <button
+                class="social-links__hashtag"
+                type="button"
+                aria-label="See posts tagged #komfikatcoloring"
+                data-hashtag-tooltip="See posts tagged #komfikatcoloring"
+                data-hashtag-instagram-url="https://www.instagram.com/explore/search/keyword/?q=%23komfikatcoloring"
+                data-hashtag-youtube-url="https://www.youtube.com/hashtag/komfikatcoloring"
+                data-hashtag-tiktok-url="https://www.tiktok.com/tag/komfikatcoloring"
+              >
+                <span class="social-links__hashtag-label">#komfikatcoloring</span>
+              </button>
+            </li>
             <li>
               <a
                 class="social-links__link"
@@ -298,6 +395,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
+                data-handle-label="komfikat"
               >
                 <svg
                   class="social-links__icon"
@@ -319,6 +417,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="TikTok"
+                data-handle-label="komfikat"
               >
                 <svg
                   class="social-links__icon"
@@ -340,6 +439,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="YouTube"
+                data-handle-label="komfikatcoloring"
               >
                 <svg
                   class="social-links__icon"
@@ -361,6 +461,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Threads"
+                data-handle-label="komfikat"
               >
                 <svg
                   class="social-links__icon"
@@ -382,6 +483,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Pinterest"
+                data-handle-label="komfikat"
               >
                 <svg
                   class="social-links__icon"
@@ -396,10 +498,23 @@
                 </svg>
               </a>
             </li>
+            <li class="social-links__hashtag-item social-links__hashtag-item--end">
+              <button
+                class="social-links__hashtag"
+                type="button"
+                aria-label="See posts tagged #colorwithkomfikat"
+                data-hashtag-tooltip="See posts tagged #colorwithkomfikat"
+                data-hashtag-instagram-url="https://www.instagram.com/explore/search/keyword/?q=%23colorwithkomfikat"
+                data-hashtag-youtube-url="https://www.youtube.com/hashtag/colorwithkomfikat"
+                data-hashtag-tiktok-url="https://www.tiktok.com/tag/colorwithkomfikat"
+              >
+                <span class="social-links__hashtag-label">#colorwithkomfikat</span>
+              </button>
+            </li>
           </ul>
-        </section>
+          </section>
 
-        <section class="promo-carousel" aria-label="Latest carousel previews">
+          <section class="promo-carousel" aria-label="Latest carousel previews">
           <div class="promo-carousel__shell" data-promo-carousel>
             <span class="promo-carousel__badge">NEW</span>
 
@@ -439,7 +554,8 @@
               </button>
             </div>
           </div>
-        </section>
+          </section>
+        </div>
 
         <section class="link-section" aria-label="Shop links">
           <ul class="link-list stack">
@@ -469,10 +585,12 @@
               </a>
             </li>
             <li>
-              <div
-                class="link-card link-card--amazon link-card--disabled"
-                aria-label="Amazon coming soon"
-                aria-disabled="true"
+              <a
+                class="link-card link-card--amazon"
+                href="http://amazon.com/author/komfikat"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Shop on Amazon for the Hobby Girl coloring book"
               >
                 <span class="link-card__badge" aria-hidden="true">
                   <img
@@ -486,10 +604,10 @@
                 </span>
                 <span class="link-card__content">
                   <span class="link-card__title">Amazon Shop</span>
-                  <span class="link-card__subtitle">Coming soon</span>
+                  <span class="link-card__subtitle">Paperback Version</span>
                 </span>
                 <span class="link-card__spacer" aria-hidden="true"></span>
-              </div>
+              </a>
             </li>
             <li>
               <div
@@ -620,6 +738,7 @@
             </div>
           </div>
         </dialog>
+
       </div>
     </main>
   </body>

@@ -1,4 +1,7 @@
 window.KomfiKatCarouselManifest = {
+  ctaTitle: "Hobby Girl",
+  ctaSubtitle: "Cute & Cozy Coloring Book",
+
   // Edit CTA buttons here: labels, subtitles, icons, links, and disabled state.
   actions: [
     {
@@ -7,13 +10,18 @@ window.KomfiKatCarouselManifest = {
       icon: "img/icons/etsy.svg",
       href: "https://komfikatcoloring.etsy.com/listing/4472798201",
       className: "promo-carousel__shop-button--etsy",
+      promoCode: "COZY10",
+      promoLabel: "PROMO CODE",
+      promoHint: "Tap to copy",
+      promoCopiedLabel: "Copied!",
+      promoCopiedHint: "Ready to paste",
     },
     {
       label: "Buy on Amazon",
-      subtitle: "Coming soon",
+      subtitle: "Paperback Version",
       icon: "img/icons/amazon.svg",
+      href: "https://www.amazon.com/dp/B0GVF789ZJ",
       className: "promo-carousel__shop-button--amazon",
-      disabled: true,
     },
     {
       label: "View on Website",
@@ -35,6 +43,10 @@ window.KomfiKatCarouselManifest = {
       { src: "img/carousel/1-1152.webp", srcset: "img/carousel/1-768.webp 768w, img/carousel/1-1152.webp 1152w", sizes: "(max-width: 30rem) 91vw, 575px", width: 1152, height: 1152, alt: "Hobby Girl cover" },
       { src: "img/carousel/2-1152.webp", srcset: "img/carousel/2-768.webp 768w, img/carousel/2-1152.webp 1152w", sizes: "(max-width: 30rem) 91vw, 575px", width: 1152, height: 1152, alt: "Instagram carousel image 2" },
       { src: "img/carousel/3-1152.webp", srcset: "img/carousel/3-768.webp 768w, img/carousel/3-1152.webp 1152w", sizes: "(max-width: 30rem) 91vw, 575px", width: 1152, height: 1152, alt: "Instagram carousel image 3" },
+      { src: "img/carousel/4-1152.webp", srcset: "img/carousel/4-768.webp 768w, img/carousel/4-1152.webp 1152w", sizes: "(max-width: 30rem) 91vw, 575px", width: 1152, height: 1152, alt: "Instagram carousel image 4" },
+      { src: "img/carousel/5-1152.webp", srcset: "img/carousel/5-768.webp 768w, img/carousel/5-1152.webp 1152w", sizes: "(max-width: 30rem) 91vw, 575px", width: 1152, height: 1152, alt: "Instagram carousel image 5" },
+      { src: "img/carousel/6-1152.webp", srcset: "img/carousel/6-768.webp 768w, img/carousel/6-1152.webp 1152w", sizes: "(max-width: 30rem) 91vw, 575px", width: 1152, height: 1152, alt: "Instagram carousel image 6" },
+      { src: "img/carousel/7-1152.webp", srcset: "img/carousel/7-768.webp 768w, img/carousel/7-1152.webp 1152w", sizes: "(max-width: 30rem) 91vw, 575px", width: 1152, height: 1152, alt: "Instagram carousel image 7" },
     ],
   },
 };

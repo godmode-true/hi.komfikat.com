@@ -17,10 +17,12 @@
       return;
     }
 
-    const pageBg = getComputedStyle(dom.root).getPropertyValue("--page-bg").trim();
+    const browserChromeColor =
+      getComputedStyle(dom.root).getPropertyValue("--browser-chrome-color").trim() ||
+      getComputedStyle(dom.root).getPropertyValue("--page-bg").trim();
 
-    if (pageBg) {
-      dom.themeColorMeta.setAttribute("content", pageBg);
+    if (browserChromeColor) {
+      dom.themeColorMeta.setAttribute("content", browserChromeColor);
     }
   }
 
@@ -130,9 +132,42 @@
     syncThemeToggle(initialTheme);
     updateThemeColor();
 
+    dom.themeToggle?.addEventListener("mouseenter", () => {
+      helpers.showTopBarTooltip(
+        dom.themeToggle?.dataset.tooltip || dom.themeToggle?.ariaLabel || "",
+        "theme-toggle",
+        "share-button-left",
+      );
+    });
+
+    dom.themeToggle?.addEventListener("mouseleave", () => {
+      helpers.hideTopBarTooltip("theme-toggle");
+    });
+
+    dom.themeToggle?.addEventListener("focus", () => {
+      helpers.showTopBarTooltip(
+        dom.themeToggle?.dataset.tooltip || dom.themeToggle?.ariaLabel || "",
+        "theme-toggle",
+        "share-button-left",
+      );
+    });
+
+    dom.themeToggle?.addEventListener("blur", () => {
+      helpers.hideTopBarTooltip("theme-toggle");
+    });
+
     dom.themeToggle?.addEventListener("click", () => {
       const nextTheme = dom.root.dataset.theme === "dark" ? "light" : "dark";
       setTheme(nextTheme);
+
+      if (dom.themeToggle?.matches(":hover, :focus-visible, :focus")) {
+        helpers.showTopBarTooltip(
+          dom.themeToggle.dataset.tooltip || dom.themeToggle.ariaLabel || "",
+          "theme-toggle",
+          "share-button-left",
+          { trigger: "click" },
+        );
+      }
     });
   };
 })();

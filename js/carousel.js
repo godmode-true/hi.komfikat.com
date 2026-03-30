@@ -7,6 +7,8 @@
 
   const { dom } = App;
   const defaultManifest = {
+    ctaTitle: "Hobby Girl",
+    ctaSubtitle: "Cute & Cozy Coloring Book",
     actions: [
       {
         label: "Buy on Etsy",
@@ -14,13 +16,18 @@
         icon: "img/icons/etsy.svg",
         href: "https://komfikatcoloring.etsy.com/listing/4472798201",
         className: "promo-carousel__shop-button--etsy",
+        promoCode: "COZY10",
+        promoLabel: "PROMO CODE",
+        promoHint: "Tap to copy",
+        promoCopiedLabel: "Copied!",
+        promoCopiedHint: "Ready to paste",
       },
       {
         label: "Buy on Amazon",
-        subtitle: "Coming soon",
+        subtitle: "Paperback Version",
         icon: "img/icons/amazon.svg",
+        href: "https://www.amazon.com/dp/B0GVF789ZJ",
         className: "promo-carousel__shop-button--amazon",
-        disabled: true,
       },
       {
         label: "View on Website",
@@ -56,6 +63,12 @@
       : defaultManifest.slides.files;
 
     return {
+      ctaTitle:
+        typeof manifest.ctaTitle === "string" && manifest.ctaTitle.trim() ? manifest.ctaTitle.trim() : defaultManifest.ctaTitle,
+      ctaSubtitle:
+        typeof manifest.ctaSubtitle === "string" && manifest.ctaSubtitle.trim()
+          ? manifest.ctaSubtitle.trim()
+          : defaultManifest.ctaSubtitle,
       actions:
         Array.isArray(manifest.actions) && manifest.actions.length > 0 ? manifest.actions : defaultManifest.actions,
       slides: {
@@ -101,13 +114,16 @@
   }
 
   function getVisibleCards() {
-    return window.matchMedia("(max-width: 30rem)").matches ? 1 : 2;
+    return window.matchMedia("(max-width: 48rem)").matches ? 1 : 2;
   }
 
-  function createCarouselItems(imageSlides, actions, visibleCardsCount) {
+  function createCarouselItems(imageSlides, ctaTitle, ctaSubtitle, actions, visibleCardsCount) {
     const ctaItem = {
       type: "cta",
-      title: "Shop links",
+      title: ctaTitle,
+      subtitle: ctaSubtitle,
+      coverImage: "img/carousel/1.png",
+      coverImageAlt: imageSlides[0]?.alt || ctaTitle,
       actions,
     };
 
@@ -152,6 +168,203 @@
     return Array.from({ length: items.length - visibleCardsCount + 1 }, (_, index) => index);
   }
 
+  function createBrandIconElement(action, className) {
+    const icon = document.createElement("img");
+    icon.className = className;
+    icon.src = action.icon;
+    icon.alt = "";
+    icon.width = action.className?.includes("--website") ? 200 : 24;
+    icon.height = action.className?.includes("--website") ? 200 : 24;
+    icon.decoding = "async";
+    icon.draggable = false;
+    return icon;
+  }
+
+  let promoRedirectTimeout = 0;
+  let promoRedirectInterval = 0;
+  let promoRedirectDeadline = 0;
+  let promoRedirectHref = "";
+  const PROMO_REDIRECT_DELAY_MS = 5000;
+  const PROMO_REDIRECT_TRANSITION_MS = 180;
+  let promoRedirectCleanupTimeout = 0;
+
+  function clearPromoRedirectTimers() {
+    window.clearTimeout(promoRedirectTimeout);
+    window.clearInterval(promoRedirectInterval);
+    promoRedirectTimeout = 0;
+    promoRedirectInterval = 0;
+  }
+
+  function schedulePromoRedirectToastCleanup() {
+    window.clearTimeout(promoRedirectCleanupTimeout);
+    promoRedirectCleanupTimeout = window.setTimeout(() => {
+      if (dom.promoRedirectToast?.dataset.visible === "true") {
+        return;
+      }
+
+      App.helpers.setPromoRedirectToastContent?.({ mode: "redirect" });
+    }, PROMO_REDIRECT_TRANSITION_MS);
+  }
+
+  function dismissPromoRedirectToast() {
+    if (!dom.promoRedirectToast) {
+      App.helpers.scheduleIdleTopBarTooltipRestore?.();
+      return;
+    }
+
+    delete dom.promoRedirectToast.dataset.visible;
+    dom.promoRedirectToast.setAttribute("aria-hidden", "true");
+    schedulePromoRedirectToastCleanup();
+    App.helpers.scheduleIdleTopBarTooltipRestore?.();
+  }
+
+  function hidePromoRedirectToast() {
+    clearPromoRedirectTimers();
+    promoRedirectHref = "";
+    promoRedirectDeadline = 0;
+    if (dom.shareMenu) {
+      delete dom.shareMenu.dataset.promoRedirectVisible;
+    }
+
+    if (!dom.promoRedirectToast) {
+      App.helpers.scheduleIdleTopBarTooltipRestore?.();
+      return;
+    }
+
+    dismissPromoRedirectToast();
+  }
+
+  App.dismissPromoRedirectToast = dismissPromoRedirectToast;
+  App.hidePromoRedirectToast = hidePromoRedirectToast;
+
+  function updatePromoRedirectCountdown() {
+    if (!dom.promoRedirectCountdown) {
+      return;
+    }
+
+    const remaining = Math.max(0, promoRedirectDeadline - window.performance.now());
+    const remainingSeconds = remaining / 1000;
+    const nextValue = Math.ceil(remainingSeconds).toString();
+    dom.promoRedirectCountdown.textContent = nextValue;
+    dom.promoRedirectCountdown.dataset.value = nextValue;
+  }
+
+  function schedulePromoRedirect(href) {
+    if (!href) {
+      return;
+    }
+
+    App.helpers.dismissStickyMenuPrompts?.("promo-redirect");
+    clearPromoRedirectTimers();
+    window.clearTimeout(promoRedirectCleanupTimeout);
+    promoRedirectHref = href;
+    promoRedirectDeadline = window.performance.now() + PROMO_REDIRECT_DELAY_MS;
+
+    if (dom.shareMenu) {
+      delete dom.shareMenu.dataset.shareMenuOpen;
+      delete dom.shareMenu.dataset.shareHintVisible;
+      delete dom.shareMenu.dataset.shareFeedbackVisible;
+      dom.shareMenu.dataset.promoRedirectVisible = "true";
+    }
+
+    if (dom.shareButton) {
+      dom.shareButton.setAttribute("aria-expanded", "false");
+    }
+
+    if (dom.promoRedirectToast) {
+      App.helpers.setPromoRedirectToastContent?.({ mode: "redirect" });
+      dom.promoRedirectToast.dataset.visible = "true";
+      dom.promoRedirectToast.setAttribute("aria-hidden", "false");
+    }
+
+    updatePromoRedirectCountdown();
+
+    promoRedirectInterval = window.setInterval(updatePromoRedirectCountdown, 50);
+    promoRedirectTimeout = window.setTimeout(() => {
+      const targetHref = promoRedirectHref;
+      hidePromoRedirectToast();
+      window.open(targetHref, "_blank", "noopener,noreferrer");
+    }, PROMO_REDIRECT_DELAY_MS);
+  }
+
+  function createPromoChip(action) {
+    const getIdleHint = () => (App.helpers.isDesktopPointerDevice() ? "Click to copy" : "Tap to copy");
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "promo-carousel__promo-chip";
+    chip.setAttribute("aria-label", `Copy promo code ${action.promoCode}`);
+
+    const eyebrow = document.createElement("span");
+    eyebrow.className = "promo-carousel__promo-chip-label";
+    eyebrow.textContent = action.promoLabel || "PROMO CODE";
+
+    const code = document.createElement("span");
+    code.className = "promo-carousel__promo-chip-code";
+    code.textContent = action.promoCode;
+
+    const hint = document.createElement("span");
+    hint.className = "promo-carousel__promo-chip-hint";
+    hint.textContent = getIdleHint();
+
+    chip.append(eyebrow, code, hint);
+
+    let failureResetTimeout = 0;
+
+    if (action.promoCopied) {
+      chip.dataset.copyState = "copied";
+      eyebrow.textContent = action.promoCopiedLabel || "Copied!";
+      hint.textContent = action.promoCopiedHint || "Ready to paste";
+      chip.setAttribute("aria-label", `Promo code ${action.promoCode} copied`);
+    }
+
+    chip.addEventListener("click", async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const didCopy = await App.helpers.copyText(action.promoCode);
+      window.clearTimeout(failureResetTimeout);
+
+      action.promoCopied = didCopy;
+      chip.dataset.copyState = didCopy ? "copied" : "failed";
+
+      if (didCopy) {
+        eyebrow.textContent = action.promoCopiedLabel || "Copied!";
+        hint.textContent = action.promoCopiedHint || "Ready to paste";
+        chip.setAttribute("aria-label", `Promo code ${action.promoCode} copied`);
+        if (action.href) {
+          schedulePromoRedirect(action.href);
+        }
+      } else {
+        action.promoCopied = false;
+        eyebrow.textContent = action.promoLabel || "PROMO CODE";
+        hint.textContent = getIdleHint();
+        chip.setAttribute("aria-label", `Copy promo code ${action.promoCode}`);
+        failureResetTimeout = window.setTimeout(() => {
+          delete chip.dataset.copyState;
+        }, 1600);
+      }
+    });
+
+    chip.addEventListener("dragstart", (event) => event.preventDefault());
+
+    return chip;
+  }
+
+  if (dom.promoRedirectCancel) {
+    dom.promoRedirectCancel.addEventListener("click", () => {
+      hidePromoRedirectToast();
+    });
+  }
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !dom.promoRedirectToast?.dataset.visible) {
+      return;
+    }
+
+    event.preventDefault();
+    hidePromoRedirectToast();
+  });
+
   function createShopButton(action) {
     const className = `promo-carousel__shop-button ${action.className}`.trim();
     const content = document.createElement("span");
@@ -160,16 +373,7 @@
     const badge = document.createElement("span");
     badge.className = "promo-carousel__shop-button-badge";
     badge.setAttribute("aria-hidden", "true");
-
-        const icon = document.createElement("img");
-        icon.className = "promo-carousel__shop-button-icon";
-        icon.src = action.icon;
-        icon.alt = "";
-        icon.width = action.className?.includes("--website") ? 200 : 24;
-        icon.height = action.className?.includes("--website") ? 200 : 24;
-        icon.decoding = "async";
-        icon.draggable = false;
-        badge.append(icon);
+    badge.append(createBrandIconElement(action, "promo-carousel__shop-button-icon"));
 
     const copy = document.createElement("span");
     copy.className = "promo-carousel__shop-button-copy";
@@ -189,6 +393,19 @@
     copy.append(title, subtitle);
     content.append(badge, copy, spacer);
 
+    const buildWrap = (control) => {
+      if (!action.promoCode || action.disabled) {
+        return control;
+      }
+
+      control.classList.add("promo-carousel__shop-button--has-promo");
+
+      const wrap = document.createElement("span");
+      wrap.className = "promo-carousel__shop-button-wrap";
+      wrap.append(control, createPromoChip(action));
+      return wrap;
+    };
+
     if (action.disabled) {
       const button = document.createElement("button");
       button.className = className;
@@ -196,7 +413,7 @@
       button.setAttribute("aria-disabled", "true");
       button.addEventListener("dragstart", (event) => event.preventDefault());
       button.append(content);
-      return button;
+      return buildWrap(button);
     }
 
     const link = document.createElement("a");
@@ -207,7 +424,7 @@
     link.draggable = false;
     link.addEventListener("dragstart", (event) => event.preventDefault());
     link.append(content);
-    return link;
+    return buildWrap(link);
   }
 
   function createCard(item, index) {
@@ -220,12 +437,41 @@
       const panel = document.createElement("div");
       panel.className = "promo-carousel__cta-panel";
 
+      const header = document.createElement("div");
+      header.className = "promo-carousel__cta-header";
+
+      if (item.coverImage) {
+        const cover = document.createElement("img");
+        cover.className = "promo-carousel__cta-cover";
+        cover.src = item.coverImage;
+        cover.alt = item.coverImageAlt || "";
+        cover.width = 240;
+        cover.height = 240;
+        cover.decoding = "async";
+        cover.draggable = false;
+        header.append(cover);
+      }
+
+      const copy = document.createElement("div");
+      copy.className = "promo-carousel__cta-copy";
+
+      const title = document.createElement("h3");
+      title.className = "promo-carousel__cta-title";
+      title.textContent = item.title;
+
+      const subtitle = document.createElement("p");
+      subtitle.className = "promo-carousel__cta-subtitle";
+      subtitle.textContent = item.subtitle || "";
+
+      copy.append(title, subtitle);
+      header.append(copy);
+
       const actions = document.createElement("div");
       actions.className = "promo-carousel__cta-actions";
       actions.style.setProperty("--promo-cta-action-count", String(item.actions.length || 0));
       item.actions.forEach((action) => actions.append(createShopButton(action)));
 
-      panel.append(actions);
+      panel.append(header, actions);
       card.append(panel);
       return card;
     }
@@ -317,7 +563,13 @@
     preloadCarouselImages(imageSlides);
 
     let currentVisibleCards = getVisibleCards();
-    let carouselItems = createCarouselItems(imageSlides, manifest.actions, currentVisibleCards);
+    let carouselItems = createCarouselItems(
+      imageSlides,
+      manifest.ctaTitle,
+      manifest.ctaSubtitle,
+      manifest.actions,
+      currentVisibleCards,
+    );
     let pageStarts = [];
     let maxIndex = 0;
     let pageCount = 0;
@@ -337,10 +589,12 @@
     let dragStartX = 0;
     let dragStartY = 0;
     let dragOffset = 0;
+    let dragInputMode = "";
     let gestureAxis = "";
     let suppressClick = false;
     let stepSize = 0;
     let activeNavButton = null;
+    let lastTapNavigateAt = 0;
 
     shell.setAttribute("aria-roledescription", "carousel");
     viewport.setAttribute("tabindex", "0");
@@ -351,13 +605,19 @@
       const visibleCardCountChanged = nextVisibleCards !== currentVisibleCards;
 
       currentVisibleCards = nextVisibleCards;
-      carouselItems = createCarouselItems(imageSlides, manifest.actions, currentVisibleCards);
+      carouselItems = createCarouselItems(
+        imageSlides,
+        manifest.ctaTitle,
+        manifest.ctaSubtitle,
+        manifest.actions,
+        currentVisibleCards,
+      );
       pageStarts = createPageStarts(carouselItems, currentVisibleCards);
       pageCount = pageStarts.length;
       maxIndex = Math.max(pageCount - 1, 0);
       hasPagination = maxIndex > 0;
       shouldLoop = pageCount > 1;
-      cloneCount = shouldLoop ? Math.min(currentVisibleCards, carouselItems.length) : 0;
+      cloneCount = shouldLoop ? carouselItems.length : 0;
       renderedItems = [...carouselItems.slice(-cloneCount), ...carouselItems, ...carouselItems.slice(0, cloneCount)];
 
       activeIndex = visibleCardCountChanged ? 0 : Math.min(activeIndex, maxIndex);
@@ -395,6 +655,16 @@
 
     function getStep() {
       const gap = getGap();
+      const firstCard = track.querySelector(".promo-carousel__card");
+
+      if (firstCard instanceof HTMLElement) {
+        const rawWidth =
+          Number.parseFloat(window.getComputedStyle(firstCard).width || "0") ||
+          firstCard.offsetWidth ||
+          firstCard.clientWidth;
+        return rawWidth + gap;
+      }
+
       const viewportStyles = window.getComputedStyle(viewport);
       const viewportPadding =
         (Number.parseFloat(viewportStyles.paddingLeft || "0") || 0) +
@@ -408,6 +678,16 @@
     }
 
     function syncControls() {
+      shell.dataset.activeSlideType = carouselItems[pageStarts[activeIndex] ?? activeIndex]?.type || "image";
+
+      Array.from(track.children).forEach((card, index) => {
+        if (!(card instanceof HTMLElement)) {
+          return;
+        }
+
+        card.dataset.cardState = index >= renderedIndex && index < renderedIndex + currentVisibleCards ? "active" : "rest";
+      });
+
       dots.forEach((dot, index) => {
         dot.setAttribute("aria-current", String(index === activeIndex));
       });
@@ -436,17 +716,34 @@
       return target instanceof Element && Boolean(target.closest(".promo-carousel__nav, .promo-carousel__dot"));
     }
 
-    function prepareDrag(clientX, clientY = 0) {
+    function isInteractiveTarget(target) {
+      return (
+        target instanceof Element &&
+        Boolean(target.closest("a, button, input, textarea, select, label, summary, [role=\"button\"]"))
+      );
+    }
+
+    function prepareDrag(clientX, clientY = 0, inputMode = "") {
       suppressClick = false;
       pointerDragReady = true;
       dragStartX = clientX;
       dragStartY = clientY;
       dragOffset = 0;
+      dragInputMode = inputMode;
       gestureAxis = "";
     }
 
     function updateDrag(clientX, capturePointerId = null) {
-      dragOffset = clientX - dragStartX;
+      const nextOffset = clientX - dragStartX;
+      if (stepSize > 0 && dragInputMode !== "mouse") {
+        dragOffset = Math.max(-stepSize, Math.min(stepSize, nextOffset));
+      } else if (stepSize > 0) {
+        const minOffset = -Math.max(0, (renderedItems.length - currentVisibleCards - renderedIndex) * stepSize);
+        const maxOffset = Math.max(0, renderedIndex * stepSize);
+        dragOffset = Math.max(minOffset, Math.min(maxOffset, nextOffset));
+      } else {
+        dragOffset = nextOffset;
+      }
 
       if (!isDragging) {
         if (Math.abs(dragOffset) < 8) {
@@ -473,18 +770,22 @@
     }
 
     function goToNext() {
-      if (isAnimating || maxIndex <= 0) {
+      if (isAnimating) {
         return;
       }
 
-      if (activeIndex === maxIndex) {
+      if (maxIndex <= 0) {
+        return;
+      }
+
+      if (activeIndex >= maxIndex) {
         if (!shouldLoop) {
           return;
         }
 
         activeIndex = 0;
         renderedIndex += currentVisibleCards;
-        pendingSnapIndex = cloneCount + (pageStarts[0] ?? 0);
+        pendingSnapIndex = cloneCount + (pageStarts[activeIndex] ?? 0);
       } else {
         activeIndex += 1;
         renderedIndex = cloneCount + (pageStarts[activeIndex] ?? 0);
@@ -497,11 +798,15 @@
     }
 
     function goToPrevious() {
-      if (isAnimating || maxIndex <= 0) {
+      if (isAnimating) {
         return;
       }
 
-      if (activeIndex === 0) {
+      if (maxIndex <= 0) {
+        return;
+      }
+
+      if (activeIndex <= 0) {
         if (!shouldLoop) {
           return;
         }
@@ -550,11 +855,12 @@
       if (!isDragging) {
         pointerDragReady = false;
         dragOffset = 0;
+        dragInputMode = "";
         gestureAxis = "";
         return;
       }
 
-      const threshold = Math.max(36, stepSize * 0.16);
+      const threshold = Math.max(32, stepSize * 0.22);
       suppressClick = Math.abs(dragOffset) > 8;
 
       isDragging = false;
@@ -562,6 +868,47 @@
       pointerDragReady = false;
       gestureAxis = "";
       delete shell.dataset.dragging;
+
+      if (dragInputMode === "mouse" && currentVisibleCards > 1 && stepSize > 0) {
+        const projectedRenderedIndex = renderedIndex - dragOffset / stepSize;
+        let nearest = {
+          activeIndex,
+          renderedIndex,
+          distance: Number.POSITIVE_INFINITY,
+        };
+
+        pageStarts.forEach((pageStart, index) => {
+          const baseRenderedIndex = cloneCount + pageStart;
+          const candidates = shouldLoop
+            ? [baseRenderedIndex - carouselItems.length, baseRenderedIndex, baseRenderedIndex + carouselItems.length]
+            : [baseRenderedIndex];
+
+          candidates.forEach((candidateRenderedIndex) => {
+            const distance = Math.abs(candidateRenderedIndex - projectedRenderedIndex);
+
+            if (distance < nearest.distance) {
+              nearest = {
+                activeIndex: index,
+                renderedIndex: candidateRenderedIndex,
+                distance,
+              };
+            }
+          });
+        });
+
+        activeIndex = nearest.activeIndex;
+        renderedIndex = nearest.renderedIndex;
+        dragOffset = 0;
+        dragInputMode = "";
+
+        const baseRenderedIndex = cloneCount + (pageStarts[activeIndex] ?? 0);
+        pendingSnapIndex = nearest.renderedIndex === baseRenderedIndex ? null : baseRenderedIndex;
+        isAnimating = true;
+        syncPosition();
+        return;
+      }
+
+      dragInputMode = "";
 
       if (dragOffset > threshold) {
         goToPrevious();
@@ -628,7 +975,7 @@
       }
 
       pointerId = event.pointerId;
-      prepareDrag(event.clientX, event.clientY);
+      prepareDrag(event.clientX, event.clientY, "mouse");
     });
 
     viewport.addEventListener(
@@ -648,7 +995,7 @@
         }
 
         touchId = touch.identifier;
-        prepareDrag(touch.clientX, touch.clientY);
+        prepareDrag(touch.clientX, touch.clientY, "touch");
       },
       { passive: true },
     );
@@ -766,6 +1113,35 @@
       },
       true,
     );
+
+    shell.addEventListener("click", (event) => {
+      if (currentVisibleCards !== 1 || isAnimating || event.defaultPrevented) {
+        return;
+      }
+
+      if (
+        isPagerTarget(event.target) ||
+        isInteractiveTarget(event.target)
+      ) {
+        return;
+      }
+
+      const now = performance.now();
+      if (now - lastTapNavigateAt < 200) {
+        return;
+      }
+      lastTapNavigateAt = now;
+
+      const rect = shell.getBoundingClientRect();
+      const midpoint = rect.left + rect.width / 2;
+
+      if (event.clientX < midpoint) {
+        goToPrevious();
+        return;
+      }
+
+      goToNext();
+    });
 
     if (typeof ResizeObserver === "function") {
       const resizeObserver = new ResizeObserver(() => {
