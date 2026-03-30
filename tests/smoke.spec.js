@@ -83,12 +83,52 @@ test("stories open and close from the avatar trigger", async ({ page }) => {
 test("footer back-to-top control returns the page to the start", async ({ page }) => {
   await gotoHome(page);
 
+  const initialGeometry = await page.evaluate(() => {
+    const topBar = document.querySelector(".top-bar");
+    const logo = document.querySelector(".profile__logo-frame");
+
+    if (!(topBar instanceof HTMLElement) || !(logo instanceof HTMLElement)) {
+      return null;
+    }
+
+    const topBarRect = topBar.getBoundingClientRect();
+    const logoRect = logo.getBoundingClientRect();
+
+    return {
+      logoTop: logoRect.top,
+      gap: logoRect.top - topBarRect.bottom,
+    };
+  });
+
+  expect(initialGeometry).not.toBeNull();
+
   const footerButton = page.locator("[data-scroll-top]");
   await footerButton.scrollIntoViewIfNeeded();
   await page.waitForFunction(() => window.scrollY > 0);
   await footerButton.click();
 
-  await page.waitForFunction(() => window.scrollY < 24);
+  await page.waitForFunction(() => window.scrollY === 0);
+
+  const finalGeometry = await page.evaluate(() => {
+    const topBar = document.querySelector(".top-bar");
+    const logo = document.querySelector(".profile__logo-frame");
+
+    if (!(topBar instanceof HTMLElement) || !(logo instanceof HTMLElement)) {
+      return null;
+    }
+
+    const topBarRect = topBar.getBoundingClientRect();
+    const logoRect = logo.getBoundingClientRect();
+
+    return {
+      logoTop: logoRect.top,
+      gap: logoRect.top - topBarRect.bottom,
+    };
+  });
+
+  expect(finalGeometry).not.toBeNull();
+  expect(Math.abs(finalGeometry.logoTop - initialGeometry.logoTop)).toBeLessThanOrEqual(1);
+  expect(Math.abs(finalGeometry.gap - initialGeometry.gap)).toBeLessThanOrEqual(1);
 });
 
 test("external buttons use local promo redirect overlays", async ({ page }, testInfo) => {
@@ -195,6 +235,7 @@ test("mobile carousel starts on the first image while CTA remains one slide befo
 
 test("core layout stays within the viewport across key widths", async ({ page }) => {
   const viewports = [
+    { width: 1920, height: 1080 },
     { width: 1365, height: 940 },
     { width: 1180, height: 900 },
     { width: 1024, height: 860 },
