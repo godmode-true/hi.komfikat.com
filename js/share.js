@@ -115,7 +115,6 @@
     delete dom.shareMenu.dataset.shareHintVisible;
     delete dom.shareMenu.dataset.shareFeedbackVisible;
     delete dom.shareMenu.dataset.shareFeedbackMode;
-    delete dom.shareMenu.dataset.storyHintVisible;
     helpers.hideTopBarTooltip("share-feedback");
     resetShareButtonState();
   }

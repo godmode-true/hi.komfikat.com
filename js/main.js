@@ -38,27 +38,18 @@
     storyClose: document.querySelector("[data-story-close]"),
     storyPlaybackToggle: document.querySelector("[data-story-toggle-playback]"),
     storySurface: document.querySelector(".story-viewer__surface"),
-    storyMobileHint: document.querySelector(".profile__story-mobile-hint"),
-    storyDesktopHint: document.querySelector(".profile__story-desktop-hint"),
     promoCarousel: document.querySelector("[data-promo-carousel]"),
     promoCarouselViewport: document.querySelector("[data-promo-carousel-viewport]"),
     promoCarouselTrack: document.querySelector("[data-promo-carousel-track]"),
     promoCarouselDots: document.querySelector("[data-promo-carousel-dots]"),
     promoCarouselPrev: document.querySelector("[data-promo-carousel-prev]"),
     promoCarouselNext: document.querySelector("[data-promo-carousel-next]"),
-    promoRedirectToast: document.querySelector("[data-promo-redirect-toast]"),
-    promoRedirectBody: document.querySelector("[data-promo-redirect-body]"),
-    promoRedirectCode: document.querySelector("[data-promo-redirect-code]"),
-    promoRedirectCountdown: document.querySelector("[data-promo-redirect-countdown]"),
-    promoRedirectOpenNow: document.querySelector("[data-promo-redirect-open-now]"),
-    promoRedirectCancel: document.querySelector("[data-promo-redirect-cancel]"),
   };
 
   App.storageKeys = {
     theme: "komfi-theme",
     themePreset: "komfi-theme-preset",
     storyViewed: "komfi-story-viewed-signature-v2",
-    storyHintDismissed: "komfi-story-hint-dismissed-signature-v1",
   };
 
   App.flags = {
@@ -408,11 +399,7 @@
   }
 
   function isPromoRedirectToastVisible() {
-    return (
-      App.isPromoRedirectVisible?.() === true ||
-      App.dom.shareMenu?.dataset.promoRedirectVisible === "true" ||
-      App.dom.promoRedirectToast?.dataset.visible === "true"
-    );
+    return App.isPromoRedirectVisible?.() === true;
   }
 
   function canShowIdleTopBarTooltip() {
@@ -586,98 +573,6 @@
     }
   }
 
-  function createPromoRedirectBodyContent(promoCode = "") {
-    const body = document.createElement("span");
-    body.className = "promo-redirect-toast__body";
-    body.setAttribute("data-promo-redirect-body", "");
-
-    const eyebrow = document.createElement("span");
-    eyebrow.className = "promo-redirect-toast__eyebrow";
-    eyebrow.append("Promo code ");
-
-    if (promoCode) {
-      const code = document.createElement("span");
-      code.className = "promo-redirect-toast__code";
-      code.setAttribute("data-promo-redirect-code", "");
-      code.textContent = promoCode;
-      eyebrow.append(code, " copied");
-    } else {
-      eyebrow.append("copied");
-    }
-
-    const text = document.createElement("span");
-    text.className = "promo-redirect-toast__text";
-    text.append("Redirecting to Etsy in ");
-
-    const countdown = document.createElement("span");
-    countdown.className = "promo-redirect-toast__countdown";
-    countdown.setAttribute("data-promo-redirect-countdown", "");
-    countdown.textContent = "5";
-    text.append(countdown);
-
-    body.append(eyebrow, text);
-    return body;
-  }
-
-  function setPromoRedirectToastContent({ mode = "redirect", message = "", success = false, promoCode = "" } = {}) {
-    if (!App.dom.promoRedirectToast) {
-      return;
-    }
-
-    const bodyElement = App.dom.promoRedirectToast.querySelector("[data-promo-redirect-body]");
-
-    if (!bodyElement) {
-      return;
-    }
-
-    if (mode === "feedback") {
-      const nodes = [];
-
-      if (success) {
-        const successIcon = createShareHintStatusIcon();
-        successIcon.classList.add("promo-redirect-toast__status-icon");
-        nodes.push(successIcon);
-      }
-
-      const messageNode = document.createElement("span");
-      messageNode.className = "promo-redirect-toast__feedback-label";
-      messageNode.textContent = message;
-      nodes.push(messageNode);
-
-      bodyElement.replaceChildren(...nodes);
-      App.dom.promoRedirectCountdown = App.dom.promoRedirectToast.querySelector("[data-promo-redirect-countdown]");
-      App.dom.promoRedirectCode = App.dom.promoRedirectToast.querySelector("[data-promo-redirect-code]");
-      App.dom.promoRedirectBody = bodyElement;
-
-      if (App.dom.promoRedirectOpenNow) {
-        App.dom.promoRedirectOpenNow.hidden = true;
-      }
-
-      if (App.dom.promoRedirectCancel) {
-        App.dom.promoRedirectCancel.hidden = true;
-      }
-
-      App.dom.promoRedirectToast.dataset.mode = "feedback";
-      return;
-    }
-
-    const nextBody = createPromoRedirectBodyContent(promoCode);
-    bodyElement.replaceWith(nextBody);
-    App.dom.promoRedirectBody = nextBody;
-    App.dom.promoRedirectCountdown = App.dom.promoRedirectToast.querySelector("[data-promo-redirect-countdown]");
-    App.dom.promoRedirectCode = App.dom.promoRedirectToast.querySelector("[data-promo-redirect-code]");
-
-    if (App.dom.promoRedirectOpenNow) {
-      App.dom.promoRedirectOpenNow.hidden = false;
-    }
-
-    if (App.dom.promoRedirectCancel) {
-      App.dom.promoRedirectCancel.hidden = false;
-    }
-
-    App.dom.promoRedirectToast.dataset.mode = "redirect";
-  }
-
   function legacyCopyText(text) {
     const textarea = document.createElement("textarea");
     textarea.value = text;
@@ -736,7 +631,6 @@
     scheduleIdleTopBarTooltipRestore,
     dismissTopBarTooltipUntilNextStateChange,
     isPromoRedirectToastVisible,
-    setPromoRedirectToastContent,
     copyText,
     lockViewportGestureZoom,
   };
@@ -906,7 +800,6 @@
 
     if (App.helpers.isDevPreviewHost()) {
       App.helpers.removeStorageValue(App.storageKeys.storyViewed);
-      App.helpers.removeStorageValue(App.storageKeys.storyHintDismissed);
       App.dom.root.dataset.devStoryReset = "true";
     }
 

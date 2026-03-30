@@ -108,6 +108,36 @@ test("external buttons use local promo redirect overlays", async ({ page }, test
   await expect(activeLinkOverlay.locator(".promo-redirect-toast__text")).toContainText("Redirecting to Amazon in");
   await expect(activeLinkOverlay.locator(".promo-redirect-toast__eyebrow")).toHaveCount(0);
 
+  const linkOverlaySpacing = await activeLinkOverlay.evaluate((overlay) => {
+    const body = overlay.querySelector(".promo-redirect-toast__body");
+    const actions = overlay.querySelector(".promo-redirect-toast__actions");
+    const openNow = overlay.querySelector(".promo-redirect-toast__action--open-now");
+    const cancel = overlay.querySelector(".promo-redirect-toast__action--cancel");
+
+    if (
+      !(body instanceof HTMLElement) ||
+      !(actions instanceof HTMLElement) ||
+      !(openNow instanceof HTMLElement) ||
+      !(cancel instanceof HTMLElement)
+    ) {
+      return null;
+    }
+
+    const bodyRect = body.getBoundingClientRect();
+    const actionsRect = actions.getBoundingClientRect();
+    const openNowRect = openNow.getBoundingClientRect();
+    const cancelRect = cancel.getBoundingClientRect();
+
+    return {
+      bodyToActionsGap: actionsRect.left - bodyRect.right,
+      iconGap: cancelRect.left - openNowRect.right,
+    };
+  });
+
+  expect(linkOverlaySpacing).not.toBeNull();
+  expect(linkOverlaySpacing.bodyToActionsGap).toBeGreaterThan(0);
+  expect(Math.abs(linkOverlaySpacing.bodyToActionsGap - linkOverlaySpacing.iconGap * 2)).toBeLessThanOrEqual(5);
+
   await activeLinkOverlay.locator(".promo-redirect-toast__action--cancel").click();
   await expect(activeLinkOverlay).not.toBeVisible();
 
@@ -161,6 +191,64 @@ test("mobile carousel starts on the first image while CTA remains one slide befo
   await prevButton.click({ force: true });
   await expect(shell).toHaveAttribute("data-active-slide-type", "cta");
   await expect(dots.nth(0)).toHaveAttribute("aria-current", "true");
+});
+
+test("core layout stays within the viewport across key widths", async ({ page }) => {
+  const viewports = [
+    { width: 1365, height: 940 },
+    { width: 1180, height: 900 },
+    { width: 1024, height: 860 },
+    { width: 768, height: 900 },
+    { width: 430, height: 932 },
+    { width: 390, height: 844 },
+    { width: 360, height: 800 },
+    { width: 320, height: 712 },
+  ];
+
+  for (const viewport of viewports) {
+    await page.setViewportSize(viewport);
+    await gotoHome(page);
+
+    await expect(page.locator("[data-home-hero]")).toBeVisible();
+    await expect(page.locator(".promo-carousel")).toBeVisible();
+    await expect(page.locator(".link-list")).toBeVisible();
+
+    const layout = await page.evaluate(() => {
+      const doc = document.documentElement;
+      const body = document.body;
+      const getMetrics = (selector) => {
+        const element = document.querySelector(selector);
+
+        if (!(element instanceof HTMLElement)) {
+          return null;
+        }
+
+        const rect = element.getBoundingClientRect();
+        return {
+          left: rect.left,
+          right: rect.right,
+          width: rect.width,
+        };
+      };
+
+      return {
+        clientWidth: doc.clientWidth,
+        scrollWidth: Math.max(doc.scrollWidth, body.scrollWidth),
+        page: getMetrics(".page"),
+        hero: getMetrics("[data-home-hero]"),
+        promo: getMetrics(".promo-carousel"),
+        links: getMetrics(".link-list"),
+      };
+    });
+
+    expect(layout.scrollWidth - layout.clientWidth).toBeLessThanOrEqual(1);
+
+    for (const section of [layout.page, layout.hero, layout.promo, layout.links]) {
+      expect(section).not.toBeNull();
+      expect(section.left).toBeGreaterThanOrEqual(-1);
+      expect(section.right).toBeLessThanOrEqual(layout.clientWidth + 1);
+    }
+  }
 });
 
 test("desktop no longer shows legacy home and stories hover tooltips", async ({ page }, testInfo) => {

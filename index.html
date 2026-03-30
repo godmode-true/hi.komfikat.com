@@ -105,35 +105,6 @@
         }
       ]
     </script>
-    <script>
-      try {
-        const root = document.documentElement;
-        const storyStorageKeys = {
-          storyViewed: "komfi-story-viewed-signature-v2",
-          storyHintDismissed: "komfi-story-hint-dismissed-signature-v1",
-        };
-        const storyDataElement = document.getElementById("komfi-story-data");
-        const stories = JSON.parse(storyDataElement?.textContent || "[]");
-        const storySignature = JSON.stringify(
-          (Array.isArray(stories) ? stories : []).map(
-            ({ eyebrow, publishedAt, meta, description, ctaLabel, url, image, imageAlt, imageFit, layout }) => ({
-              eyebrow,
-              publishedAt,
-              meta,
-              description,
-              ctaLabel,
-              url,
-              image,
-              imageAlt,
-              imageFit: imageFit || "cover",
-              layout: layout || "caption",
-            }),
-          ),
-        );
-        root.dataset.storyHintLayout = "collapsed";
-      } catch {}
-    </script>
-
     <link rel="stylesheet" href="css/style.css?v=20260330a" />
     <script src="js/main.js?v=20260330a" defer></script>
     <script src="js/theme.js?v=20260330a" defer></script>
@@ -222,35 +193,6 @@
                   </button>
                 </div>
 
-                <div class="promo-redirect-toast" data-promo-redirect-toast aria-hidden="true" role="status" aria-live="polite">
-                  <span class="promo-redirect-toast__body" data-promo-redirect-body>
-                    <span class="promo-redirect-toast__eyebrow">
-                      Promo code <span class="promo-redirect-toast__code" data-promo-redirect-code>COZY10</span> copied
-                    </span>
-                    <span class="promo-redirect-toast__text">
-                      Redirecting to Etsy in <span class="promo-redirect-toast__countdown" data-promo-redirect-countdown>5</span>
-                    </span>
-                  </span>
-                  <span class="promo-redirect-toast__actions">
-                    <button
-                      class="promo-redirect-toast__action promo-redirect-toast__action--open-now"
-                      type="button"
-                      aria-label="Open Etsy now"
-                      data-promo-redirect-open-now
-                    >
-                      <span class="promo-redirect-toast__action-label">Open now</span>
-                    </button>
-                    <button
-                      class="promo-redirect-toast__action promo-redirect-toast__action--cancel"
-                      type="button"
-                      aria-label="Cancel Etsy redirect"
-                      data-promo-redirect-cancel
-                    >
-                      <span class="promo-redirect-toast__action-label">Cancel</span>
-                    </button>
-                  </span>
-                </div>
-
                 <span class="share-rail__hover-bridge" aria-hidden="true"></span>
 
                 <button
@@ -335,15 +277,6 @@
           </header>
 
           <section class="profile stack" aria-label="Brand profile">
-          <button
-            class="profile__story-mobile-hint"
-            type="button"
-            aria-label="Open Komfi Kat stories with new updates"
-            data-story-open-hint
-          >
-            <span class="profile__story-mobile-hint-text">New story</span>
-            <span class="profile__story-mobile-hint-icon">👇</span>
-          </button>
           <button class="profile__story-trigger" type="button" aria-label="Open Komfi Kat stories" data-story-open>
             <span class="profile__story-ring" aria-hidden="true">
               <span class="profile__story-core">
@@ -364,7 +297,7 @@
           </button>
           <div class="profile__copy stack">
             <h1>
-              <a class="profile__title" href="#" aria-label="Visit home page" data-copy-profile-title>Komfi Kat</a>
+              <a class="profile__title" href="#page-top" aria-label="Visit home page" data-copy-profile-title>Komfi Kat</a>
             </h1>
             <p class="profile__tagline">Cozy &amp; Relaxing Coloring Books</p>
           </div>

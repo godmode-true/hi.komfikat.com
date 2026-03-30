@@ -301,8 +301,28 @@
     const bodyWidth = Math.ceil(ui.redirectBody.scrollWidth);
     const actionsWidth = Math.ceil(ui.redirectActions.scrollWidth);
     const baseContentWidth = bodyWidth + actionsWidth;
+    const isLinkCardRedirect = ui.root instanceof HTMLElement && ui.root.classList.contains("promo-redirect-local-wrap--link-card");
 
     if (availableWidth <= 0 || baseContentWidth <= 0) {
+      return;
+    }
+
+    if (isLinkCardRedirect) {
+      const measuredActionsGap =
+        ui.openNow instanceof HTMLElement && ui.cancel instanceof HTMLElement
+          ? Math.max(0, ui.cancel.getBoundingClientRect().left - ui.openNow.getBoundingClientRect().right)
+          : 0;
+      const actionsStyles = window.getComputedStyle(ui.redirectActions);
+      const configuredActionsGap =
+        Number.parseFloat(actionsStyles.columnGap || "0") ||
+        Number.parseFloat(actionsStyles.gap || "0") ||
+        0;
+      const actionsGap = Math.max(measuredActionsGap, configuredActionsGap);
+      const nextGap = Math.max(configuredGap, actionsGap * 2);
+      const nextScale = Math.max(0.64, Math.min(1, availableWidth / (baseContentWidth + nextGap)));
+
+      ui.overlay.style.setProperty("--promo-redirect-inline-gap", `${nextGap.toFixed(3)}px`);
+      ui.overlay.style.setProperty("--promo-redirect-content-scale", nextScale.toFixed(4));
       return;
     }
 

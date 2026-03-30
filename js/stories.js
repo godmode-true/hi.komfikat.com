@@ -54,73 +54,14 @@
   let storyNavHoldTimer = 0;
   let storyNavHoldTriggered = false;
   let activeStoryNavTarget = null;
-  let storyHintCleanupTimeout = 0;
-  let storyHintShowTimeout = 0;
   let storyCloseTimeout = 0;
-
-  function showDesktopStoryHint() {
-    return;
-  }
-
-  function hideDesktopStoryHint() {
-    return;
-  }
 
   function getSeenStorySignature() {
     return helpers.readStorageValue(storageKeys.storyViewed);
   }
 
-  function getDismissedStoryHintSignature() {
-    return helpers.readStorageValue(storageKeys.storyHintDismissed);
-  }
-
   function hasSeenCurrentStories() {
     return getSeenStorySignature() === storySignature;
-  }
-
-  function hasDismissedCurrentStoryHint() {
-    return getDismissedStoryHintSignature() === storySignature;
-  }
-
-  function hideStoryHint() {
-    if (!dom.storyTrigger || !dom.storyMobileHint) {
-      return;
-    }
-
-    window.clearTimeout(storyHintShowTimeout);
-    window.clearTimeout(storyHintCleanupTimeout);
-
-    if (!dom.storyMobileHint.dataset.storyHint) {
-      return;
-    }
-
-    dom.storyMobileHint.dataset.storyHint = "closing";
-    storyHintCleanupTimeout = window.setTimeout(() => {
-      delete dom.storyMobileHint.dataset.storyHint;
-    }, 220);
-  }
-
-  function showStoryHint() {
-    if (
-      !dom.storyTrigger ||
-      !dom.storyMobileHint ||
-      hasSeenCurrentStories() ||
-      hasDismissedCurrentStoryHint() ||
-      !helpers.isTouchLikeDevice()
-    ) {
-      return;
-    }
-
-    window.clearTimeout(storyHintCleanupTimeout);
-    window.clearTimeout(storyHintShowTimeout);
-    storyHintShowTimeout = window.setTimeout(() => {
-      dom.storyMobileHint.dataset.storyHint = "visible";
-    }, 200);
-  }
-
-  function dismissCurrentStoryHint() {
-    helpers.writeStorageValue(storageKeys.storyHintDismissed, storySignature);
-    updateStoryTriggerState();
   }
 
   function updateStoryTriggerState() {
@@ -129,19 +70,11 @@
     }
 
     const hasSeenStories = hasSeenCurrentStories();
-    const hasDismissedHint = hasDismissedCurrentStoryHint();
     dom.storyTrigger.dataset.storyState = hasSeenStories ? "viewed" : "new";
-    dom.storyTrigger.dataset.storyHintState = hasDismissedHint ? "dismissed" : "visible";
     dom.storyTrigger.setAttribute(
       "aria-label",
       hasSeenStories ? "Rewatch Komfi Kat stories" : "Open Komfi Kat stories with new updates",
     );
-    dom.root.dataset.storyHintLayout = "collapsed";
-
-    if (hasSeenStories || hasDismissedHint) {
-      hideStoryHint();
-      hideDesktopStoryHint();
-    }
   }
 
   function markCurrentStoriesSeen() {
@@ -277,7 +210,6 @@
 
   function resetStorySessionState() {
     clearStoryNavHoldTimer();
-    window.clearTimeout(storyHintShowTimeout);
     window.clearTimeout(storyCloseTimeout);
     storyNavHoldTriggered = false;
     activeStoryNavTarget = null;
@@ -494,14 +426,10 @@
     updateStoryTriggerState();
 
     const openStoriesFromTrigger = () => {
-      dismissCurrentStoryHint();
-      hideStoryHint();
-      hideDesktopStoryHint();
       openStories(0);
     };
 
     dom.storyTrigger.addEventListener("click", openStoriesFromTrigger);
-    dom.storyMobileHint?.addEventListener("click", openStoriesFromTrigger);
 
     bindStoryNavigationEvents();
 
