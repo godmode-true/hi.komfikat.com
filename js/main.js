@@ -14,6 +14,7 @@
     shareRailHint: document.querySelector("[data-share-rail-hint]"),
     shareHoverBridge: document.querySelector(".share-rail__hover-bridge"),
     shareButton: document.querySelector("[data-share-page]"),
+    subscribeButton: document.querySelector(".action-button--subscribe"),
     socialHandleLinks: document.querySelectorAll(".social-links__link[data-handle-label]"),
     socialHashtagLinks: document.querySelectorAll(".social-links__hashtag[data-hashtag-tooltip]"),
     shareCopyButton: document.querySelector('[data-share-option="copy"]'),
@@ -735,6 +736,26 @@
 
       App.dom.profileTitle.addEventListener("blur", () => {
         App.helpers.hideTopBarTooltip("profile-title");
+      });
+    }
+
+    if (App.dom.subscribeButton) {
+      const subscribeTooltip = "Get your free cozy coloring pages!";
+
+      App.dom.subscribeButton.addEventListener("mouseenter", () => {
+        App.helpers.showTopBarTooltip(subscribeTooltip, "subscribe-button", "subscribe-button-right");
+      });
+
+      App.dom.subscribeButton.addEventListener("mouseleave", () => {
+        App.helpers.hideTopBarTooltip("subscribe-button");
+      });
+
+      App.dom.subscribeButton.addEventListener("focus", () => {
+        App.helpers.showTopBarTooltip(subscribeTooltip, "subscribe-button", "subscribe-button-right");
+      });
+
+      App.dom.subscribeButton.addEventListener("blur", () => {
+        App.helpers.hideTopBarTooltip("subscribe-button");
       });
     }
 

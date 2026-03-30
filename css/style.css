@@ -2655,6 +2655,10 @@ input[type="reset"] {
   .top-bar {
     --top-bar-actions-gap: 0.45rem;
     --share-rail-offset-for-tooltip: 0.45rem;
+    --subscribe-button-width: calc((var(--top-control-height) * 2) + var(--top-bar-actions-gap) + 0.18rem);
+    --subscribe-button-right-anchor-left: calc(
+      var(--sticky-bar-pad) + var(--subscribe-button-width) + var(--top-bar-actions-gap)
+    );
     --share-button-left-anchor-right: calc(
       var(--sticky-bar-pad) +
         var(--top-control-height) +
@@ -2964,6 +2968,12 @@ input[type="reset"] {
     transform: translateY(calc(-50% + 0.18rem));
   }
 
+  .top-bar__tooltip[data-anchor="subscribe-button-right"] {
+    left: var(--subscribe-button-right-anchor-left);
+    right: auto;
+    transform: translateY(calc(-50% + 0.18rem));
+  }
+
   .top-bar__tooltip[data-visible="true"] {
     opacity: 1;
     transform: translate(-50%, -50%);
@@ -2974,6 +2984,10 @@ input[type="reset"] {
   }
 
   .top-bar__tooltip[data-visible="true"][data-anchor="share-button-left"] {
+    transform: translateY(-50%);
+  }
+
+  .top-bar__tooltip[data-visible="true"][data-anchor="subscribe-button-right"] {
     transform: translateY(-50%);
   }
 
