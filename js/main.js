@@ -44,6 +44,7 @@
     promoCarouselDots: document.querySelector("[data-promo-carousel-dots]"),
     promoCarouselPrev: document.querySelector("[data-promo-carousel-prev]"),
     promoCarouselNext: document.querySelector("[data-promo-carousel-next]"),
+    scrollTopLinks: document.querySelectorAll("[data-scroll-top]"),
   };
 
   App.storageKeys = {
@@ -298,6 +299,75 @@
     }
 
     runSync();
+  }
+
+  function scrollPageToAbsoluteTop() {
+    const scrollingElement = document.scrollingElement;
+    const root = document.documentElement;
+    const body = document.body;
+    const previousRootScrollBehavior = root?.style.scrollBehavior || "";
+    const previousBodyScrollBehavior = body?.style.scrollBehavior || "";
+    let settleRestoreScheduled = false;
+
+    const restoreScrollBehavior = () => {
+      if (settleRestoreScheduled) {
+        return;
+      }
+
+      settleRestoreScheduled = true;
+
+      window.setTimeout(() => {
+        if (root) {
+          root.style.scrollBehavior = previousRootScrollBehavior;
+        }
+
+        if (body) {
+          body.style.scrollBehavior = previousBodyScrollBehavior;
+        }
+      }, 220);
+    };
+
+    const forceTop = () => {
+      window.scrollTo(0, 0);
+
+      if (scrollingElement) {
+        scrollingElement.scrollTop = 0;
+        scrollingElement.scrollLeft = 0;
+      }
+    };
+
+    if (root) {
+      root.style.scrollBehavior = "auto";
+    }
+
+    if (body) {
+      body.style.scrollBehavior = "auto";
+    }
+
+    forceTop();
+
+    window.requestAnimationFrame(() => {
+      forceTop();
+
+      window.requestAnimationFrame(() => {
+        forceTop();
+
+        promoViewportFitStableHeight = 0;
+        promoViewportFitStableWidth = 0;
+        schedulePromoCarouselViewportFitSync();
+        restoreScrollBehavior();
+      });
+    });
+
+    window.setTimeout(forceTop, 60);
+    window.setTimeout(forceTop, 140);
+    window.setTimeout(() => {
+      forceTop();
+      promoViewportFitStableHeight = 0;
+      promoViewportFitStableWidth = 0;
+      schedulePromoCarouselViewportFitSync();
+      restoreScrollBehavior();
+    }, 220);
   }
 
   function createShareHintText(text) {
@@ -831,6 +901,19 @@
         App.helpers.hideTopBarTooltip("subscribe-button");
       });
     }
+
+    App.dom.scrollTopLinks?.forEach((link) => {
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        if (link instanceof HTMLElement) {
+          link.blur();
+        }
+        if (document.activeElement instanceof HTMLElement && document.activeElement !== link) {
+          document.activeElement.blur();
+        }
+        scrollPageToAbsoluteTop();
+      });
+    });
 
     App.helpers.lockViewportGestureZoom();
 
