@@ -12,7 +12,7 @@
     actions: [
       {
         label: "Buy on Etsy",
-        subtitle: "Digital Version",
+        subtitle: "Hobby Girl Digital Version",
         icon: "img/icons/etsy.svg",
         href: "https://komfikatcoloring.etsy.com/listing/4472798201",
         className: "promo-carousel__shop-button--etsy",
@@ -24,7 +24,7 @@
       },
       {
         label: "Buy on Amazon",
-        subtitle: "Paperback Version",
+        subtitle: "Hobby Girl Paperback Version",
         icon: "img/icons/amazon.svg",
         href: "https://www.amazon.com/dp/B0GVF789ZJ",
         className: "promo-carousel__shop-button--amazon",
@@ -128,7 +128,7 @@
     };
 
     if (visibleCardsCount === 1) {
-      return [...imageSlides, ctaItem];
+      return [ctaItem, ...imageSlides];
     }
 
     if (imageSlides.length === 0) {
@@ -142,6 +142,14 @@
     }
 
     return [imageSlides[0], ctaItem, ...imageSlides.slice(1)];
+  }
+
+  function getInitialActiveIndexForViewport(visibleCardsCount, items) {
+    if (visibleCardsCount === 1 && items.length > 1 && items[0]?.type === "cta") {
+      return 1;
+    }
+
+    return 0;
   }
 
   function createPageStarts(items, visibleCardsCount) {
@@ -185,18 +193,172 @@
   let promoRedirectDeadline = 0;
   let promoRedirectHref = "";
   let promoRedirectCode = "";
-  let promoRedirectRevealFrame = 0;
   const PROMO_REDIRECT_DELAY_MS = 5000;
   let activePromoRedirectUi = null;
   let activePromoRedirectAction = null;
+  let promoRedirectFitFrame = 0;
+
+  function isNonEmptyString(value) {
+    return typeof value === "string" && value.trim().length > 0;
+  }
+
+  function isExternalNavigationHref(href) {
+    if (!isNonEmptyString(href)) {
+      return false;
+    }
+
+    try {
+      const url = new URL(href, window.location.href);
+      return url.origin !== window.location.origin;
+    } catch {
+      return /^https?:\/\//i.test(href);
+    }
+  }
+
+  function inferRedirectLabel({ redirectLabel = "", label = "", href = "" } = {}) {
+    if (isNonEmptyString(redirectLabel)) {
+      return redirectLabel.trim();
+    }
+
+    if (isNonEmptyString(label)) {
+      const normalizedLabel = label.trim();
+      const buyOnMatch = normalizedLabel.match(/(?:buy|shop|view|open)\s+on\s+(.+)$/i);
+      const shopMatch = normalizedLabel.match(/^(.+?)\s+shop$/i);
+
+      if (buyOnMatch?.[1]) {
+        return buyOnMatch[1].trim();
+      }
+
+      if (shopMatch?.[1]) {
+        return shopMatch[1].trim();
+      }
+    }
+
+    try {
+      const host = new URL(href, window.location.href).hostname.replace(/^www\./i, "");
+
+      if (host.includes("etsy")) {
+        return "Etsy";
+      }
+
+      if (host.includes("amazon")) {
+        return "Amazon";
+      }
+
+      if (host.includes("komfikat")) {
+        return "Komfi Kat";
+      }
+    } catch {}
+
+    return "";
+  }
+
+  function getRedirectTextPrefix(config = {}) {
+    const redirectLabel = inferRedirectLabel(config);
+    return redirectLabel ? `Redirecting to ${redirectLabel} in ` : "Redirecting in ";
+  }
+
+  function getRedirectAriaLabel(config = {}, countdownSeconds = 5) {
+    const redirectLine = `${getRedirectTextPrefix(config)}${countdownSeconds} seconds.`;
+
+    if (isNonEmptyString(config.promoCode)) {
+      return `Save 10% with code ${config.promoCode}. ${redirectLine}`;
+    }
+
+    return redirectLine;
+  }
 
   function clearPromoRedirectTimers() {
     window.clearTimeout(promoRedirectTimeout);
     window.clearInterval(promoRedirectInterval);
-    window.cancelAnimationFrame(promoRedirectRevealFrame);
     promoRedirectTimeout = 0;
     promoRedirectInterval = 0;
-    promoRedirectRevealFrame = 0;
+  }
+
+  function fitPromoRedirectOverlay(ui = activePromoRedirectUi) {
+    if (!(ui?.overlay instanceof HTMLElement) || !(ui.content instanceof HTMLElement)) {
+      return;
+    }
+
+    ui.overlay.style.removeProperty("--promo-redirect-content-scale");
+
+    const overlayWidth = ui.overlay.clientWidth;
+    if (overlayWidth <= 0) {
+      return;
+    }
+
+    const overlayStyles = window.getComputedStyle(ui.overlay);
+    const paddingInline =
+      (Number.parseFloat(overlayStyles.paddingLeft || "0") || 0) +
+      (Number.parseFloat(overlayStyles.paddingRight || "0") || 0);
+    const fitGutter =
+      (Number.parseFloat(overlayStyles.getPropertyValue("--promo-redirect-fit-gutter-inline") || "0") || 0) * 2;
+    const availableWidth = Math.max(0, overlayWidth - paddingInline - fitGutter);
+    const contentWidth = Math.ceil(ui.content.scrollWidth);
+
+    if (availableWidth <= 0 || contentWidth <= 0) {
+      return;
+    }
+
+    const nextScale = Math.max(0.64, Math.min(1, availableWidth / contentWidth));
+    ui.overlay.style.setProperty("--promo-redirect-content-scale", nextScale.toFixed(4));
+  }
+
+  function schedulePromoRedirectOverlayFit(ui = activePromoRedirectUi) {
+    window.cancelAnimationFrame(promoRedirectFitFrame);
+    promoRedirectFitFrame = window.requestAnimationFrame(() => {
+      promoRedirectFitFrame = 0;
+      fitPromoRedirectOverlay(ui);
+    });
+  }
+
+  function setPromoRedirectCodeText(codeElement, text) {
+    if (!(codeElement instanceof HTMLElement)) {
+      return;
+    }
+
+    const label = codeElement.querySelector(".promo-redirect-toast__code-label");
+
+    if (label instanceof HTMLElement) {
+      label.textContent = text;
+      return;
+    }
+
+    codeElement.textContent = text;
+  }
+
+  function setPromoRedirectOverlayInteractiveState(ui, isInteractive) {
+    const controls = [ui?.redirectCode, ui?.openNow, ui?.cancel].filter(
+      (control) => control instanceof HTMLElement,
+    );
+
+    controls.forEach((control) => {
+      if (!(control instanceof HTMLElement)) {
+        return;
+      }
+
+      if (isInteractive) {
+        if (control.dataset.restoreTabindex !== undefined) {
+          const restoreValue = control.dataset.restoreTabindex;
+
+          if (restoreValue) {
+            control.setAttribute("tabindex", restoreValue);
+          } else {
+            control.removeAttribute("tabindex");
+          }
+
+          delete control.dataset.restoreTabindex;
+        }
+
+        return;
+      }
+
+      if (control.dataset.restoreTabindex === undefined) {
+        control.dataset.restoreTabindex = control.getAttribute("tabindex") || "";
+      }
+
+      control.setAttribute("tabindex", "-1");
+    });
   }
 
   function openPromoRedirectTarget(href) {
@@ -219,12 +381,24 @@
       return;
     }
 
-    if (ui.redirectShell instanceof HTMLElement) {
-      ui.redirectShell.setAttribute("aria-hidden", "true");
+    window.clearTimeout(ui.copyFeedbackTimeout);
+    ui.copyFeedbackTimeout = 0;
+    ui.overlay?.style.removeProperty("--promo-redirect-content-scale");
+
+    delete ui.root.dataset.promoRedirectActive;
+
+    if (ui.overlay instanceof HTMLElement) {
+      ui.overlay.setAttribute("aria-hidden", "true");
     }
 
+    setPromoRedirectOverlayInteractiveState(ui, false);
+
     if (ui.redirectCode instanceof HTMLElement) {
-      ui.redirectCode.textContent = action?.promoCode || promoRedirectCode || "";
+      setPromoRedirectCodeText(ui.redirectCode, action?.promoCode || promoRedirectCode || "");
+      delete ui.redirectCode.dataset.copied;
+      if (action?.promoCode) {
+        ui.redirectCode.setAttribute("aria-label", `Copy promo code ${action.promoCode}`);
+      }
     }
 
     if (ui.redirectCountdown instanceof HTMLElement) {
@@ -232,11 +406,12 @@
       ui.redirectCountdown.dataset.value = "5";
     }
 
-    delete ui.root.dataset.copyState;
-    ui.label.textContent = action?.promoLabel || "PROMO CODE";
-    ui.hint.textContent = App.helpers.isDesktopPointerDevice() ? "Click to copy" : "Tap to copy";
-    if (action?.promoCode) {
-      ui.trigger.setAttribute("aria-label", `Copy promo code ${action.promoCode}`);
+    if (ui.control instanceof HTMLElement) {
+      const fallbackLabel = isNonEmptyString(action?.ariaLabel) ? action.ariaLabel.trim() : action?.label;
+
+      if (isNonEmptyString(fallbackLabel)) {
+        ui.control.setAttribute("aria-label", fallbackLabel);
+      }
     }
   }
 
@@ -248,6 +423,10 @@
     activePromoRedirectUi = ui || null;
     activePromoRedirectAction = action || null;
   }
+
+  App.isPromoRedirectVisible = function isPromoRedirectVisible() {
+    return Boolean(activePromoRedirectUi);
+  };
 
   function dismissPromoRedirectToast() {
     hidePromoRedirectToast();
@@ -294,16 +473,20 @@
     setActivePromoRedirectUi(ui, action);
 
     if (ui?.root) {
-      ui.root.dataset.copyState = "redirecting";
-      ui.redirectShell?.setAttribute("aria-hidden", "false");
-      if (ui.redirectCode instanceof HTMLElement) {
-        ui.redirectCode.textContent = promoCode;
+      ui.root.dataset.promoRedirectActive = "true";
+      ui.overlay?.setAttribute("aria-hidden", "false");
+      setPromoRedirectOverlayInteractiveState(ui, true);
+      if (ui.redirectCode instanceof HTMLElement && promoCode) {
+        setPromoRedirectCodeText(ui.redirectCode, promoCode);
+        delete ui.redirectCode.dataset.copied;
+        ui.redirectCode.setAttribute("aria-label", `Copy promo code ${promoCode}`);
       }
       if (ui.redirectCountdown instanceof HTMLElement) {
         ui.redirectCountdown.textContent = "5";
         ui.redirectCountdown.dataset.value = "5";
       }
-      ui.trigger.setAttribute("aria-label", `Promo code ${promoCode} copied. Redirecting to Etsy in 5 seconds.`);
+      ui.control.setAttribute("aria-label", getRedirectAriaLabel(action || { href, promoCode }, 5));
+      schedulePromoRedirectOverlayFit(ui);
     }
 
     updatePromoRedirectCountdown();
@@ -316,61 +499,50 @@
     }, PROMO_REDIRECT_DELAY_MS);
   }
 
-  function createPromoChip(action) {
-    const getIdleHint = () => (App.helpers.isDesktopPointerDevice() ? "Click to copy" : "Tap to copy");
-    const chip = document.createElement("div");
-    chip.className = "promo-carousel__promo-chip";
-    chip.setAttribute("aria-live", "polite");
+  function createPromoRedirectOverlay(action, control, root) {
+    const overlay = document.createElement("span");
+    overlay.className = "promo-redirect-local-overlay promo-carousel__shop-button-redirect";
+    overlay.setAttribute("aria-hidden", "true");
+    overlay.setAttribute("role", "status");
+    overlay.setAttribute("aria-live", "polite");
 
-    const trigger = document.createElement("button");
-    trigger.type = "button";
-    trigger.className = "promo-carousel__promo-chip-trigger";
-    trigger.setAttribute("aria-label", `Copy promo code ${action.promoCode}`);
-
-    const defaultView = document.createElement("span");
-    defaultView.className = "promo-carousel__promo-chip-default";
-
-    const eyebrow = document.createElement("span");
-    eyebrow.className = "promo-carousel__promo-chip-label";
-    eyebrow.textContent = action.promoLabel || "PROMO CODE";
-
-    const code = document.createElement("span");
-    code.className = "promo-carousel__promo-chip-code";
-    code.textContent = action.promoCode;
-
-    const hint = document.createElement("span");
-    hint.className = "promo-carousel__promo-chip-hint";
-    hint.textContent = getIdleHint();
-
-    defaultView.append(eyebrow, code, hint);
-    trigger.append(defaultView);
-
-    const redirectShell = document.createElement("span");
-    redirectShell.className = "promo-carousel__promo-chip-redirect";
-    redirectShell.setAttribute("aria-hidden", "true");
+    const content = document.createElement("span");
+    content.className = "promo-redirect-local-overlay__content";
 
     const redirectBody = document.createElement("span");
     redirectBody.className = "promo-redirect-toast__body";
 
-    const redirectEyebrow = document.createElement("span");
-    redirectEyebrow.className = "promo-redirect-toast__eyebrow";
-    redirectEyebrow.append("Promo code ");
+    const hasPromoCode = isNonEmptyString(action?.promoCode);
+    const redirectLabel = inferRedirectLabel(action);
+    let redirectCode = null;
 
-    const redirectCode = document.createElement("span");
-    redirectCode.className = "promo-redirect-toast__code";
-    redirectCode.textContent = action.promoCode;
-    redirectEyebrow.append(redirectCode, " copied");
+    if (hasPromoCode) {
+      const redirectEyebrow = document.createElement("span");
+      redirectEyebrow.className = "promo-redirect-toast__eyebrow";
+      redirectEyebrow.append("SAVE 10% WITH CODE ");
+
+      redirectCode = document.createElement("button");
+      redirectCode.type = "button";
+      redirectCode.className = "promo-redirect-toast__code";
+      redirectCode.setAttribute("aria-label", `Copy promo code ${action.promoCode}`);
+      const redirectCodeLabel = document.createElement("span");
+      redirectCodeLabel.className = "promo-redirect-toast__code-label";
+      redirectCodeLabel.textContent = action.promoCode;
+      redirectCode.append(redirectCodeLabel);
+      redirectEyebrow.append(redirectCode);
+      redirectBody.append(redirectEyebrow);
+    }
 
     const redirectText = document.createElement("span");
     redirectText.className = "promo-redirect-toast__text";
-    redirectText.append("Redirecting to Etsy in ");
+    redirectText.append(getRedirectTextPrefix(action));
 
     const redirectCountdown = document.createElement("span");
     redirectCountdown.className = "promo-redirect-toast__countdown";
     redirectCountdown.textContent = "5";
     redirectText.append(redirectCountdown);
 
-    redirectBody.append(redirectEyebrow, redirectText);
+    redirectBody.append(redirectText);
 
     const redirectActions = document.createElement("span");
     redirectActions.className = "promo-redirect-toast__actions";
@@ -378,56 +550,59 @@
     const openNow = document.createElement("button");
     openNow.type = "button";
     openNow.className = "promo-redirect-toast__action promo-redirect-toast__action--open-now";
-    openNow.setAttribute("aria-label", "Open Etsy now");
-
+    openNow.setAttribute("aria-label", redirectLabel ? `Open ${redirectLabel} now` : "Open link now");
     openNow.innerHTML =
       '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path d="M7 17L17 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 7H17V15" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
     const cancel = document.createElement("button");
     cancel.type = "button";
     cancel.className = "promo-redirect-toast__action promo-redirect-toast__action--cancel";
-    cancel.setAttribute("aria-label", "Cancel Etsy redirect");
+    cancel.setAttribute("aria-label", redirectLabel ? `Cancel ${redirectLabel} redirect` : "Cancel redirect");
     cancel.innerHTML =
       '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path d="M7.4 7.4L16.6 16.6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M16.6 7.4L7.4 16.6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
 
     redirectActions.append(openNow, cancel);
-    redirectShell.append(redirectBody, redirectActions);
-    chip.append(trigger, redirectShell);
+    content.append(redirectBody, redirectActions);
+    overlay.append(content);
 
     const promoUi = {
-      root: chip,
-      trigger,
-      label: eyebrow,
-      hint,
-      redirectShell,
+      root,
+      control,
+      overlay,
+      content,
       redirectCode,
       redirectCountdown,
+      openNow,
+      cancel,
+      copyFeedbackTimeout: 0,
     };
 
-    let failureResetTimeout = 0;
+    setPromoRedirectOverlayInteractiveState(promoUi, false);
 
-    trigger.addEventListener("click", async (event) => {
-      event.preventDefault();
-      event.stopPropagation();
+    if (redirectCode instanceof HTMLButtonElement) {
+      redirectCode.addEventListener("click", async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
 
-      const didCopy = await App.helpers.copyText(action.promoCode);
-      window.clearTimeout(failureResetTimeout);
-
-      if (didCopy) {
-        delete chip.dataset.copyState;
-        if (action.href) {
-          schedulePromoRedirect(action.href, action.promoCode, promoUi, action);
+        const didCopy = await App.helpers.copyText(action.promoCode);
+        if (!didCopy) {
+          return;
         }
-      } else {
-        chip.dataset.copyState = "failed";
-        eyebrow.textContent = action.promoLabel || "PROMO CODE";
-        hint.textContent = getIdleHint();
-        trigger.setAttribute("aria-label", `Copy promo code ${action.promoCode}`);
-        failureResetTimeout = window.setTimeout(() => {
-          delete chip.dataset.copyState;
-        }, 1600);
-      }
-    });
+
+        window.clearTimeout(promoUi.copyFeedbackTimeout);
+        redirectCode.dataset.copied = "true";
+        setPromoRedirectCodeText(redirectCode, "COPIED");
+        redirectCode.setAttribute("aria-label", `Promo code ${action.promoCode} copied`);
+        schedulePromoRedirectOverlayFit(promoUi);
+        promoUi.copyFeedbackTimeout = window.setTimeout(() => {
+          setPromoRedirectCodeText(redirectCode, action.promoCode);
+          delete redirectCode.dataset.copied;
+          redirectCode.setAttribute("aria-label", `Copy promo code ${action.promoCode}`);
+          promoUi.copyFeedbackTimeout = 0;
+          schedulePromoRedirectOverlayFit(promoUi);
+        }, 1400);
+      });
+    }
 
     openNow.addEventListener("click", (event) => {
       event.preventDefault();
@@ -451,42 +626,9 @@
       hidePromoRedirectToast();
     });
 
-    chip.addEventListener("dragstart", (event) => event.preventDefault());
+    overlay.addEventListener("dragstart", (event) => event.preventDefault());
 
-    return chip;
-  }
-
-  function syncPromoChipLayout(wrap, retries = 6) {
-    if (!(wrap instanceof HTMLElement)) {
-      return;
-    }
-
-    if (!wrap.isConnected) {
-      if (retries > 0) {
-        window.requestAnimationFrame(() => syncPromoChipLayout(wrap, retries - 1));
-      }
-      return;
-    }
-
-    const inlineEnd = Number.parseFloat(window.getComputedStyle(wrap).getPropertyValue("--promo-redirect-inline-end"));
-    if (!Number.isFinite(inlineEnd)) {
-      if (retries > 0) {
-        window.requestAnimationFrame(() => syncPromoChipLayout(wrap, retries - 1));
-      }
-      return;
-    }
-
-    wrap.style.setProperty("--promo-chip-expanded-start", `${inlineEnd}px`);
-  }
-
-  function syncPromoChipLayouts(root) {
-    if (!root || typeof root.querySelectorAll !== "function") {
-      return;
-    }
-
-    root.querySelectorAll(".promo-carousel__shop-button-wrap").forEach((wrap) => {
-      syncPromoChipLayout(wrap);
-    });
+    return promoUi;
   }
 
   document.addEventListener("keydown", (event) => {
@@ -519,27 +661,25 @@
     subtitle.className = "promo-carousel__shop-button-subtitle";
     subtitle.textContent = action.subtitle || "";
 
-    const spacer = document.createElement("span");
-    spacer.className = "promo-carousel__shop-button-spacer";
-    spacer.setAttribute("aria-hidden", "true");
-
     copy.append(title, subtitle);
-    content.append(badge, copy, spacer);
+    content.append(badge, copy);
 
     const buildWrap = (control) => {
-      if (!action.promoCode || action.disabled) {
+      if (action.disabled || !isExternalNavigationHref(action.href)) {
         return control;
       }
 
-      control.classList.add("promo-carousel__shop-button--has-promo");
-
       const wrap = document.createElement("span");
-      wrap.className = "promo-carousel__shop-button-wrap";
+      wrap.className = "promo-redirect-local-wrap promo-carousel__shop-button-wrap";
+      control.dataset.promoRedirectControl = "true";
+      const promoUi = createPromoRedirectOverlay(action, control, wrap);
+      wrap.append(control, promoUi.overlay);
 
-      const promoChip = createPromoChip(action);
-      wrap.append(control, promoChip);
-
-      window.requestAnimationFrame(() => syncPromoChipLayout(wrap));
+      control.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        schedulePromoRedirect(action.href, action.promoCode, promoUi, action);
+      });
 
       return wrap;
     };
@@ -563,6 +703,45 @@
     link.addEventListener("dragstart", (event) => event.preventDefault());
     link.append(content);
     return buildWrap(link);
+  }
+
+  function enhanceLinkSectionRedirects() {
+    document.querySelectorAll(".link-section .link-card[href][target=\"_blank\"]").forEach((link) => {
+      if (!(link instanceof HTMLAnchorElement) || link.closest(".promo-redirect-local-wrap")) {
+        return;
+      }
+
+      const href = link.getAttribute("href") || link.href;
+      if (!isExternalNavigationHref(href)) {
+        return;
+      }
+
+      const wrap = document.createElement("span");
+      wrap.className = "promo-redirect-local-wrap promo-redirect-local-wrap--link-card";
+      const action = {
+        href,
+        ariaLabel: link.getAttribute("aria-label") || "",
+        label: link.querySelector(".link-card__title")?.textContent?.trim() || link.textContent?.trim() || "External link",
+        redirectLabel: link.dataset.localRedirectTarget || "",
+        promoCode: link.dataset.localRedirectPromoCode || "",
+      };
+
+      link.dataset.promoRedirectControl = "true";
+      link.draggable = false;
+      link.addEventListener("dragstart", (event) => event.preventDefault());
+
+      link.parentNode?.insertBefore(wrap, link);
+      wrap.append(link);
+
+      const promoUi = createPromoRedirectOverlay(action, link, wrap);
+      wrap.append(promoUi.overlay);
+
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        schedulePromoRedirect(href, action.promoCode, promoUi, action);
+      });
+    });
   }
 
   function createCard(item, index) {
@@ -678,12 +857,67 @@
     return card;
   }
 
+  function syncShopButtonAlignment(root) {
+    if (!(root instanceof Element)) {
+      return;
+    }
+
+    const isCompactViewport = window.matchMedia("(max-width: 48rem)").matches;
+
+    root.querySelectorAll(".promo-carousel__cta-actions").forEach((actions) => {
+      if (!(actions instanceof HTMLElement)) {
+        return;
+      }
+
+      const buttonContents = Array.from(actions.querySelectorAll(".promo-carousel__shop-button-content")).filter(
+        (content) => content instanceof HTMLElement,
+      );
+
+      buttonContents.forEach((content) => {
+        content.style.removeProperty("width");
+      });
+
+      actions.style.removeProperty("--promo-shop-content-width");
+
+      if (!isCompactViewport || buttonContents.length === 0) {
+        return;
+      }
+
+      const referenceButton = actions.querySelector(".promo-carousel__shop-button");
+      let availableWidth = Number.POSITIVE_INFINITY;
+
+      if (referenceButton instanceof HTMLElement) {
+        const buttonStyles = window.getComputedStyle(referenceButton);
+        const paddingInline =
+          (Number.parseFloat(buttonStyles.paddingLeft || "0") || 0) +
+          (Number.parseFloat(buttonStyles.paddingRight || "0") || 0);
+        availableWidth = Math.max(0, Math.floor(referenceButton.clientWidth - paddingInline));
+      }
+
+      const widestContentWidth = buttonContents.reduce((maxWidth, content) => {
+        return Math.max(maxWidth, Math.ceil(content.scrollWidth));
+      }, 0);
+
+      const alignedWidth = Math.max(0, Math.min(widestContentWidth, availableWidth));
+
+      if (alignedWidth <= 0) {
+        return;
+      }
+
+      actions.style.setProperty("--promo-shop-content-width", `${alignedWidth}px`);
+      buttonContents.forEach((content) => {
+        content.style.width = `${alignedWidth}px`;
+      });
+    });
+  }
+
   App.initCarousel = function initCarousel() {
     if (App.flags.carouselInitialized) {
       return;
     }
 
     App.flags.carouselInitialized = true;
+    enhanceLinkSectionRedirects();
 
     const shell = dom.promoCarousel;
     const viewport = dom.promoCarouselViewport;
@@ -716,7 +950,7 @@
     let cloneCount = 0;
     let renderedItems = [];
     let dots = [];
-    let activeIndex = 0;
+    let activeIndex = getInitialActiveIndexForViewport(currentVisibleCards, carouselItems);
     let renderedIndex = 0;
     let isDragging = false;
     let isAnimating = false;
@@ -762,10 +996,12 @@
       cloneCount = shouldLoop ? carouselItems.length : 0;
       renderedItems = [...carouselItems.slice(-cloneCount), ...carouselItems, ...carouselItems.slice(0, cloneCount)];
 
-      activeIndex = visibleCardCountChanged ? 0 : Math.min(activeIndex, maxIndex);
+      activeIndex = visibleCardCountChanged
+        ? getInitialActiveIndexForViewport(currentVisibleCards, carouselItems)
+        : Math.min(activeIndex, maxIndex);
       renderedIndex = cloneCount + (pageStarts[activeIndex] ?? 0);
       track.replaceChildren(...renderedItems.map(createCard));
-      syncPromoChipLayouts(track);
+      syncShopButtonAlignment(track);
 
       dotsRoot.replaceChildren();
       dots = Array.from({ length: pageCount }, (_, index) => {
@@ -891,6 +1127,10 @@
       if (!isDragging) {
         if (Math.abs(dragOffset) < 8) {
           return false;
+        }
+
+        if (activePromoRedirectUi) {
+          hidePromoRedirectToast();
         }
 
         isDragging = true;
@@ -1294,9 +1534,9 @@
           rebuildCarouselStructure();
         }
 
+        syncShopButtonAlignment(track);
         updateMetrics();
         syncPosition(true);
-        syncPromoChipLayouts(track);
       });
       resizeObserver.observe(viewport);
     } else {
@@ -1307,13 +1547,26 @@
           rebuildCarouselStructure();
         }
 
+        syncShopButtonAlignment(track);
         updateMetrics();
         syncPosition(true);
-        syncPromoChipLayouts(track);
+      });
+    }
+
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        syncShopButtonAlignment(track);
+        updateMetrics();
+        syncPosition(true);
       });
     }
 
     window.addEventListener("blur", clearNavRepeat);
+    window.addEventListener("resize", () => {
+      if (activePromoRedirectUi) {
+        schedulePromoRedirectOverlayFit(activePromoRedirectUi);
+      }
+    });
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         clearNavRepeat();
@@ -1321,8 +1574,8 @@
     });
 
     rebuildCarouselStructure();
+    syncShopButtonAlignment(track);
     updateMetrics();
     syncPosition(true);
-    syncPromoChipLayouts(track);
   };
 })();

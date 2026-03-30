@@ -8,7 +8,10 @@
     "update:images": "node scripts/run-update-site-images.mjs",
     "build": "npm run update:fonts && npm run update:images && node scripts/sync-default-theme-preset.mjs && node scripts/build-production.mjs",
     "sync:theme-preset": "node scripts/sync-default-theme-preset.mjs",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npm run test:smoke",
+    "test:smoke": "playwright test",
+    "test:smoke:headed": "playwright test --headed",
+    "test:smoke:ui": "playwright test --ui"
   },
   "repository": {
     "type": "git",
@@ -23,6 +26,7 @@
   },
   "homepage": "https://github.com/godmode-true/hi.komfikat.com#readme",
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "esbuild": "^0.27.4",
     "html-minifier-terser": "^7.2.0",
     "ttf2woff2": "^8.0.1"
