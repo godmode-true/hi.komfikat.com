@@ -25,19 +25,19 @@
 
     <meta name="theme-color" content="#fffcfe" />
     <!-- Bump this cache token whenever theme/style/script visuals change, so browsers do not mix old and new theme assets. -->
-    <link rel="icon" href="favicon.ico?v=20260329c" sizes="any" />
-    <link rel="shortcut icon" href="favicon.ico?v=20260329c" />
-    <link rel="icon" href="img/icons/favicon-32x32.png?v=20260329c" sizes="32x32" type="image/png" />
-    <link rel="icon" href="img/icons/favicon-16x16.png?v=20260329c" sizes="16x16" type="image/png" />
-    <link rel="apple-touch-icon" href="img/icons/apple-touch-icon.png?v=20260329c" sizes="180x180" />
-    <link rel="preload" as="image" href="img/logo.webp?v=20260329c" type="image/webp" fetchpriority="high" />
+    <link rel="icon" href="favicon.ico?v=20260330a" sizes="any" />
+    <link rel="shortcut icon" href="favicon.ico?v=20260330a" />
+    <link rel="icon" href="img/icons/favicon-32x32.png?v=20260330a" sizes="32x32" type="image/png" />
+    <link rel="icon" href="img/icons/favicon-16x16.png?v=20260330a" sizes="16x16" type="image/png" />
+    <link rel="apple-touch-icon" href="img/icons/apple-touch-icon.png?v=20260330a" sizes="180x180" />
+    <link rel="preload" as="image" href="img/logo.webp?v=20260330a" type="image/webp" fetchpriority="high" />
     <script>
       (() => {
         const isDevPreviewHost =
           location.hostname === "localhost" ||
           location.hostname === "127.0.0.1" ||
           location.hostname.startsWith("192.168.");
-        const assetVersion = isDevPreviewHost ? Date.now().toString() : "20260329c";
+        const assetVersion = isDevPreviewHost ? Date.now().toString() : "20260330a";
         document.write(`<script src="themes/theme-presets.js?v=${assetVersion}"><\/script>`);
       })();
     </script>
@@ -66,7 +66,7 @@
       as="style"
       href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap"
     />
-    <link rel="preload" href="fonts/comic-story.woff2?v=20260329c" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="fonts/comic-story.woff2?v=20260330a" as="font" type="font/woff2" crossorigin />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap"
@@ -134,13 +134,13 @@
       } catch {}
     </script>
 
-    <link rel="stylesheet" href="css/style.css?v=20260329c" />
-    <script src="js/main.js?v=20260329c" defer></script>
-    <script src="js/theme.js?v=20260329c" defer></script>
-    <script src="js/share.js?v=20260329c" defer></script>
-    <script src="js/stories.js?v=20260329c" defer></script>
-    <script src="js/carousel-manifest.js?v=20260329c" defer></script>
-    <script src="js/carousel.js?v=20260329c" defer></script>
+    <link rel="stylesheet" href="css/style.css?v=20260330a" />
+    <script src="js/main.js?v=20260330a" defer></script>
+    <script src="js/theme.js?v=20260330a" defer></script>
+    <script src="js/share.js?v=20260330a" defer></script>
+    <script src="js/stories.js?v=20260330a" defer></script>
+    <script src="js/carousel-manifest.js?v=20260330a" defer></script>
+    <script src="js/carousel.js?v=20260330a" defer></script>
   </head>
 
   <body>
@@ -346,11 +346,11 @@
           </button>
           <button class="profile__story-trigger" type="button" aria-label="Open Komfi Kat stories" data-story-open>
             <span class="profile__story-desktop-hint" aria-hidden="true">
-              <span class="profile__story-desktop-hint-text">Click to see what's new!</span>
+              <span class="profile__story-desktop-hint-text">Click to see new Komfi Kat stories!</span>
             </span>
             <span class="profile__story-ring" aria-hidden="true">
               <span class="profile__story-core">
-                <span class="profile__logo-frame">
+                <span class="profile__logo-frame" data-profile-logo-frame>
                   <img
                     class="profile__logo"
                     src="img/logo.webp"

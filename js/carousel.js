@@ -208,12 +208,14 @@
 
   function dismissPromoRedirectToast() {
     if (!dom.promoRedirectToast) {
+      App.helpers.scheduleIdleTopBarTooltipRestore?.();
       return;
     }
 
     delete dom.promoRedirectToast.dataset.visible;
     dom.promoRedirectToast.setAttribute("aria-hidden", "true");
     schedulePromoRedirectToastCleanup();
+    App.helpers.scheduleIdleTopBarTooltipRestore?.();
   }
 
   function hidePromoRedirectToast() {
@@ -225,6 +227,7 @@
     }
 
     if (!dom.promoRedirectToast) {
+      App.helpers.scheduleIdleTopBarTooltipRestore?.();
       return;
     }
 

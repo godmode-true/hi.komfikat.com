@@ -69,7 +69,11 @@
   let topBarTooltipOwner = "";
   let topBarTooltipStickyOwner = "";
   let topBarTooltipCleanupTimeout = 0;
+  let topBarTooltipIdleRestoreTimeout = 0;
   const topBarTooltipTransitionMs = 180;
+  const topBarTooltipIdleOwner = "top-bar-idle";
+  const topBarTooltipIdleDesktopText = "Welcome to Komfi Kat community!";
+  const topBarTooltipIdleMobileText = "Welcome to Komfi Kat community!";
   const topBarTooltipStickyBlockedHoverOwners = new Set(["story-hint", "profile-title"]);
 
   const monthMap = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -346,11 +350,59 @@
     return true;
   }
 
+  function getIdleTopBarTooltipText() {
+    return isTouchLikeDevice() || window.matchMedia("(max-width: 48rem)").matches
+      ? topBarTooltipIdleMobileText
+      : topBarTooltipIdleDesktopText;
+  }
+
+  function canShowIdleTopBarTooltip() {
+    return (
+      !!App.dom.topBarTooltip &&
+      App.dom.shareMenu?.dataset.shareMenuOpen !== "true" &&
+      App.dom.shareMenu?.dataset.shareHintVisible !== "true" &&
+      App.dom.shareMenu?.dataset.shareFeedbackVisible !== "true" &&
+      App.dom.shareMenu?.dataset.promoRedirectVisible !== "true" &&
+      App.dom.promoRedirectToast?.dataset.visible !== "true"
+    );
+  }
+
+  function showIdleTopBarTooltip() {
+    if (!canShowIdleTopBarTooltip()) {
+      return false;
+    }
+
+    if (!setTopBarTooltipContent(getIdleTopBarTooltipText())) {
+      return false;
+    }
+
+    window.clearTimeout(topBarTooltipCleanupTimeout);
+    window.clearTimeout(topBarTooltipIdleRestoreTimeout);
+    topBarTooltipOwner = topBarTooltipIdleOwner;
+    topBarTooltipStickyOwner = "";
+    App.dom.topBarTooltip.dataset.anchor = "center";
+    delete App.dom.topBarTooltip.dataset.interactive;
+    App.dom.topBarTooltip.dataset.visible = "true";
+    return true;
+  }
+
+  function scheduleIdleTopBarTooltipRestore() {
+    window.clearTimeout(topBarTooltipIdleRestoreTimeout);
+    topBarTooltipIdleRestoreTimeout = window.setTimeout(() => {
+      if (topBarTooltipOwner && topBarTooltipOwner !== topBarTooltipIdleOwner) {
+        return;
+      }
+
+      showIdleTopBarTooltip();
+    }, 0);
+  }
+
   function showTopBarTooltip(content, owner = "default", anchor = "center", options = {}) {
     if (!App.dom.topBarTooltip || !isDesktopPointerDevice()) {
       return;
     }
 
+    window.clearTimeout(topBarTooltipIdleRestoreTimeout);
     const trigger = options.trigger === "click" ? "click" : "hover";
 
     if (
@@ -404,7 +456,21 @@
       return;
     }
 
+    window.clearTimeout(topBarTooltipIdleRestoreTimeout);
     topBarTooltipOwner = "";
+    topBarTooltipStickyOwner = "";
+    delete App.dom.topBarTooltip.dataset.visible;
+    delete App.dom.topBarTooltip.dataset.interactive;
+    scheduleTopBarTooltipCleanup();
+  }
+
+  function dismissTopBarTooltipUntilNextStateChange() {
+    if (!App.dom.topBarTooltip) {
+      return;
+    }
+
+    window.clearTimeout(topBarTooltipIdleRestoreTimeout);
+    topBarTooltipOwner = "__dismissed__";
     topBarTooltipStickyOwner = "";
     delete App.dom.topBarTooltip.dataset.visible;
     delete App.dom.topBarTooltip.dataset.interactive;
@@ -420,11 +486,13 @@
       return;
     }
 
+    window.clearTimeout(topBarTooltipIdleRestoreTimeout);
     topBarTooltipOwner = "";
     topBarTooltipStickyOwner = "";
     delete App.dom.topBarTooltip.dataset.visible;
     delete App.dom.topBarTooltip.dataset.interactive;
     scheduleTopBarTooltipCleanup();
+    scheduleIdleTopBarTooltipRestore();
   }
 
   function dismissStickyMenuPrompts(except = "") {
@@ -543,6 +611,9 @@
     showTopBarTooltip,
     hideTopBarTooltip,
     dismissStickyMenuPrompts,
+    showIdleTopBarTooltip,
+    scheduleIdleTopBarTooltipRestore,
+    dismissTopBarTooltipUntilNextStateChange,
     setPromoRedirectToastContent,
     copyText,
     lockViewportGestureZoom,
@@ -591,7 +662,7 @@
         App.dom.shareHoverBridge && App.dom.shareHoverBridge.parentElement === App.dom.shareMenu
           ? App.dom.shareHoverBridge
           : App.dom.shareButton || null,
-      );
+        );
     }
 
     App.dom.socialHandleLinks?.forEach((link, index) => {
@@ -623,8 +694,16 @@
         App.helpers.showTopBarTooltip(createTooltipContent(), tooltipOwner, "center", { sticky: true });
       });
 
+      link.addEventListener("mouseleave", () => {
+        App.helpers.hideTopBarTooltip(tooltipOwner);
+      });
+
       link.addEventListener("focus", () => {
         App.helpers.showTopBarTooltip(createTooltipContent(), tooltipOwner, "center", { sticky: true });
+      });
+
+      link.addEventListener("blur", () => {
+        App.helpers.hideTopBarTooltip(tooltipOwner);
       });
     });
 
@@ -765,9 +844,33 @@
     App.initShare?.();
     App.initStories?.();
     App.initCarousel?.();
+    App.helpers.scheduleIdleTopBarTooltipRestore?.();
+
+    document.addEventListener("keydown", (event) => {
+      if (
+        event.key !== "Escape" ||
+        !isDesktopPointerDevice() ||
+        App.dom.topBarTooltip?.dataset.visible !== "true" ||
+        topBarTooltipOwner === topBarTooltipIdleOwner
+      ) {
+        return;
+      }
+
+      App.helpers.hideTopBarTooltip();
+    });
 
     schedulePromoCarouselViewportFitSync();
     window.addEventListener("resize", schedulePromoCarouselViewportFitSync);
     window.visualViewport?.addEventListener("resize", schedulePromoCarouselViewportFitSync);
+    window.addEventListener("resize", () => {
+      if (topBarTooltipOwner === topBarTooltipIdleOwner && !canShowIdleTopBarTooltip()) {
+        forceHideTopBarTooltip();
+        return;
+      }
+
+      if (!topBarTooltipOwner || topBarTooltipOwner === topBarTooltipIdleOwner) {
+        scheduleIdleTopBarTooltipRestore();
+      }
+    });
   });
 })();

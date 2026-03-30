@@ -124,6 +124,7 @@
     resetShareRailHint();
     delete dom.shareMenu.dataset.shareMenuOpen;
     dom.shareButton.setAttribute("aria-expanded", "false");
+    helpers.scheduleIdleTopBarTooltipRestore?.();
   }
 
   function hideShareStickyUi() {

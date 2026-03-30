@@ -66,7 +66,7 @@
       return;
     }
 
-    const storyHintText = dom.storyDesktopHint?.textContent?.trim() || "Click to see what's new!";
+    const storyHintText = dom.storyDesktopHint?.textContent?.trim() || "Click to see new Komfi Kat stories!";
     helpers.showTopBarTooltip(storyHintText, "story-hint");
   }
 
