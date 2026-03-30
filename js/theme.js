@@ -132,9 +132,41 @@
     syncThemeToggle(initialTheme);
     updateThemeColor();
 
+    dom.themeToggle?.addEventListener("mouseenter", () => {
+      helpers.showTopBarTooltip(
+        dom.themeToggle?.dataset.tooltip || dom.themeToggle?.ariaLabel || "",
+        "theme-toggle",
+        "share-button-left",
+      );
+    });
+
+    dom.themeToggle?.addEventListener("mouseleave", () => {
+      helpers.hideTopBarTooltip("theme-toggle");
+    });
+
+    dom.themeToggle?.addEventListener("focus", () => {
+      helpers.showTopBarTooltip(
+        dom.themeToggle?.dataset.tooltip || dom.themeToggle?.ariaLabel || "",
+        "theme-toggle",
+        "share-button-left",
+      );
+    });
+
+    dom.themeToggle?.addEventListener("blur", () => {
+      helpers.hideTopBarTooltip("theme-toggle");
+    });
+
     dom.themeToggle?.addEventListener("click", () => {
       const nextTheme = dom.root.dataset.theme === "dark" ? "light" : "dark";
       setTheme(nextTheme);
+
+      if (dom.themeToggle?.matches(":hover, :focus-visible, :focus")) {
+        helpers.showTopBarTooltip(
+          dom.themeToggle.dataset.tooltip || dom.themeToggle.ariaLabel || "",
+          "theme-toggle",
+          "share-button-left",
+        );
+      }
     });
   };
 })();

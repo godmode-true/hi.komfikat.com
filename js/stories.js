@@ -60,24 +60,18 @@
 
   function showDesktopStoryHint() {
     if (
-      !dom.shareMenu ||
-      !dom.storyDesktopHint ||
       !helpers.isDesktopPointerDevice() ||
       dom.storyTrigger?.dataset.storyState !== "new"
     ) {
       return;
     }
 
-    delete dom.storyDesktopHint.dataset.storyHintState;
-    dom.shareMenu.dataset.storyHintVisible = "true";
+    const storyHintText = dom.storyDesktopHint?.textContent?.trim() || "Click to see what's new!";
+    helpers.showTopBarTooltip(storyHintText, "story-hint");
   }
 
   function hideDesktopStoryHint() {
-    if (!dom.shareMenu) {
-      return;
-    }
-
-    delete dom.shareMenu.dataset.storyHintVisible;
+    helpers.hideTopBarTooltip("story-hint");
   }
 
   function getSeenStorySignature() {
@@ -400,6 +394,13 @@
         return;
       }
 
+      if (event.button !== 0) {
+        if (event.cancelable) {
+          event.preventDefault();
+        }
+        return;
+      }
+
       clearStoryNavHoldTimer();
       storyNavHoldTriggered = false;
       activeStoryNavTarget = direction;
@@ -521,6 +522,13 @@
 
     bindStoryNavigationEvents();
 
+    const shouldSuppressStoryContextMenu = (target) =>
+      target instanceof Element &&
+      Boolean(target.closest("[data-story-viewer]")) &&
+      (dom.storyViewer?.open ||
+        document.body.classList.contains("story-viewer-is-open") ||
+        document.body.classList.contains("story-viewer-is-closing"));
+
     dom.storyClose?.addEventListener("click", () => {
       closeStories();
     });
@@ -528,11 +536,7 @@
     document.addEventListener(
       "contextmenu",
       (event) => {
-        if (!dom.storyViewer?.open) {
-          return;
-        }
-
-        if (event.target instanceof Element && event.target.closest("[data-story-viewer]")) {
+        if (shouldSuppressStoryContextMenu(event.target)) {
           event.preventDefault();
         }
       },
@@ -570,10 +574,6 @@
     });
 
     dom.storyViewer.addEventListener("contextmenu", (event) => {
-      if (!dom.storyViewer?.open) {
-        return;
-      }
-
       event.preventDefault();
     });
 
@@ -619,6 +619,13 @@
 
     const handlePressStart = (event) => {
       if (!dom.storyViewer?.open) {
+        return;
+      }
+
+      if (event.button !== 0) {
+        if (event.cancelable) {
+          event.preventDefault();
+        }
         return;
       }
 

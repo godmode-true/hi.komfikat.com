@@ -24,10 +24,10 @@
       },
       {
         label: "Buy on Amazon",
-        subtitle: "Coming soon",
+        subtitle: "Paperback Version",
         icon: "img/icons/amazon.svg",
+        href: "https://www.amazon.com/dp/B0GVF789ZJ",
         className: "promo-carousel__shop-button--amazon",
-        disabled: true,
       },
       {
         label: "View on Website",
@@ -114,7 +114,7 @@
   }
 
   function getVisibleCards() {
-    return window.matchMedia("(max-width: 30rem)").matches ? 1 : 2;
+    return window.matchMedia("(max-width: 48rem)").matches ? 1 : 2;
   }
 
   function createCarouselItems(imageSlides, ctaTitle, ctaSubtitle, actions, visibleCardsCount) {
@@ -185,12 +185,35 @@
   let promoRedirectDeadline = 0;
   let promoRedirectHref = "";
   const PROMO_REDIRECT_DELAY_MS = 5000;
+  const PROMO_REDIRECT_TRANSITION_MS = 180;
+  let promoRedirectCleanupTimeout = 0;
 
   function clearPromoRedirectTimers() {
     window.clearTimeout(promoRedirectTimeout);
     window.clearInterval(promoRedirectInterval);
     promoRedirectTimeout = 0;
     promoRedirectInterval = 0;
+  }
+
+  function schedulePromoRedirectToastCleanup() {
+    window.clearTimeout(promoRedirectCleanupTimeout);
+    promoRedirectCleanupTimeout = window.setTimeout(() => {
+      if (dom.promoRedirectToast?.dataset.visible === "true") {
+        return;
+      }
+
+      App.helpers.setPromoRedirectToastContent?.({ mode: "redirect" });
+    }, PROMO_REDIRECT_TRANSITION_MS);
+  }
+
+  function dismissPromoRedirectToast() {
+    if (!dom.promoRedirectToast) {
+      return;
+    }
+
+    delete dom.promoRedirectToast.dataset.visible;
+    dom.promoRedirectToast.setAttribute("aria-hidden", "true");
+    schedulePromoRedirectToastCleanup();
   }
 
   function hidePromoRedirectToast() {
@@ -205,10 +228,11 @@
       return;
     }
 
-    App.helpers.setPromoRedirectToastContent?.({ mode: "redirect" });
-    delete dom.promoRedirectToast.dataset.visible;
-    dom.promoRedirectToast.setAttribute("aria-hidden", "true");
+    dismissPromoRedirectToast();
   }
+
+  App.dismissPromoRedirectToast = dismissPromoRedirectToast;
+  App.hidePromoRedirectToast = hidePromoRedirectToast;
 
   function updatePromoRedirectCountdown() {
     if (!dom.promoRedirectCountdown) {
@@ -227,7 +251,9 @@
       return;
     }
 
+    App.helpers.dismissStickyMenuPrompts?.("promo-redirect");
     clearPromoRedirectTimers();
+    window.clearTimeout(promoRedirectCleanupTimeout);
     promoRedirectHref = href;
     promoRedirectDeadline = window.performance.now() + PROMO_REDIRECT_DELAY_MS;
 

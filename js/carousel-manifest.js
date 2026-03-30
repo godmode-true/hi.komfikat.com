@@ -18,10 +18,10 @@ window.KomfiKatCarouselManifest = {
     },
     {
       label: "Buy on Amazon",
-      subtitle: "Coming soon",
+      subtitle: "Paperback Version",
       icon: "img/icons/amazon.svg",
+      href: "https://www.amazon.com/dp/B0GVF789ZJ",
       className: "promo-carousel__shop-button--amazon",
-      disabled: true,
     },
     {
       label: "View on Website",

@@ -56,9 +56,12 @@
       return;
     }
 
+    helpers.dismissStickyMenuPrompts?.("share");
     window.clearTimeout(shareFeedbackCleanupTimeout);
 
-    if (text === shareMessages.linkCopiedHint || text === shareMessages.textCopiedHint) {
+    const isCopiedFeedback = typeof text === "string" && /\bcopied!$/i.test(text.trim());
+
+    if (isCopiedFeedback) {
       helpers.setShareHintContent({ text, success: true });
     } else if (text.endsWith("👉")) {
       helpers.setShareHintContent({ text: text.slice(0, -2).trim(), icon: "👉" });
@@ -92,6 +95,25 @@
 
     dom.shareButton.setAttribute("data-tooltip", "Share with a friend");
     dom.shareButton.setAttribute("aria-label", "Share");
+    helpers.hideTopBarTooltip("share-button");
+  }
+
+  function clearShareTransientState() {
+    if (!dom.shareMenu) {
+      return;
+    }
+
+    shareCopyFeedbackActive = false;
+    shareHintSuppressed = false;
+    window.clearTimeout(shareTooltipTimeout);
+    window.clearTimeout(shareFeedbackCleanupTimeout);
+    delete dom.shareMenu.dataset.shareTooltipSuppressed;
+    delete dom.shareMenu.dataset.shareHintVisible;
+    delete dom.shareMenu.dataset.shareFeedbackVisible;
+    delete dom.shareMenu.dataset.shareFeedbackMode;
+    delete dom.shareMenu.dataset.storyHintVisible;
+    helpers.hideTopBarTooltip("share-feedback");
+    resetShareButtonState();
   }
 
   function closeShareMenu() {
@@ -102,6 +124,11 @@
     resetShareRailHint();
     delete dom.shareMenu.dataset.shareMenuOpen;
     dom.shareButton.setAttribute("aria-expanded", "false");
+  }
+
+  function hideShareStickyUi() {
+    clearShareTransientState();
+    closeShareMenu();
   }
 
   function elementContainsPoint(element, clientX, clientY) {
@@ -141,13 +168,7 @@
       return;
     }
 
-    window.clearTimeout(shareTooltipTimeout);
-    resetShareButtonState();
-    delete dom.shareMenu.dataset.shareTooltipSuppressed;
-    delete dom.shareMenu.dataset.shareHintVisible;
-    delete dom.shareMenu.dataset.shareFeedbackVisible;
-    delete dom.shareMenu.dataset.shareFeedbackMode;
-    window.clearTimeout(shareFeedbackCleanupTimeout);
+    clearShareTransientState();
     dom.shareMenu.dataset.shareMenuOpen = "true";
     dom.shareButton.setAttribute("aria-expanded", "true");
 
@@ -190,17 +211,17 @@
     delete dom.shareMenu.dataset.shareTooltipSuppressed;
     window.clearTimeout(shareTooltipTimeout);
     dom.shareButton.setAttribute("aria-label", message);
-    setShareRailHint(message);
-    dom.shareMenu.dataset.shareFeedbackVisible = "true";
-    dom.shareMenu.dataset.shareFeedbackMode = "copied";
+    helpers.showTopBarTooltip(message, "share-feedback");
     shareTooltipTimeout = window.setTimeout(() => {
       shareCopyFeedbackActive = false;
       resetShareRailHint();
       resetShareButtonState();
+      helpers.hideTopBarTooltip("share-feedback");
     }, 2600);
   }
 
   App.showShareCopiedState = showShareCopiedState;
+  App.hideShareStickyUi = hideShareStickyUi;
 
   function bindShareOptionEvents(shareOption) {
     const optionHint = shareOption.dataset.shareHint || shareMessages.defaultHint;
@@ -388,7 +409,16 @@
             return;
           }
 
-          if (shouldUseDesktopShareRail() && isShareMenuOpen() && !shareHintSuppressed) {
+          if (!shouldUseDesktopShareRail()) {
+            return;
+          }
+
+          if (!isShareMenuOpen()) {
+            helpers.showTopBarTooltip(dom.shareButton.dataset.tooltip || "Share with a friend", "share-button");
+            return;
+          }
+
+          if (!shareHintSuppressed) {
             setShareRailHint();
           }
         });
@@ -399,7 +429,16 @@
             return;
           }
 
-          if (shouldUseDesktopShareRail() && isShareMenuOpen() && !shareHintSuppressed) {
+          if (!shouldUseDesktopShareRail()) {
+            return;
+          }
+
+          if (!isShareMenuOpen()) {
+            helpers.showTopBarTooltip(dom.shareButton.dataset.tooltip || "Share with a friend", "share-button");
+            return;
+          }
+
+          if (!shareHintSuppressed) {
             setShareRailHint();
           }
         });
@@ -407,6 +446,7 @@
         dom.shareButton.addEventListener("mouseleave", () => {
           shareHintSuppressed = false;
           delete dom.shareMenu.dataset.shareTooltipSuppressed;
+          helpers.hideTopBarTooltip("share-button");
           if (shouldUseDesktopShareRail() && isShareMenuOpen() && !shareCopyFeedbackActive) {
             resetShareRailHint();
           }
@@ -415,6 +455,7 @@
         dom.shareButton.addEventListener("blur", () => {
           shareHintSuppressed = false;
           delete dom.shareMenu.dataset.shareTooltipSuppressed;
+          helpers.hideTopBarTooltip("share-button");
           if (shouldUseDesktopShareRail() && isShareMenuOpen() && !shareCopyFeedbackActive) {
             resetShareRailHint();
           }
