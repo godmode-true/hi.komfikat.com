@@ -2177,7 +2177,7 @@ input[type="reset"] {
 }
 
 :root[data-theme="dark"] .link-card--etsy {
-  background: linear-gradient(180deg, #4d4043 0%, #43373a 100%);
+  background: var(--surface-panel-dark);
   color: var(--profile-text);
 }
 
@@ -3268,6 +3268,11 @@ input[type="reset"] {
     background: #4b4043;
   }
 
+  :root[data-theme="dark"] .top-bar {
+    border-color: var(--surface-border-soft);
+    background: var(--surface-panel-dark);
+  }
+
   :root[data-theme="dark"] .top-bar__share[data-share-menu-open="true"] .action-button--icon-only {
     background: #4b4043;
   }
@@ -3430,6 +3435,7 @@ input[type="reset"] {
   }
 
   .top-bar {
+    --top-bar-sticky-offset: calc(env(safe-area-inset-top) + 0.52rem);
     --mobile-sticky-toast-inline-gap: calc(var(--sticky-bar-pad) * 2);
     --mobile-sticky-toast-pad: 0.42rem;
     --mobile-sticky-toast-cancel-size: 1.72rem;
@@ -3483,6 +3489,12 @@ input[type="reset"] {
     transform: translate(-50%, -50%);
   }
 
+  :root[data-theme="dark"] .top-bar__tooltip {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+  }
+
   .share-rail {
     display: none !important;
   }
@@ -3506,6 +3518,14 @@ input[type="reset"] {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     transform: translate(-50%, calc(-50% + 0.18rem)) scale(0.985);
+  }
+
+  :root[data-theme="dark"] .promo-redirect-toast {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   .promo-redirect-toast__text {
@@ -3958,7 +3978,17 @@ input[type="reset"] {
 /* Phone layout */
 @media (max-width: 30rem) {
   :root {
-    --social-link-size: 2.58rem;
+    --hero-edge-gap: 0.48rem;
+    --hero-stack-gap: 0.62rem;
+    --hero-profile-top-gap: 1.42rem;
+    --hero-social-gap: 0.58rem;
+    --hero-carousel-gap: 0.58rem;
+    --social-link-size: 2.42rem;
+    --social-links-row-gap: 0.42rem;
+  }
+
+  .top-bar {
+    --top-bar-sticky-offset: calc(env(safe-area-inset-top) + 0.72rem);
   }
 
   .promo-carousel {
@@ -3972,7 +4002,7 @@ input[type="reset"] {
   }
 
   .profile {
-    padding-top: clamp(1.15rem, 6vw, 1.55rem);
+    padding-top: var(--hero-profile-top-gap);
   }
 
   .story-viewer {
@@ -3990,8 +4020,8 @@ input[type="reset"] {
   }
 
   .social-links__icon {
-    width: 1.32rem;
-    height: 1.32rem;
+    width: 1.38rem;
+    height: 1.38rem;
   }
 
   .profile__story-trigger {
