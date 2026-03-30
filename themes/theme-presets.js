@@ -50,6 +50,14 @@
   }
 
   function createThemePreset({ id, label, light, dark, brand = {} }) {
+    const lightAccentUiStart = light.accentUiStart || mixHex(light.accent, "#ffffff", 0.16);
+    const lightAccentUiMid = light.accentUiMid || light.accent;
+    const lightAccentUiEnd = light.accentUiEnd || mixHex(light.accent, light.accentSoft, 0.42);
+    const lightAccentUiSolid = light.accentUiSolid || lightAccentUiMid;
+    const darkAccentUiStart = dark.accentUiStart || mixHex(dark.accent, "#ffffff", 0.1);
+    const darkAccentUiMid = dark.accentUiMid || dark.accent;
+    const darkAccentUiEnd = dark.accentUiEnd || mixHex(dark.accent, dark.accentSoft, 0.42);
+    const darkAccentUiSolid = dark.accentUiSolid || darkAccentUiMid;
     const lightSurfaceHoverSolid = mixHex(light.surface, light.accentSoft, 0.34);
     const lightSurfaceHover = verticalGradient(
       mixHex(light.surface, "#ffffff", 0.12),
@@ -92,6 +100,7 @@
         "--surface-panel-dark-hover": darkSurfaceHover,
         "--surface-panel-dark-solid": dark.surfaceSolid,
         "--surface-panel-dark-solid-hover": darkSurfaceHoverSolid,
+        "--browser-chrome-color": light.browserChromeColor || mixHex(light.surface, light.accentSoft, 0.34),
         "--hint-surface": rgba(light.surface, 0.96),
         "--hint-surface-dark": rgba(dark.hintSurface || dark.surfaceSolid, 0.96),
         "--button-bg": light.surface,
@@ -108,8 +117,17 @@
         "--profile-logo-image-filter": brand.logoFilterLight || "hue-rotate(-13deg) saturate(0.9) brightness(1.015)",
         "--profile-logo-image-filter-hover":
           brand.logoFilterLightHover || "hue-rotate(-15deg) saturate(0.92) brightness(1.02)",
-        "--profile-story-ring-start": light.accent,
-        "--profile-story-ring-end": light.accentSoft,
+        "--accent-ui-start": lightAccentUiStart,
+        "--accent-ui-mid": lightAccentUiMid,
+        "--accent-ui-end": lightAccentUiEnd,
+        "--accent-ui-solid": lightAccentUiSolid,
+        "--accent-ui-soft": rgba(lightAccentUiSolid, 0.34),
+        "--accent-ui-outline": rgba(lightAccentUiSolid, 0.48),
+        "--accent-ui-active-outline": rgba(mixHex(lightAccentUiStart, "#ffffff", 0.22), 0.42),
+        "--accent-ui-shadow": rgba(lightAccentUiSolid, 0.22),
+        "--accent-ui-shadow-strong": rgba(lightAccentUiMid, 0.18),
+        "--profile-story-ring-start": light.ringStart || lightAccentUiStart,
+        "--profile-story-ring-end": light.ringEnd || lightAccentUiEnd,
         "--profile-text": light.text,
         "--profile-subtext": light.textMuted,
         "--surface-border-soft": rgba(light.accentSoft, 0.52),
@@ -155,6 +173,7 @@
         "--surface-panel-dark-hover": darkSurfaceHover,
         "--surface-panel-dark-solid": dark.surfaceSolid,
         "--surface-panel-dark-solid-hover": darkSurfaceHoverSolid,
+        "--browser-chrome-color": dark.browserChromeColor || mixHex(dark.surfaceSolid, dark.accentSoft, 0.2),
         "--hint-surface": rgba(light.surface, 0.96),
         "--hint-surface-dark": rgba(dark.hintSurface || dark.surfaceSolid, 0.96),
         "--button-bg": dark.surfaceSolid,
@@ -171,8 +190,17 @@
         "--profile-logo-image-filter": brand.logoFilterDark || "hue-rotate(-11deg) saturate(0.9) brightness(1.02)",
         "--profile-logo-image-filter-hover":
           brand.logoFilterDarkHover || "hue-rotate(-13deg) saturate(0.92) brightness(1.025)",
-        "--profile-story-ring-start": dark.accent,
-        "--profile-story-ring-end": dark.accentSoft,
+        "--accent-ui-start": darkAccentUiStart,
+        "--accent-ui-mid": darkAccentUiMid,
+        "--accent-ui-end": darkAccentUiEnd,
+        "--accent-ui-solid": darkAccentUiSolid,
+        "--accent-ui-soft": rgba(darkAccentUiSolid, 0.34),
+        "--accent-ui-outline": rgba(darkAccentUiSolid, 0.48),
+        "--accent-ui-active-outline": rgba(mixHex(darkAccentUiStart, "#ffffff", 0.18), 0.26),
+        "--accent-ui-shadow": rgba(darkAccentUiSolid, 0.24),
+        "--accent-ui-shadow-strong": rgba(darkAccentUiMid, 0.3),
+        "--profile-story-ring-start": dark.ringStart || darkAccentUiStart,
+        "--profile-story-ring-end": dark.ringEnd || darkAccentUiEnd,
         "--profile-text": dark.text,
         "--profile-subtext": dark.textMuted,
         "--surface-border-soft": rgba(dark.accentSoft, 0.34),
@@ -240,6 +268,7 @@
       light: {
         pageBg: "#fffcfe",
         surface: "#fff8fb",
+        browserChromeColor: "#fde7ef",
         selectionBg: "#f6eaf0",
         text: "#5f3442",
         textMuted: "#8a5a69",
@@ -254,6 +283,7 @@
       },
       dark: {
         pageBg: "#241e1a",
+        browserChromeColor: "#4a3b40",
         selectionBg: "#6d4651",
         surface: "#4d4043",
         surfaceSolid: "#45373b",
@@ -340,6 +370,10 @@
         textMuted: "#78625a",
         accent: "#b84f5c",
         accentSoft: "#d6b3b6",
+        accentUiStart: "#6fae7f",
+        accentUiMid: "#d96673",
+        accentUiEnd: "#bc505d",
+        accentUiSolid: "#c95b67",
         shellSurface:
           "linear-gradient(180deg, rgba(248, 243, 238, 0.74) 0%, rgba(248, 243, 238, 0) 20%), linear-gradient(180deg, #efe4dc 0%, #e6d6cf 100%)",
         scrollbarTrack: "#e8ddd6",
@@ -358,6 +392,10 @@
         panelTextMuted: "#d7c4bc",
         accent: "#d98692",
         accentSoft: "#9eb3a4",
+        accentUiStart: "#87c398",
+        accentUiMid: "#ea9aa4",
+        accentUiEnd: "#d57d89",
+        accentUiSolid: "#e497a1",
         shellSurface: "linear-gradient(180deg, #394940 0%, #2f3d35 100%)",
         scrollbarTrack: "#232b26",
         scrollbarThumb: "#6f8278",

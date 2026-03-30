@@ -17,10 +17,12 @@
       return;
     }
 
-    const pageBg = getComputedStyle(dom.root).getPropertyValue("--page-bg").trim();
+    const browserChromeColor =
+      getComputedStyle(dom.root).getPropertyValue("--browser-chrome-color").trim() ||
+      getComputedStyle(dom.root).getPropertyValue("--page-bg").trim();
 
-    if (pageBg) {
-      dom.themeColorMeta.setAttribute("content", pageBg);
+    if (browserChromeColor) {
+      dom.themeColorMeta.setAttribute("content", browserChromeColor);
     }
   }
 

@@ -8,7 +8,8 @@
   const { dom, helpers } = App;
   const shareMessages = {
     defaultHint: "Share with your friend 👉",
-    copiedHint: "Link copied!",
+    linkCopiedHint: "Link copied!",
+    textCopiedHint: "Text copied!",
   };
 
   let shareTooltipTimeout = 0;
@@ -23,6 +24,10 @@
 
   function shouldUseDesktopShareRail() {
     return helpers.isDesktopPointerDevice();
+  }
+
+  function shouldUseBottomMobileToast() {
+    return window.matchMedia("(max-width: 48rem)").matches || !shouldUseDesktopShareRail();
   }
 
   function getSharePayload() {
@@ -42,6 +47,10 @@
     return dom.shareMenu?.dataset.shareMenuOpen === "true";
   }
 
+  function isPromoRedirectVisible() {
+    return dom.shareMenu?.dataset.promoRedirectVisible === "true";
+  }
+
   function setShareRailHint(text = shareMessages.defaultHint) {
     if (!dom.shareRailHint || !dom.shareMenu) {
       return;
@@ -49,7 +58,7 @@
 
     window.clearTimeout(shareFeedbackCleanupTimeout);
 
-    if (text === shareMessages.copiedHint) {
+    if (text === shareMessages.linkCopiedHint || text === shareMessages.textCopiedHint) {
       helpers.setShareHintContent({ text, success: true });
     } else if (text.endsWith("👉")) {
       helpers.setShareHintContent({ text: text.slice(0, -2).trim(), icon: "👉" });
@@ -95,6 +104,38 @@
     dom.shareButton.setAttribute("aria-expanded", "false");
   }
 
+  function elementContainsPoint(element, clientX, clientY) {
+    if (!element) {
+      return false;
+    }
+
+    const rect = element.getBoundingClientRect();
+    return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+  }
+
+  function isPointerInsideExpandedShareZone(clientX, clientY) {
+    if (!dom.shareButton) {
+      return false;
+    }
+
+    if (elementContainsPoint(dom.shareButton, clientX, clientY)) {
+      return true;
+    }
+
+    if (isShareMenuOpen() && elementContainsPoint(dom.shareRail, clientX, clientY)) {
+      return true;
+    }
+
+    if (
+      (dom.shareMenu?.dataset.shareHintVisible === "true" || dom.shareMenu?.dataset.shareFeedbackVisible === "true") &&
+      elementContainsPoint(dom.shareRailHint, clientX, clientY)
+    ) {
+      return true;
+    }
+
+    return elementContainsPoint(dom.shareHoverBridge, clientX, clientY);
+  }
+
   function openShareMenu() {
     if (!dom.shareMenu || !dom.shareButton) {
       return;
@@ -131,8 +172,16 @@
     openShareMenu();
   }
 
-  function showShareCopiedState() {
+  function showShareCopiedState(message = shareMessages.linkCopiedHint) {
     if (!dom.shareButton || !dom.shareMenu) {
+      return;
+    }
+
+    if (shouldUseBottomMobileToast()) {
+      shareCopyFeedbackActive = false;
+      closeShareMenu();
+      delete dom.shareMenu.dataset.shareTooltipSuppressed;
+      resetShareButtonState();
       return;
     }
 
@@ -140,8 +189,8 @@
     closeShareMenu();
     delete dom.shareMenu.dataset.shareTooltipSuppressed;
     window.clearTimeout(shareTooltipTimeout);
-    dom.shareButton.setAttribute("aria-label", shareMessages.copiedHint);
-    setShareRailHint(shareMessages.copiedHint);
+    dom.shareButton.setAttribute("aria-label", message);
+    setShareRailHint(message);
     dom.shareMenu.dataset.shareFeedbackVisible = "true";
     dom.shareMenu.dataset.shareFeedbackMode = "copied";
     shareTooltipTimeout = window.setTimeout(() => {
@@ -150,6 +199,8 @@
       resetShareButtonState();
     }, 2600);
   }
+
+  App.showShareCopiedState = showShareCopiedState;
 
   function bindShareOptionEvents(shareOption) {
     const optionHint = shareOption.dataset.shareHint || shareMessages.defaultHint;
@@ -281,6 +332,12 @@
 
     if (dom.shareButton) {
       dom.shareButton.addEventListener("click", async (event) => {
+        if (isPromoRedirectVisible()) {
+          event.preventDefault();
+          closeShareMenu();
+          return;
+        }
+
         if (shouldUseDesktopShareRail()) {
           event.preventDefault();
           toggleShareMenu();
@@ -326,12 +383,22 @@
     if (dom.shareMenu && dom.shareRail) {
       if (dom.shareButton) {
         dom.shareButton.addEventListener("mouseenter", () => {
+          if (isPromoRedirectVisible()) {
+            closeShareMenu();
+            return;
+          }
+
           if (shouldUseDesktopShareRail() && isShareMenuOpen() && !shareHintSuppressed) {
             setShareRailHint();
           }
         });
 
         dom.shareButton.addEventListener("focus", () => {
+          if (isPromoRedirectVisible()) {
+            closeShareMenu();
+            return;
+          }
+
           if (shouldUseDesktopShareRail() && isShareMenuOpen() && !shareHintSuppressed) {
             setShareRailHint();
           }
@@ -355,9 +422,16 @@
       }
 
       dom.shareMenu.addEventListener("mouseenter", () => {
-        if (shouldUseDesktopShareRail()) {
-          openShareMenu();
+        if (!shouldUseDesktopShareRail()) {
+          return;
         }
+
+        if (isPromoRedirectVisible()) {
+          closeShareMenu();
+          return;
+        }
+
+        openShareMenu();
       });
 
       dom.shareMenu.addEventListener("mouseleave", () => {
@@ -371,9 +445,16 @@
       });
 
       dom.shareMenu.addEventListener("focusin", () => {
-        if (shouldUseDesktopShareRail()) {
-          openShareMenu();
+        if (!shouldUseDesktopShareRail()) {
+          return;
         }
+
+        if (isPromoRedirectVisible()) {
+          closeShareMenu();
+          return;
+        }
+
+        openShareMenu();
       });
 
       dom.shareMenu.addEventListener("focusout", (event) => {
@@ -396,6 +477,24 @@
         if (event.key === "Escape" && isShareMenuOpen()) {
           closeShareMenu();
         }
+      });
+
+      document.addEventListener("pointermove", (event) => {
+        if (event.pointerType && event.pointerType !== "mouse") {
+          return;
+        }
+
+        if (
+          !shouldUseDesktopShareRail() ||
+          !isShareMenuOpen() ||
+          shareCopyFeedbackActive ||
+          isPromoRedirectVisible() ||
+          isPointerInsideExpandedShareZone(event.clientX, event.clientY)
+        ) {
+          return;
+        }
+
+        closeShareMenu();
       });
 
       window.addEventListener("resize", () => {

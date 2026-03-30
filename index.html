@@ -44,11 +44,19 @@
     <script>
       try {
         const root = document.documentElement;
+        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
         const savedTheme = localStorage.getItem("komfi-theme");
         const initialTheme = savedTheme === "dark" ? "dark" : "light";
         const defaultPreset = window.KomfiKatThemeConfig?.defaultPreset || root.dataset.defaultPreset || "default-rose";
+        const preset = window.KomfiKatThemePresets?.[defaultPreset];
+        const initialThemeTokens = preset?.[initialTheme];
+        const initialThemeColor =
+          initialThemeTokens?.["--browser-chrome-color"] || (initialTheme === "dark" ? "#4a3b40" : "#fde7ef");
         root.dataset.theme = initialTheme;
         root.dataset.themePreset = defaultPreset;
+        if (themeColorMeta) {
+          themeColorMeta.setAttribute("content", initialThemeColor);
+        }
       } catch {}
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -68,6 +76,63 @@
     <noscript>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap" />
     </noscript>
+
+    <script id="komfi-story-data" type="application/json">
+      [
+        {
+          "eyebrow": "Komfi Kat",
+          "publishedAt": "2026-03-27",
+          "meta": "Instagram Story",
+          "description": "Fresh little peeks at new coloring pages, cute scenes, and what Komfi Kat is making next.",
+          "ctaLabel": "Visit Instagram",
+          "url": "https://www.instagram.com/komfikat/",
+          "image": "img/stories/placeholder-white.svg",
+          "imageAlt": "White story placeholder",
+          "imageFit": "cover",
+          "layout": "caption"
+        },
+        {
+          "eyebrow": "Komfi Kat",
+          "publishedAt": "2026-04-03",
+          "meta": "",
+          "description": "",
+          "ctaLabel": "Open Reel on Instagram",
+          "url": "https://www.instagram.com/komfikat/",
+          "image": "img/stories/placeholder-white.svg",
+          "imageAlt": "White story placeholder",
+          "imageFit": "cover",
+          "layout": "full"
+        }
+      ]
+    </script>
+    <script>
+      try {
+        const root = document.documentElement;
+        const storyStorageKeys = {
+          storyViewed: "komfi-story-viewed-signature-v2",
+          storyHintDismissed: "komfi-story-hint-dismissed-signature-v1",
+        };
+        const storyDataElement = document.getElementById("komfi-story-data");
+        const stories = JSON.parse(storyDataElement?.textContent || "[]");
+        const storySignature = JSON.stringify(
+          (Array.isArray(stories) ? stories : []).map(
+            ({ eyebrow, publishedAt, meta, description, ctaLabel, url, image, imageAlt, imageFit, layout }) => ({
+              eyebrow,
+              publishedAt,
+              meta,
+              description,
+              ctaLabel,
+              url,
+              image,
+              imageAlt,
+              imageFit: imageFit || "cover",
+              layout: layout || "caption",
+            }),
+          ),
+        );
+        root.dataset.storyHintLayout = "collapsed";
+      } catch {}
+    </script>
 
     <link rel="stylesheet" href="css/style.css?v=20260329c" />
     <script src="js/main.js?v=20260329c" defer></script>
@@ -174,6 +239,35 @@
                 </button>
               </div>
 
+              <div class="promo-redirect-toast" data-promo-redirect-toast aria-hidden="true" role="status" aria-live="polite">
+                <span class="promo-redirect-toast__text">
+                  Redirecting to Etsy in <span class="promo-redirect-toast__countdown" data-promo-redirect-countdown>5</span>s
+                </span>
+                <button
+                  class="promo-redirect-toast__cancel"
+                  type="button"
+                  aria-label="Cancel Etsy redirect"
+                  data-promo-redirect-cancel
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M8 8L16 16"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M16 8L8 16"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+
               <span class="share-rail__hover-bridge" aria-hidden="true"></span>
 
               <button
@@ -257,14 +351,18 @@
         </header>
 
         <section class="profile stack" aria-label="Brand profile">
-          <span class="profile__story-mobile-hint" aria-hidden="true">
+          <button
+            class="profile__story-mobile-hint"
+            type="button"
+            aria-label="Open Komfi Kat stories with new updates"
+            data-story-open-hint
+          >
             <span class="profile__story-mobile-hint-text">New story</span>
             <span class="profile__story-mobile-hint-icon">👇</span>
-          </span>
+          </button>
           <button class="profile__story-trigger" type="button" aria-label="Open Komfi Kat stories" data-story-open>
             <span class="profile__story-desktop-hint" aria-hidden="true">
-              <span class="profile__story-desktop-hint-text">New story</span>
-              <span class="profile__story-desktop-hint-icon">👇</span>
+              <span class="profile__story-desktop-hint-text">Click on logo to see what's new!</span>
             </span>
             <span class="profile__story-ring" aria-hidden="true">
               <span class="profile__story-core">
@@ -284,7 +382,15 @@
             </span>
           </button>
           <div class="profile__copy stack">
-            <h1 class="profile__title">Komfi Kat</h1>
+            <h1
+              class="profile__title"
+              tabindex="0"
+              role="button"
+              aria-label="Copy Komfi Kat to clipboard"
+              data-copy-profile-title
+            >
+              Komfi Kat
+            </h1>
             <p class="profile__tagline">Cozy &amp; Relaxing Coloring Books</p>
           </div>
         </section>
@@ -620,6 +726,7 @@
             </div>
           </div>
         </dialog>
+
       </div>
     </main>
   </body>

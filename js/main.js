@@ -5,6 +5,7 @@
   App.dom = {
     root: document.documentElement,
     body: document.body,
+    topBar: document.querySelector(".top-bar"),
     themeToggle: document.querySelector("[data-theme-toggle]"),
     shareMenu: document.querySelector("[data-share-menu]"),
     shareRail: document.querySelector("[data-share-rail]"),
@@ -18,6 +19,7 @@
     metaDescription: document.querySelector('meta[name="description"]'),
     storyTrigger: document.querySelector("[data-story-open]"),
     profileLogo: document.querySelector(".profile__logo"),
+    profileTitle: document.querySelector("[data-copy-profile-title]"),
     storyViewer: document.querySelector("[data-story-viewer]"),
     storyTitle: document.querySelector("[data-story-title]"),
     storyEyebrow: document.querySelector("[data-story-eyebrow]"),
@@ -32,12 +34,16 @@
     storyPlaybackToggle: document.querySelector("[data-story-toggle-playback]"),
     storySurface: document.querySelector(".story-viewer__surface"),
     storyMobileHint: document.querySelector(".profile__story-mobile-hint"),
+    storyDesktopHint: document.querySelector(".profile__story-desktop-hint"),
     promoCarousel: document.querySelector("[data-promo-carousel]"),
     promoCarouselViewport: document.querySelector("[data-promo-carousel-viewport]"),
     promoCarouselTrack: document.querySelector("[data-promo-carousel-track]"),
     promoCarouselDots: document.querySelector("[data-promo-carousel-dots]"),
     promoCarouselPrev: document.querySelector("[data-promo-carousel-prev]"),
     promoCarouselNext: document.querySelector("[data-promo-carousel-next]"),
+    promoRedirectToast: document.querySelector("[data-promo-redirect-toast]"),
+    promoRedirectCountdown: document.querySelector("[data-promo-redirect-countdown]"),
+    promoRedirectCancel: document.querySelector("[data-promo-redirect-cancel]"),
   };
 
   App.storageKeys = {
@@ -53,6 +59,8 @@
     storiesInitialized: false,
     carouselInitialized: false,
   };
+
+  let profileTitleCopyTimeout = 0;
 
   const monthMap = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -110,6 +118,92 @@
     return host === "localhost" || host === "127.0.0.1" || host.startsWith("192.168.");
   }
 
+  function lockViewportGestureZoom() {
+    if (!isTouchLikeDevice()) {
+      return;
+    }
+
+    let lastTouchEndAt = 0;
+    let lastTouchX = 0;
+    let lastTouchY = 0;
+
+    const isEditableTarget = (target) =>
+      target instanceof Element && Boolean(target.closest('input, textarea, select, [contenteditable="true"]'));
+    const findTapTarget = (target) =>
+      target instanceof Element
+        ? target.closest('button, a, summary, [role="button"], input[type="button"], input[type="submit"], input[type="reset"]')
+        : null;
+
+    const preventGestureZoom = (event) => {
+      if (event.cancelable) {
+        event.preventDefault();
+      }
+    };
+
+    ["gesturestart", "gesturechange", "gestureend"].forEach((eventName) => {
+      document.addEventListener(eventName, preventGestureZoom, { passive: false });
+    });
+
+    document.addEventListener(
+      "touchstart",
+      (event) => {
+        if (event.touches.length > 1 && event.cancelable) {
+          event.preventDefault();
+        }
+      },
+      { passive: false },
+    );
+
+    document.addEventListener(
+      "touchmove",
+      (event) => {
+        if (event.touches.length > 1 && event.cancelable) {
+          event.preventDefault();
+        }
+      },
+      { passive: false },
+    );
+
+    document.addEventListener(
+      "touchend",
+      (event) => {
+        const touch = event.changedTouches[0];
+
+        if (!touch) {
+          return;
+        }
+
+        const now = window.performance.now();
+        const isRapidSecondTap = now - lastTouchEndAt < 320;
+        const isNearbyTap = Math.abs(touch.clientX - lastTouchX) < 28 && Math.abs(touch.clientY - lastTouchY) < 28;
+        const tapTarget = findTapTarget(event.target);
+
+        lastTouchEndAt = now;
+        lastTouchX = touch.clientX;
+        lastTouchY = touch.clientY;
+
+        if (!isRapidSecondTap || !isNearbyTap || isEditableTarget(event.target)) {
+          return;
+        }
+
+        if (event.cancelable) {
+          event.preventDefault();
+        }
+
+        if (tapTarget) {
+          tapTarget.dispatchEvent(
+            new MouseEvent("click", {
+              bubbles: true,
+              cancelable: true,
+              view: window,
+            }),
+          );
+        }
+      },
+      { passive: false },
+    );
+  }
+
   function createShareHintText(text) {
     const textElement = document.createElement("span");
     textElement.className = "share-rail__hint-text";
@@ -156,12 +250,55 @@
     App.dom.shareRailHint.replaceChildren(...nodes);
   }
 
-  async function copyText(text) {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text);
-      return true;
+  const promoRedirectToastDefaultText = App.dom.promoRedirectToast?.querySelector(".promo-redirect-toast__text")?.innerHTML || "";
+
+  function setPromoRedirectToastContent({ mode = "redirect", message = "", success = false } = {}) {
+    if (!App.dom.promoRedirectToast) {
+      return;
     }
 
+    const textElement = App.dom.promoRedirectToast.querySelector(".promo-redirect-toast__text");
+
+    if (!textElement) {
+      return;
+    }
+
+    if (mode === "feedback") {
+      const nodes = [];
+
+      if (success) {
+        const successIcon = createShareHintStatusIcon();
+        successIcon.classList.add("promo-redirect-toast__status-icon");
+        nodes.push(successIcon);
+      }
+
+      const messageNode = document.createElement("span");
+      messageNode.className = "promo-redirect-toast__feedback-label";
+      messageNode.textContent = message;
+      nodes.push(messageNode);
+
+      textElement.replaceChildren(...nodes);
+      App.dom.promoRedirectCountdown = App.dom.promoRedirectToast.querySelector("[data-promo-redirect-countdown]");
+
+      if (App.dom.promoRedirectCancel) {
+        App.dom.promoRedirectCancel.hidden = true;
+      }
+
+      App.dom.promoRedirectToast.dataset.mode = "feedback";
+      return;
+    }
+
+    textElement.innerHTML = promoRedirectToastDefaultText;
+    App.dom.promoRedirectCountdown = App.dom.promoRedirectToast.querySelector("[data-promo-redirect-countdown]");
+
+    if (App.dom.promoRedirectCancel) {
+      App.dom.promoRedirectCancel.hidden = false;
+    }
+
+    App.dom.promoRedirectToast.dataset.mode = "redirect";
+  }
+
+  function legacyCopyText(text) {
     const textarea = document.createElement("textarea");
     textarea.value = text;
     textarea.setAttribute("readonly", "");
@@ -183,6 +320,23 @@
     return didCopy;
   }
 
+  async function copyText(text) {
+    if (isTouchLikeDevice()) {
+      const didLegacyCopy = legacyCopyText(text);
+
+      if (didLegacyCopy) {
+        return true;
+      }
+    }
+
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+
+    return legacyCopyText(text);
+  }
+
   App.helpers = {
     formatStoryDate,
     readStorageValue,
@@ -195,10 +349,58 @@
     createShareHintIcon,
     createShareHintStatusIcon,
     setShareHintContent,
+    setPromoRedirectToastContent,
     copyText,
+    lockViewportGestureZoom,
   };
 
   document.addEventListener("DOMContentLoaded", () => {
+    const promoRedirectToastDesktopHost = App.dom.shareMenu || null;
+    const promoRedirectToastDesktopAnchor = App.dom.shareHoverBridge || null;
+    const promoRedirectToastMobileHost = App.dom.topBar || null;
+    const shouldCenterPromoToastInStickyBar = () =>
+      window.matchMedia("(max-width: 48rem), (hover: none), (pointer: coarse)").matches;
+
+    const syncPromoRedirectToastHost = () => {
+      if (!App.dom.promoRedirectToast) {
+        return;
+      }
+
+      const targetHost = shouldCenterPromoToastInStickyBar() ? promoRedirectToastMobileHost : promoRedirectToastDesktopHost;
+
+      if (!targetHost || App.dom.promoRedirectToast.parentElement === targetHost) {
+        return;
+      }
+
+      if (targetHost === promoRedirectToastDesktopHost) {
+        targetHost.insertBefore(
+          App.dom.promoRedirectToast,
+          promoRedirectToastDesktopAnchor && promoRedirectToastDesktopAnchor.parentElement === targetHost
+            ? promoRedirectToastDesktopAnchor
+            : null,
+        );
+        return;
+      }
+
+      targetHost.append(App.dom.promoRedirectToast);
+    };
+
+    syncPromoRedirectToastHost();
+    window.addEventListener("resize", syncPromoRedirectToastHost);
+
+    if (
+      App.dom.shareMenu &&
+      App.dom.storyDesktopHint &&
+      App.dom.storyDesktopHint.parentElement !== App.dom.shareMenu
+    ) {
+      App.dom.shareMenu.insertBefore(
+        App.dom.storyDesktopHint,
+        App.dom.shareHoverBridge && App.dom.shareHoverBridge.parentElement === App.dom.shareMenu
+          ? App.dom.shareHoverBridge
+          : App.dom.shareButton || null,
+      );
+    }
+
     if (App.helpers.isDevPreviewHost()) {
       App.helpers.removeStorageValue(App.storageKeys.storyViewed);
       App.helpers.removeStorageValue(App.storageKeys.storyHintDismissed);
@@ -213,6 +415,38 @@
       element.addEventListener("dragstart", (event) => event.preventDefault());
       element.addEventListener("contextmenu", (event) => event.preventDefault());
     });
+
+    if (App.dom.profileTitle) {
+      const copyProfileTitle = async () => {
+        const profileTitleText = App.dom.profileTitle?.textContent?.trim() || "Komfi Kat";
+        const didCopy = await App.helpers.copyText(profileTitleText);
+        App.dom.profileTitle.dataset.copyState = didCopy ? "copied" : "failed";
+
+        if (didCopy) {
+          App.showShareCopiedState?.("Text copied!");
+        }
+
+        window.clearTimeout(profileTitleCopyTimeout);
+        profileTitleCopyTimeout = window.setTimeout(() => {
+          delete App.dom.profileTitle.dataset.copyState;
+        }, 1200);
+      };
+
+      App.dom.profileTitle.addEventListener("click", () => {
+        copyProfileTitle();
+      });
+
+      App.dom.profileTitle.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") {
+          return;
+        }
+
+        event.preventDefault();
+        copyProfileTitle();
+      });
+    }
+
+    App.helpers.lockViewportGestureZoom();
 
     App.initTheme?.();
     App.initShare?.();
