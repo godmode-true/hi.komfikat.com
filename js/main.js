@@ -66,6 +66,9 @@
   };
 
   let promoViewportFitFrame = 0;
+  let promoViewportFitResizeTimeout = 0;
+  let promoViewportFitStableHeight = 0;
+  let promoViewportFitStableWidth = 0;
   let topBarTooltipOwner = "";
   let topBarTooltipStickyOwner = "";
   let topBarTooltipCleanupTimeout = 0;
@@ -234,10 +237,26 @@
     promoSection.style.removeProperty("--promo-screen-available-height");
 
     if (viewportWidth > 1024) {
+      promoViewportFitStableHeight = 0;
+      promoViewportFitStableWidth = 0;
       return;
     }
 
-    const viewportHeight = window.visualViewport?.height || window.innerHeight || 0;
+    const rawViewportHeight = window.visualViewport?.height || window.innerHeight || 0;
+    const shouldUseStableMobileViewportHeight = isTouchLikeDevice();
+
+    if (
+      shouldUseStableMobileViewportHeight &&
+      (!promoViewportFitStableHeight || Math.abs(viewportWidth - promoViewportFitStableWidth) > 24)
+    ) {
+      promoViewportFitStableHeight = rawViewportHeight;
+      promoViewportFitStableWidth = viewportWidth;
+    } else if (shouldUseStableMobileViewportHeight) {
+      promoViewportFitStableHeight = Math.min(promoViewportFitStableHeight, rawViewportHeight);
+      promoViewportFitStableWidth = viewportWidth;
+    }
+
+    const viewportHeight = shouldUseStableMobileViewportHeight ? promoViewportFitStableHeight : rawViewportHeight;
     const pageStyles = window.getComputedStyle(page);
     const pageTopPadding = Number.parseFloat(pageStyles.paddingTop || "0") || 0;
     const pageBottomPadding = Number.parseFloat(pageStyles.paddingBottom || "0") || 0;
@@ -268,11 +287,22 @@
     promoSection.style.setProperty("--promo-screen-available-height", `${availablePromoHeight}px`);
   }
 
-  function schedulePromoCarouselViewportFitSync() {
+  function schedulePromoCarouselViewportFitSync({ debounce = false } = {}) {
     window.cancelAnimationFrame(promoViewportFitFrame);
-    promoViewportFitFrame = window.requestAnimationFrame(() => {
-      syncPromoCarouselViewportFit();
-    });
+    window.clearTimeout(promoViewportFitResizeTimeout);
+
+    const runSync = () => {
+      promoViewportFitFrame = window.requestAnimationFrame(() => {
+        syncPromoCarouselViewportFit();
+      });
+    };
+
+    if (debounce) {
+      promoViewportFitResizeTimeout = window.setTimeout(runSync, 180);
+      return;
+    }
+
+    runSync();
   }
 
   function createShareHintText(text) {
@@ -748,12 +778,16 @@
       const tooltipOwner = `social-hashtag-${index}`;
       const createTooltipContent = () => {
         const label = document.createElement("span");
+        const icon = document.createElement("span");
         const platforms = createHashtagTooltipPlatforms(link);
 
         label.className = "top-bar__tooltip-label";
         label.textContent = tooltipText;
+        icon.className = "top-bar__tooltip-text-icon";
+        icon.textContent = "👉";
+        icon.setAttribute("aria-hidden", "true");
 
-        return platforms ? [label, platforms] : [label];
+        return platforms ? [label, icon, platforms] : [label, icon];
       };
 
       if (!tooltipText) {
@@ -860,8 +894,13 @@
     });
 
     schedulePromoCarouselViewportFitSync();
-    window.addEventListener("resize", schedulePromoCarouselViewportFitSync);
-    window.visualViewport?.addEventListener("resize", schedulePromoCarouselViewportFitSync);
+    window.addEventListener("resize", () => schedulePromoCarouselViewportFitSync({ debounce: true }));
+    window.visualViewport?.addEventListener("resize", () => schedulePromoCarouselViewportFitSync({ debounce: true }));
+    window.addEventListener("orientationchange", () => {
+      promoViewportFitStableHeight = 0;
+      promoViewportFitStableWidth = 0;
+      schedulePromoCarouselViewportFitSync();
+    });
     window.addEventListener("resize", () => {
       if (topBarTooltipOwner === topBarTooltipIdleOwner && !canShowIdleTopBarTooltip()) {
         forceHideTopBarTooltip();
