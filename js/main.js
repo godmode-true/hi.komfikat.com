@@ -80,8 +80,6 @@
   const topBarTooltipIdleOwner = "top-bar-idle";
   const topBarTooltipIdleDesktopText = "Welcome to Komfi Kat community!";
   const topBarTooltipIdleMobileText = "Welcome to Komfi Kat community!";
-  const topBarTooltipStickyBlockedHoverOwners = new Set();
-
   const monthMap = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   function formatStoryDate(dateString) {
@@ -122,15 +120,11 @@
   }
 
   function isDesktopPointerDevice() {
-    const hasCoarsePointer = window.matchMedia("(any-pointer: coarse)").matches;
-    const hasTouchPoints = typeof navigator.maxTouchPoints === "number" && navigator.maxTouchPoints > 0;
-    return window.matchMedia("(hover: hover) and (pointer: fine)").matches && !hasCoarsePointer && !hasTouchPoints;
+    return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   }
 
   function isTouchLikeDevice() {
-    const hasCoarsePointer = window.matchMedia("(any-pointer: coarse)").matches;
-    const hasTouchPoints = typeof navigator.maxTouchPoints === "number" && navigator.maxTouchPoints > 0;
-    return hasCoarsePointer || hasTouchPoints || !isDesktopPointerDevice();
+    return !isDesktopPointerDevice();
   }
 
   function isDevPreviewHost() {
@@ -327,9 +321,6 @@
     root.style.setProperty("--sticky-header-mask-rect-height", `${rect.top + halfHeight}px`);
     root.style.setProperty("--sticky-header-mask-half-height", `${halfHeight}px`);
     root.style.setProperty("--sticky-header-mask-top", `${rect.top}px`);
-    root.style.setProperty("--sticky-header-mask-overlay-height", `${rect.bottom}px`);
-    root.style.setProperty("--sticky-header-mask-shell-top", `${rect.top}px`);
-    root.style.setProperty("--sticky-header-mask-shell-height", `${rect.height}px`);
     root.style.setProperty("--sticky-header-mask-left", `${rect.left}px`);
     root.style.setProperty("--sticky-header-mask-width", `${rect.width}px`);
     root.style.setProperty("--sticky-header-mask-translate-x", "0px");
@@ -540,7 +531,6 @@
       !!App.dom.topBarTooltip &&
       App.dom.shareMenu?.dataset.shareMenuOpen !== "true" &&
       App.dom.shareMenu?.dataset.shareHintVisible !== "true" &&
-      App.dom.shareMenu?.dataset.shareFeedbackVisible !== "true" &&
       !isPromoRedirectToastVisible()
     );
   }
@@ -626,7 +616,9 @@
   }
 
   function showTopBarTooltip(content, owner = "default", anchor = "center", options = {}) {
-    if (!App.dom.topBarTooltip || !isDesktopPointerDevice()) {
+    const allowTouch = options.allowTouch === true;
+
+    if (!App.dom.topBarTooltip || (!allowTouch && !isDesktopPointerDevice())) {
       return;
     }
 
@@ -637,16 +629,6 @@
     window.clearTimeout(topBarTooltipIdleRestoreTimeout);
     clearTopBarTooltipSwapState();
     const trigger = options.trigger === "click" ? "click" : "hover";
-
-    if (
-      App.dom.topBarTooltip.dataset.visible === "true" &&
-      topBarTooltipStickyOwner &&
-      topBarTooltipStickyOwner !== owner &&
-      trigger !== "click" &&
-      topBarTooltipStickyBlockedHoverOwners.has(owner)
-    ) {
-      return;
-    }
 
     const shouldFadeBetweenOwners =
       App.dom.topBarTooltip.dataset.visible === "true" &&
@@ -786,20 +768,20 @@
   }
 
   async function copyText(text) {
-    if (isTouchLikeDevice()) {
-      const didLegacyCopy = legacyCopyText(text);
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {}
+    }
 
-      if (didLegacyCopy) {
+    try {
+      if (legacyCopyText(text)) {
         return true;
       }
-    }
+    } catch {}
 
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text);
-      return true;
-    }
-
-    return legacyCopyText(text);
+    return false;
   }
 
   App.helpers = {

@@ -13,8 +13,6 @@
   };
 
   let shareTooltipTimeout = 0;
-  let shareRailHintTimeout = 0;
-  let shareFeedbackCleanupTimeout = 0;
   let shareHintSuppressed = false;
   let shareCopyFeedbackActive = false;
 
@@ -61,8 +59,6 @@
     }
 
     helpers.dismissStickyMenuPrompts?.("share");
-    window.clearTimeout(shareFeedbackCleanupTimeout);
-
     const isCopiedFeedback = typeof text === "string" && /\bcopied!$/i.test(text.trim());
 
     if (isCopiedFeedback) {
@@ -79,17 +75,7 @@
   function resetShareRailHint() {
     if (dom.shareMenu) {
       delete dom.shareMenu.dataset.shareHintVisible;
-      delete dom.shareMenu.dataset.shareFeedbackVisible;
-
-      if (dom.shareMenu.dataset.shareFeedbackMode) {
-        window.clearTimeout(shareFeedbackCleanupTimeout);
-        shareFeedbackCleanupTimeout = window.setTimeout(() => {
-          delete dom.shareMenu.dataset.shareFeedbackMode;
-        }, 220);
-      }
     }
-
-    window.clearTimeout(shareRailHintTimeout);
   }
 
   function resetShareButtonState() {
@@ -110,10 +96,7 @@
     shareCopyFeedbackActive = false;
     shareHintSuppressed = false;
     window.clearTimeout(shareTooltipTimeout);
-    window.clearTimeout(shareFeedbackCleanupTimeout);
     delete dom.shareMenu.dataset.shareHintVisible;
-    delete dom.shareMenu.dataset.shareFeedbackVisible;
-    delete dom.shareMenu.dataset.shareFeedbackMode;
     helpers.hideTopBarTooltip("share-feedback");
     resetShareButtonState();
   }
@@ -157,7 +140,7 @@
     }
 
     if (
-      (dom.shareMenu?.dataset.shareHintVisible === "true" || dom.shareMenu?.dataset.shareFeedbackVisible === "true") &&
+      dom.shareMenu?.dataset.shareHintVisible === "true" &&
       elementContainsPoint(dom.shareRailHint, clientX, clientY)
     ) {
       return true;
@@ -208,7 +191,13 @@
     if (shouldUseBottomMobileToast()) {
       shareCopyFeedbackActive = false;
       closeShareMenu();
-      resetShareButtonState();
+      window.clearTimeout(shareTooltipTimeout);
+      dom.shareButton.setAttribute("aria-label", message);
+      helpers.showTopBarTooltip(message, "share-feedback", "center", { allowTouch: true, trigger: "click" });
+      shareTooltipTimeout = window.setTimeout(() => {
+        resetShareButtonState();
+        helpers.hideTopBarTooltip("share-feedback");
+      }, 2200);
       return;
     }
 
@@ -236,7 +225,6 @@
         return;
       }
 
-      window.clearTimeout(shareRailHintTimeout);
       setShareRailHint(optionHint);
     });
 
@@ -280,7 +268,6 @@
         return;
       }
 
-      window.clearTimeout(shareRailHintTimeout);
       setShareRailHint(optionHint);
     });
 
