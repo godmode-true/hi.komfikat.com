@@ -10,11 +10,11 @@
     homeHero: document.querySelector("[data-home-hero]"),
     themeToggle: document.querySelector("[data-theme-toggle]"),
     shareMenu: document.querySelector("[data-share-menu]"),
-    shareRail: document.querySelector("[data-share-rail]"),
-    shareRailHint: document.querySelector("[data-share-rail-hint]"),
-    shareHoverBridge: document.querySelector(".share-rail__hover-bridge"),
     shareButton: document.querySelector("[data-share-page]"),
-    subscribeButton: document.querySelector(".action-button--subscribe"),
+    shareDialog: document.querySelector("[data-share-dialog]"),
+    shareDialogCloseButtons: document.querySelectorAll("[data-share-dialog-close]"),
+    shareCopyFeedbackWrap: document.querySelector("[data-share-copy-feedback-wrap]"),
+    shareCopyFeedbackOverlay: document.querySelector("[data-share-copy-feedback]"),
     socialHandleLinks: document.querySelectorAll(".social-links__link[data-handle-label]"),
     socialHashtagLinks: document.querySelectorAll(".social-links__hashtag"),
     shareCopyButton: document.querySelector('[data-share-option="copy"]'),
@@ -78,10 +78,8 @@
   const socialHandleTooltipHideDelayMs = 220;
   const socialHandleTooltipIdleRestoreDelayMs = 150;
   const topBarTooltipIdleOwner = "top-bar-idle";
-  const topBarTooltipIdleDesktopText = "Welcome to Komfi Kat community!";
-  const topBarTooltipIdleMobileText = "Welcome to Komfi Kat community!";
-  const topBarTooltipStickyBlockedHoverOwners = new Set();
-
+  const topBarTooltipIdleDesktopText = "WELCOME";
+  const topBarTooltipIdleMobileText = "WELCOME";
   const monthMap = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   function formatStoryDate(dateString) {
@@ -122,15 +120,11 @@
   }
 
   function isDesktopPointerDevice() {
-    const hasCoarsePointer = window.matchMedia("(any-pointer: coarse)").matches;
-    const hasTouchPoints = typeof navigator.maxTouchPoints === "number" && navigator.maxTouchPoints > 0;
-    return window.matchMedia("(hover: hover) and (pointer: fine)").matches && !hasCoarsePointer && !hasTouchPoints;
+    return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   }
 
   function isTouchLikeDevice() {
-    const hasCoarsePointer = window.matchMedia("(any-pointer: coarse)").matches;
-    const hasTouchPoints = typeof navigator.maxTouchPoints === "number" && navigator.maxTouchPoints > 0;
-    return hasCoarsePointer || hasTouchPoints || !isDesktopPointerDevice();
+    return !isDesktopPointerDevice();
   }
 
   function isDevPreviewHost() {
@@ -151,7 +145,9 @@
       target instanceof Element && Boolean(target.closest('input, textarea, select, [contenteditable="true"]'));
     const findTapTarget = (target) =>
       target instanceof Element
-        ? target.closest('button, a, summary, [role="button"], input[type="button"], input[type="submit"], input[type="reset"]')
+        ? target.closest(
+            'button, a, summary, [role="button"], input[type="button"], input[type="submit"], input[type="reset"]',
+          )
         : null;
 
     const preventGestureZoom = (event) => {
@@ -327,9 +323,6 @@
     root.style.setProperty("--sticky-header-mask-rect-height", `${rect.top + halfHeight}px`);
     root.style.setProperty("--sticky-header-mask-half-height", `${halfHeight}px`);
     root.style.setProperty("--sticky-header-mask-top", `${rect.top}px`);
-    root.style.setProperty("--sticky-header-mask-overlay-height", `${rect.bottom}px`);
-    root.style.setProperty("--sticky-header-mask-shell-top", `${rect.top}px`);
-    root.style.setProperty("--sticky-header-mask-shell-height", `${rect.height}px`);
     root.style.setProperty("--sticky-header-mask-left", `${rect.left}px`);
     root.style.setProperty("--sticky-header-mask-width", `${rect.width}px`);
     root.style.setProperty("--sticky-header-mask-translate-x", "0px");
@@ -540,7 +533,6 @@
       !!App.dom.topBarTooltip &&
       App.dom.shareMenu?.dataset.shareMenuOpen !== "true" &&
       App.dom.shareMenu?.dataset.shareHintVisible !== "true" &&
-      App.dom.shareMenu?.dataset.shareFeedbackVisible !== "true" &&
       !isPromoRedirectToastVisible()
     );
   }
@@ -612,21 +604,26 @@
 
   function scheduleIdleTopBarTooltipRestore(delayMs = 0) {
     window.clearTimeout(topBarTooltipIdleRestoreTimeout);
-    topBarTooltipIdleRestoreTimeout = window.setTimeout(() => {
-      if (topBarTooltipSwapTimeout || App.dom.topBarTooltip?.dataset.swapState === "out") {
-        return;
-      }
+    topBarTooltipIdleRestoreTimeout = window.setTimeout(
+      () => {
+        if (topBarTooltipSwapTimeout || App.dom.topBarTooltip?.dataset.swapState === "out") {
+          return;
+        }
 
-      if (topBarTooltipOwner && topBarTooltipOwner !== topBarTooltipIdleOwner) {
-        return;
-      }
+        if (topBarTooltipOwner && topBarTooltipOwner !== topBarTooltipIdleOwner) {
+          return;
+        }
 
-      showIdleTopBarTooltip();
-    }, Math.max(0, delayMs));
+        showIdleTopBarTooltip();
+      },
+      Math.max(0, delayMs),
+    );
   }
 
   function showTopBarTooltip(content, owner = "default", anchor = "center", options = {}) {
-    if (!App.dom.topBarTooltip || !isDesktopPointerDevice()) {
+    const allowTouch = options.allowTouch === true;
+
+    if (!App.dom.topBarTooltip || (!allowTouch && !isDesktopPointerDevice())) {
       return;
     }
 
@@ -638,28 +635,13 @@
     clearTopBarTooltipSwapState();
     const trigger = options.trigger === "click" ? "click" : "hover";
 
-    if (
-      App.dom.topBarTooltip.dataset.visible === "true" &&
-      topBarTooltipStickyOwner &&
-      topBarTooltipStickyOwner !== owner &&
-      trigger !== "click" &&
-      topBarTooltipStickyBlockedHoverOwners.has(owner)
-    ) {
-      return;
-    }
-
     const shouldFadeBetweenOwners =
-      App.dom.topBarTooltip.dataset.visible === "true" &&
-      topBarTooltipOwner &&
-      topBarTooltipOwner !== owner;
+      App.dom.topBarTooltip.dataset.visible === "true" && topBarTooltipOwner && topBarTooltipOwner !== owner;
 
     if (shouldFadeBetweenOwners) {
       App.dom.topBarTooltip.dataset.swapState = "out";
       topBarTooltipSwapTimeout = window.setTimeout(() => {
-        if (
-          !App.dom.topBarTooltip ||
-          !applyTopBarTooltipState(content, owner, anchor, options, trigger)
-        ) {
+        if (!App.dom.topBarTooltip || !applyTopBarTooltipState(content, owner, anchor, options, trigger)) {
           clearTopBarTooltipSwapState();
           return;
         }
@@ -786,20 +768,20 @@
   }
 
   async function copyText(text) {
-    if (isTouchLikeDevice()) {
-      const didLegacyCopy = legacyCopyText(text);
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {}
+    }
 
-      if (didLegacyCopy) {
+    try {
+      if (legacyCopyText(text)) {
         return true;
       }
-    }
+    } catch {}
 
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text);
-      return true;
-    }
-
-    return legacyCopyText(text);
+    return false;
   }
 
   App.helpers = {
@@ -914,9 +896,9 @@
       platforms.className = "social-links__hashtag-feedback-links";
 
       platformConfigs.forEach(({ key: platformKey, label: platformLabel, url }) => {
-        const sourceIcon = document.querySelector(
-          `.social-links__link[data-platform="${platformKey}"] .social-links__icon`,
-        )?.cloneNode(true);
+        const sourceIcon = document
+          .querySelector(`.social-links__link[data-platform="${platformKey}"] .social-links__icon`)
+          ?.cloneNode(true);
 
         if (!(sourceIcon instanceof SVGElement) || !url) {
           return;
@@ -928,7 +910,10 @@
         platform.href = url;
         platform.target = "_blank";
         platform.rel = "noopener noreferrer";
-        platform.setAttribute("aria-label", `Open ${platformLabel} posts for ${link.textContent?.trim() || "this hashtag"}`);
+        platform.setAttribute(
+          "aria-label",
+          `Open ${platformLabel} posts for ${link.textContent?.trim() || "this hashtag"}`,
+        );
         sourceIcon.classList.remove("social-links__icon");
         sourceIcon.classList.add("social-links__hashtag-feedback-icon");
         sourceIcon.setAttribute("aria-hidden", "true");
@@ -1074,26 +1059,6 @@
       element.addEventListener("dragstart", (event) => event.preventDefault());
       element.addEventListener("contextmenu", (event) => event.preventDefault());
     });
-
-    if (App.dom.subscribeButton) {
-      const subscribeTooltip = "Get your free cozy coloring pages!";
-
-      App.dom.subscribeButton.addEventListener("mouseenter", () => {
-        App.helpers.showTopBarTooltip(subscribeTooltip, "subscribe-button", "subscribe-button-right");
-      });
-
-      App.dom.subscribeButton.addEventListener("mouseleave", () => {
-        App.helpers.hideTopBarTooltip("subscribe-button");
-      });
-
-      App.dom.subscribeButton.addEventListener("focus", () => {
-        App.helpers.showTopBarTooltip(subscribeTooltip, "subscribe-button", "subscribe-button-right");
-      });
-
-      App.dom.subscribeButton.addEventListener("blur", () => {
-        App.helpers.hideTopBarTooltip("subscribe-button");
-      });
-    }
 
     App.dom.scrollTopLinks?.forEach((link) => {
       link.addEventListener("click", (event) => {

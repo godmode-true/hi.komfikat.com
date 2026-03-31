@@ -6,39 +6,36 @@
   }
 
   const { dom, helpers } = App;
-  const shareMessages = {
-    defaultHint: "Tell your friends about Komfi Kat!",
-    linkCopiedHint: "Link copied!",
-    textCopiedHint: "Text copied!",
-  };
+  const shareCopyFeedbackDurationMs = 1100;
 
-  let shareTooltipTimeout = 0;
-  let shareRailHintTimeout = 0;
-  let shareFeedbackCleanupTimeout = 0;
-  let shareHintSuppressed = false;
-  let shareCopyFeedbackActive = false;
+  let shareCopyFeedbackTimeout = 0;
+  let restoreShareButtonFocusOnClose = false;
 
   function shouldUseNativeShare() {
     return typeof navigator.share === "function";
   }
 
-  function shouldUseDesktopShareRail() {
-    return helpers.isDesktopPointerDevice();
-  }
-
-  function shouldUseBottomMobileToast() {
-    return window.matchMedia("(max-width: 48rem)").matches || !shouldUseDesktopShareRail();
+  function canUseDesktopShareDialog() {
+    return helpers.isDesktopPointerDevice() && !!dom.shareDialog && typeof dom.shareDialog.showModal === "function";
   }
 
   function getSharePayload() {
     const url = dom.canonicalLink?.href || window.location.href;
     const title = document.title;
     const text = dom.metaDescription?.content || "Cozy hand-drawn coloring books by Komfi Kat.";
+    const ogTitle = document.querySelector('meta[property="og:title"]')?.content || title;
+    const ogDescription = document.querySelector('meta[property="og:description"]')?.content || text;
+    const ogImageUrl =
+      document.querySelector('meta[property="og:image"]')?.content ||
+      new URL("img/logo.webp", url).href;
 
     return {
       url,
       title,
       text,
+      shareTitle: ogTitle,
+      shareDescription: ogDescription,
+      imageUrl: ogImageUrl,
       message: `Take a cozy peek at Komfi Kat. ${text} ${url}`,
     };
   }
@@ -48,48 +45,21 @@
   }
 
   function isPromoRedirectVisible() {
-    return dom.shareMenu?.dataset.promoRedirectVisible === "true";
+    return App.isPromoRedirectVisible?.() === true;
   }
 
-  function setShareRailHint(text = shareMessages.defaultHint) {
-    if (!dom.shareRailHint || !dom.shareMenu) {
+  function syncShareMenuState(isOpen) {
+    if (!dom.shareMenu || !dom.shareButton) {
       return;
     }
 
-    if (isPromoRedirectVisible()) {
-      return;
-    }
-
-    helpers.dismissStickyMenuPrompts?.("share");
-    window.clearTimeout(shareFeedbackCleanupTimeout);
-
-    const isCopiedFeedback = typeof text === "string" && /\bcopied!$/i.test(text.trim());
-
-    if (isCopiedFeedback) {
-      helpers.setShareHintContent({ text, success: true });
-    } else if (text.endsWith("👉")) {
-      helpers.setShareHintContent({ text: text.slice(0, -2).trim(), icon: "👉" });
+    if (isOpen) {
+      dom.shareMenu.dataset.shareMenuOpen = "true";
     } else {
-      helpers.setShareHintContent({ text });
+      delete dom.shareMenu.dataset.shareMenuOpen;
     }
 
-    dom.shareMenu.dataset.shareHintVisible = "true";
-  }
-
-  function resetShareRailHint() {
-    if (dom.shareMenu) {
-      delete dom.shareMenu.dataset.shareHintVisible;
-      delete dom.shareMenu.dataset.shareFeedbackVisible;
-
-      if (dom.shareMenu.dataset.shareFeedbackMode) {
-        window.clearTimeout(shareFeedbackCleanupTimeout);
-        shareFeedbackCleanupTimeout = window.setTimeout(() => {
-          delete dom.shareMenu.dataset.shareFeedbackMode;
-        }, 220);
-      }
-    }
-
-    window.clearTimeout(shareRailHintTimeout);
+    dom.shareButton.setAttribute("aria-expanded", String(isOpen));
   }
 
   function resetShareButtonState() {
@@ -97,254 +67,174 @@
       return;
     }
 
-    dom.shareButton.setAttribute("data-tooltip", "Share with a friend");
     dom.shareButton.setAttribute("aria-label", "Share");
-    helpers.hideTopBarTooltip("share-button");
+  }
+
+  function hideShareCopyFeedback() {
+    window.clearTimeout(shareCopyFeedbackTimeout);
+    shareCopyFeedbackTimeout = 0;
+
+    if (dom.shareCopyFeedbackWrap) {
+      delete dom.shareCopyFeedbackWrap.dataset.promoRedirectActive;
+    }
+
+    if (dom.shareCopyFeedbackOverlay) {
+      dom.shareCopyFeedbackOverlay.setAttribute("aria-hidden", "true");
+    }
   }
 
   function clearShareTransientState() {
-    if (!dom.shareMenu) {
-      return;
-    }
-
-    shareCopyFeedbackActive = false;
-    shareHintSuppressed = false;
-    window.clearTimeout(shareTooltipTimeout);
-    window.clearTimeout(shareFeedbackCleanupTimeout);
-    delete dom.shareMenu.dataset.shareHintVisible;
-    delete dom.shareMenu.dataset.shareFeedbackVisible;
-    delete dom.shareMenu.dataset.shareFeedbackMode;
-    helpers.hideTopBarTooltip("share-feedback");
+    hideShareCopyFeedback();
+    App.dismissPromoRedirectToast?.();
     resetShareButtonState();
   }
 
-  function closeShareMenu() {
-    if (!dom.shareMenu || !dom.shareButton) {
-      return;
-    }
+  function syncDesktopShareLinks() {
+    const sharePayload = getSharePayload();
 
-    resetShareRailHint();
-    delete dom.shareMenu.dataset.shareMenuOpen;
-    dom.shareButton.setAttribute("aria-expanded", "false");
+    dom.shareOptions.forEach((shareOption) => {
+      if (!(shareOption instanceof HTMLAnchorElement)) {
+        return;
+      }
+
+      const option = shareOption.dataset.shareOption;
+
+      if (option === "whatsapp") {
+        shareOption.href = `https://wa.me/?text=${encodeURIComponent(sharePayload.message)}`;
+        return;
+      }
+
+      if (option === "messenger") {
+        shareOption.href =
+          `https://www.facebook.com/dialog/send?display=popup&app_id=1217981644879628&link=${encodeURIComponent(sharePayload.url)}` +
+          `&redirect_uri=${encodeURIComponent(sharePayload.url)}`;
+        return;
+      }
+
+      if (option === "imessage") {
+        shareOption.href = `sms:&body=${encodeURIComponent(sharePayload.message)}`;
+        return;
+      }
+
+      if (option === "facebook") {
+        shareOption.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(sharePayload.url)}`;
+        return;
+      }
+
+      if (option === "x") {
+        shareOption.href =
+          `https://twitter.com/intent/tweet?url=${encodeURIComponent(sharePayload.url)}` +
+          `&text=${encodeURIComponent(`Take a cozy peek at Komfi Kat. ${sharePayload.shareDescription}`)}`;
+        return;
+      }
+
+      if (option === "reddit") {
+        shareOption.href =
+          `https://www.reddit.com/submit?url=${encodeURIComponent(sharePayload.url)}` +
+          `&title=${encodeURIComponent(sharePayload.shareTitle)}`;
+        return;
+      }
+
+      if (option === "pinterest") {
+        shareOption.href =
+          `https://www.pinterest.com/pin/create/button/?url=${encodeURIComponent(sharePayload.url)}` +
+          `&media=${encodeURIComponent(sharePayload.imageUrl)}` +
+          `&description=${encodeURIComponent(sharePayload.shareTitle)}`;
+      }
+    });
+  }
+
+  function applyShareDialogOpenState() {
+    syncShareMenuState(true);
+    document.body.classList.add("share-dialog-is-open");
+  }
+
+  function applyShareDialogClosedState({ restoreFocus = false } = {}) {
+    syncShareMenuState(false);
+    document.body.classList.remove("share-dialog-is-open");
     helpers.scheduleIdleTopBarTooltipRestore?.();
-  }
 
-  function hideShareStickyUi() {
-    clearShareTransientState();
-    closeShareMenu();
-  }
-
-  function elementContainsPoint(element, clientX, clientY) {
-    if (!element) {
-      return false;
+    if (restoreFocus && dom.shareButton instanceof HTMLElement) {
+      dom.shareButton.focus({ preventScroll: true });
     }
-
-    const rect = element.getBoundingClientRect();
-    return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
-  }
-
-  function isPointerInsideExpandedShareZone(clientX, clientY) {
-    if (!dom.shareButton) {
-      return false;
-    }
-
-    if (elementContainsPoint(dom.shareButton, clientX, clientY)) {
-      return true;
-    }
-
-    if (isShareMenuOpen() && elementContainsPoint(dom.shareRail, clientX, clientY)) {
-      return true;
-    }
-
-    if (
-      (dom.shareMenu?.dataset.shareHintVisible === "true" || dom.shareMenu?.dataset.shareFeedbackVisible === "true") &&
-      elementContainsPoint(dom.shareRailHint, clientX, clientY)
-    ) {
-      return true;
-    }
-
-    return elementContainsPoint(dom.shareHoverBridge, clientX, clientY);
   }
 
   function openShareMenu() {
-    if (!dom.shareMenu || !dom.shareButton) {
+    if (!canUseDesktopShareDialog()) {
       return;
     }
 
     if (isPromoRedirectVisible()) {
-      closeShareMenu();
+      closeShareMenu({ restoreFocus: false });
       return;
     }
 
     clearShareTransientState();
-    dom.shareMenu.dataset.shareMenuOpen = "true";
-    dom.shareButton.setAttribute("aria-expanded", "true");
+    syncDesktopShareLinks();
+    restoreShareButtonFocusOnClose = false;
 
-    if (dom.shareButton.matches(":hover, :focus-visible, :focus")) {
-      setShareRailHint(shareMessages.defaultHint);
+    if (!dom.shareDialog?.open) {
+      dom.shareDialog.showModal();
     }
+
+    applyShareDialogOpenState();
+
+    window.requestAnimationFrame(() => {
+      const firstOption = dom.shareOptions[0];
+
+      if (firstOption instanceof HTMLElement) {
+        firstOption.focus({ preventScroll: true });
+      }
+    });
   }
 
-  function toggleShareMenu() {
-    if (!dom.shareMenu) {
+  function closeShareMenu(options = {}) {
+    const restoreFocus = options.restoreFocus !== false;
+    restoreShareButtonFocusOnClose = restoreFocus;
+
+    if (dom.shareDialog?.open) {
+      dom.shareDialog.close();
       return;
     }
 
-    if (isShareMenuOpen()) {
-      shareHintSuppressed = true;
-      closeShareMenu();
-      return;
-    }
-
-    shareHintSuppressed = false;
-    openShareMenu();
+    applyShareDialogClosedState({ restoreFocus });
   }
 
-  function showShareCopiedState(message = shareMessages.linkCopiedHint) {
-    if (!dom.shareButton || !dom.shareMenu) {
+  function hideShareStickyUi() {
+    clearShareTransientState();
+    closeShareMenu({ restoreFocus: false });
+  }
+
+  function showShareCopiedState() {
+    if (!dom.shareCopyFeedbackWrap || !dom.shareCopyFeedbackOverlay) {
+      closeShareMenu({ restoreFocus: false });
       return;
     }
 
-    if (shouldUseBottomMobileToast()) {
-      shareCopyFeedbackActive = false;
-      closeShareMenu();
-      resetShareButtonState();
-      return;
-    }
+    hideShareCopyFeedback();
+    dom.shareCopyFeedbackWrap.dataset.promoRedirectActive = "true";
+    dom.shareCopyFeedbackOverlay.setAttribute("aria-hidden", "false");
 
-    shareCopyFeedbackActive = true;
-    closeShareMenu();
-    window.clearTimeout(shareTooltipTimeout);
-    dom.shareButton.setAttribute("aria-label", message);
-    helpers.showTopBarTooltip(message, "share-feedback", "center", { trigger: "click" });
-    shareTooltipTimeout = window.setTimeout(() => {
-      shareCopyFeedbackActive = false;
-      resetShareRailHint();
-      resetShareButtonState();
-      helpers.hideTopBarTooltip("share-feedback");
-    }, 2600);
+    shareCopyFeedbackTimeout = window.setTimeout(() => {
+      hideShareCopyFeedback();
+      closeShareMenu({ restoreFocus: false });
+    }, shareCopyFeedbackDurationMs);
   }
 
   App.showShareCopiedState = showShareCopiedState;
   App.hideShareStickyUi = hideShareStickyUi;
 
   function bindShareOptionEvents(shareOption) {
-    const optionHint = shareOption.dataset.shareHint || shareMessages.defaultHint;
-
-    shareOption.addEventListener("mouseenter", () => {
-      if (!shouldUseDesktopShareRail() || !isShareMenuOpen()) {
-        return;
-      }
-
-      window.clearTimeout(shareRailHintTimeout);
-      setShareRailHint(optionHint);
-    });
-
-    shareOption.addEventListener("mouseleave", (event) => {
-      if (!shouldUseDesktopShareRail() || !isShareMenuOpen()) {
-        return;
-      }
-
-      if (shareCopyFeedbackActive) {
-        return;
-      }
-
-      const nextTarget = event.relatedTarget;
-
-      if (nextTarget && dom.shareRail?.contains(nextTarget)) {
-        return;
-      }
-
-      if (
-        nextTarget &&
-        ((dom.shareButton && dom.shareButton.contains(nextTarget)) ||
-          (dom.shareHoverBridge && dom.shareHoverBridge.contains(nextTarget)))
-      ) {
-        if (dom.shareButton && dom.shareButton.matches(":hover, :focus-visible, :focus")) {
-          setShareRailHint();
-        } else {
-          resetShareRailHint();
-        }
-        return;
-      }
-
-      if (nextTarget && dom.shareMenu?.contains(nextTarget)) {
-        return;
-      }
-
-      resetShareRailHint();
-    });
-
-    shareOption.addEventListener("focus", () => {
-      if (!shouldUseDesktopShareRail() || !isShareMenuOpen()) {
-        return;
-      }
-
-      window.clearTimeout(shareRailHintTimeout);
-      setShareRailHint(optionHint);
-    });
-
-    shareOption.addEventListener("blur", (event) => {
-      if (!shouldUseDesktopShareRail() || !isShareMenuOpen()) {
-        return;
-      }
-
-      if (shareCopyFeedbackActive) {
-        return;
-      }
-
-      const nextTarget = event.relatedTarget;
-
-      if (nextTarget && dom.shareRail?.contains(nextTarget)) {
-        return;
-      }
-
-      if (
-        nextTarget &&
-        ((dom.shareButton && dom.shareButton.contains(nextTarget)) ||
-          (dom.shareHoverBridge && dom.shareHoverBridge.contains(nextTarget)))
-      ) {
-        if (dom.shareButton && dom.shareButton.matches(":hover, :focus-visible, :focus")) {
-          setShareRailHint();
-        } else {
-          resetShareRailHint();
-        }
-        return;
-      }
-
-      if (nextTarget && dom.shareMenu?.contains(nextTarget)) {
-        return;
-      }
-
-      resetShareRailHint();
-    });
+    if (shareOption.dataset.shareOption !== "copy") {
+      return;
+    }
 
     shareOption.addEventListener("click", async () => {
       const sharePayload = getSharePayload();
-      const option = shareOption.dataset.shareOption;
+      const didCopy = await helpers.copyText(sharePayload.url);
 
-      if (option === "copy") {
-        const didCopy = await helpers.copyText(sharePayload.url);
-
-        if (didCopy) {
-          showShareCopiedState();
-        }
-        return;
-      }
-
-      closeShareMenu();
-
-      if (option === "whatsapp") {
-        window.open(`https://wa.me/?text=${encodeURIComponent(sharePayload.message)}`, "_blank", "noopener,noreferrer");
-        return;
-      }
-
-      if (option === "facebook") {
-        window.open(
-          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(sharePayload.url)}`,
-          "_blank",
-          "noopener,noreferrer",
-        );
+      if (didCopy) {
+        showShareCopiedState();
       }
     });
   }
@@ -355,18 +245,24 @@
     }
 
     App.flags.shareInitialized = true;
+    syncDesktopShareLinks();
 
     if (dom.shareButton) {
       dom.shareButton.addEventListener("click", async (event) => {
         if (isPromoRedirectVisible()) {
           event.preventDefault();
-          closeShareMenu();
+          closeShareMenu({ restoreFocus: false });
           return;
         }
 
-        if (shouldUseDesktopShareRail()) {
+        if (canUseDesktopShareDialog()) {
           event.preventDefault();
-          toggleShareMenu();
+
+          if (isShareMenuOpen()) {
+            closeShareMenu();
+          } else {
+            openShareMenu();
+          }
           return;
         }
 
@@ -394,11 +290,7 @@
           }
         }
 
-        const didCopy = await helpers.copyText(sharePayload.url);
-
-        if (didCopy) {
-          showShareCopiedState();
-        }
+        await helpers.copyText(sharePayload.url);
       });
     }
 
@@ -406,158 +298,43 @@
       dom.shareOptions.forEach(bindShareOptionEvents);
     }
 
-    if (dom.shareMenu && dom.shareRail) {
-      if (dom.shareButton) {
-        dom.shareButton.addEventListener("mouseenter", () => {
-          if (isPromoRedirectVisible()) {
-            closeShareMenu();
-            return;
-          }
-
-          if (!shouldUseDesktopShareRail()) {
-            return;
-          }
-
-          if (!isShareMenuOpen()) {
-            helpers.showTopBarTooltip(dom.shareButton.dataset.tooltip || "Share with a friend", "share-button");
-            return;
-          }
-
-          if (!shareHintSuppressed) {
-            setShareRailHint();
-          }
+    if (dom.shareDialogCloseButtons.length) {
+      dom.shareDialogCloseButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          closeShareMenu();
         });
-
-        dom.shareButton.addEventListener("focus", () => {
-          if (isPromoRedirectVisible()) {
-            closeShareMenu();
-            return;
-          }
-
-          if (!shouldUseDesktopShareRail()) {
-            return;
-          }
-
-          if (!isShareMenuOpen()) {
-            helpers.showTopBarTooltip(dom.shareButton.dataset.tooltip || "Share with a friend", "share-button");
-            return;
-          }
-
-          if (!shareHintSuppressed) {
-            setShareRailHint();
-          }
-        });
-
-        dom.shareButton.addEventListener("mouseleave", () => {
-          shareHintSuppressed = false;
-          helpers.hideTopBarTooltip("share-button");
-          if (shouldUseDesktopShareRail() && isShareMenuOpen() && !shareCopyFeedbackActive) {
-            resetShareRailHint();
-          }
-        });
-
-        dom.shareButton.addEventListener("blur", () => {
-          shareHintSuppressed = false;
-          helpers.hideTopBarTooltip("share-button");
-          if (shouldUseDesktopShareRail() && isShareMenuOpen() && !shareCopyFeedbackActive) {
-            resetShareRailHint();
-          }
-        });
-      }
-
-      dom.shareMenu.addEventListener("mouseenter", () => {
-        if (!shouldUseDesktopShareRail()) {
-          return;
-        }
-
-        if (isPromoRedirectVisible()) {
-          closeShareMenu();
-          return;
-        }
-
-        openShareMenu();
-      });
-
-      dom.shareMenu.addEventListener("mouseleave", () => {
-        if (shouldUseDesktopShareRail()) {
-          if (shareCopyFeedbackActive) {
-            return;
-          }
-
-          closeShareMenu();
-        }
-      });
-
-      dom.shareMenu.addEventListener("focusin", () => {
-        if (!shouldUseDesktopShareRail()) {
-          return;
-        }
-
-        if (isPromoRedirectVisible()) {
-          closeShareMenu();
-          return;
-        }
-
-        openShareMenu();
-      });
-
-      dom.shareMenu.addEventListener("focusout", (event) => {
-        if (!shouldUseDesktopShareRail() || dom.shareMenu.contains(event.relatedTarget)) {
-          return;
-        }
-
-        closeShareMenu();
-      });
-
-      document.addEventListener("pointerdown", (event) => {
-        if (!isShareMenuOpen() || dom.shareMenu.contains(event.target)) {
-          return;
-        }
-
-        closeShareMenu();
-      });
-
-      document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && isShareMenuOpen()) {
-          closeShareMenu();
-        }
-      });
-
-      document.addEventListener("pointermove", (event) => {
-        if (event.pointerType && event.pointerType !== "mouse") {
-          return;
-        }
-
-        if (
-          !shouldUseDesktopShareRail() ||
-          !isShareMenuOpen() ||
-          shareCopyFeedbackActive ||
-          isPromoRedirectVisible() ||
-          isPointerInsideExpandedShareZone(event.clientX, event.clientY)
-        ) {
-          return;
-        }
-
-        closeShareMenu();
-      });
-
-      window.addEventListener("resize", () => {
-        if (!shouldUseDesktopShareRail()) {
-          closeShareMenu();
-        }
       });
     }
 
+    if (dom.shareDialog) {
+      dom.shareDialog.addEventListener("cancel", (event) => {
+        event.preventDefault();
+        closeShareMenu();
+      });
+
+      dom.shareDialog.addEventListener("close", () => {
+        const restoreFocus = restoreShareButtonFocusOnClose;
+        restoreShareButtonFocusOnClose = false;
+        applyShareDialogClosedState({ restoreFocus });
+      });
+    }
+
+    window.addEventListener("resize", () => {
+      if (!canUseDesktopShareDialog()) {
+        closeShareMenu({ restoreFocus: false });
+      }
+    });
+
     if (dom.themeToggle) {
       dom.themeToggle.addEventListener("mouseenter", () => {
-        if (shouldUseDesktopShareRail()) {
-          closeShareMenu();
+        if (canUseDesktopShareDialog()) {
+          closeShareMenu({ restoreFocus: false });
         }
       });
 
       dom.themeToggle.addEventListener("focusin", () => {
-        if (shouldUseDesktopShareRail()) {
-          closeShareMenu();
+        if (canUseDesktopShareDialog()) {
+          closeShareMenu({ restoreFocus: false });
         }
       });
     }
