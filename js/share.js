@@ -7,7 +7,7 @@
 
   const { dom, helpers } = App;
   const shareMessages = {
-    defaultHint: "Tell your friends about Komfi Kat",
+    defaultHint: "Tell your friends about Komfi Kat!",
     linkCopiedHint: "Link copied!",
     textCopiedHint: "Text copied!",
   };
@@ -111,7 +111,6 @@
     shareHintSuppressed = false;
     window.clearTimeout(shareTooltipTimeout);
     window.clearTimeout(shareFeedbackCleanupTimeout);
-    delete dom.shareMenu.dataset.shareTooltipSuppressed;
     delete dom.shareMenu.dataset.shareHintVisible;
     delete dom.shareMenu.dataset.shareFeedbackVisible;
     delete dom.shareMenu.dataset.shareFeedbackMode;
@@ -193,7 +192,6 @@
 
     if (isShareMenuOpen()) {
       shareHintSuppressed = true;
-      dom.shareMenu.dataset.shareTooltipSuppressed = "true";
       closeShareMenu();
       return;
     }
@@ -210,14 +208,12 @@
     if (shouldUseBottomMobileToast()) {
       shareCopyFeedbackActive = false;
       closeShareMenu();
-      delete dom.shareMenu.dataset.shareTooltipSuppressed;
       resetShareButtonState();
       return;
     }
 
     shareCopyFeedbackActive = true;
     closeShareMenu();
-    delete dom.shareMenu.dataset.shareTooltipSuppressed;
     window.clearTimeout(shareTooltipTimeout);
     dom.shareButton.setAttribute("aria-label", message);
     helpers.showTopBarTooltip(message, "share-feedback", "center", { trigger: "click" });
@@ -454,7 +450,6 @@
 
         dom.shareButton.addEventListener("mouseleave", () => {
           shareHintSuppressed = false;
-          delete dom.shareMenu.dataset.shareTooltipSuppressed;
           helpers.hideTopBarTooltip("share-button");
           if (shouldUseDesktopShareRail() && isShareMenuOpen() && !shareCopyFeedbackActive) {
             resetShareRailHint();
@@ -463,7 +458,6 @@
 
         dom.shareButton.addEventListener("blur", () => {
           shareHintSuppressed = false;
-          delete dom.shareMenu.dataset.shareTooltipSuppressed;
           helpers.hideTopBarTooltip("share-button");
           if (shouldUseDesktopShareRail() && isShareMenuOpen() && !shareCopyFeedbackActive) {
             resetShareRailHint();

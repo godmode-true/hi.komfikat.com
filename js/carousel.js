@@ -193,7 +193,7 @@
   let promoRedirectDeadline = 0;
   let promoRedirectHref = "";
   let promoRedirectCode = "";
-  const DEFAULT_PROMO_REDIRECT_DELAY_MS = 3000;
+  const DEFAULT_PROMO_REDIRECT_DELAY_MS = 5000;
   const PROMO_CODE_PROMO_REDIRECT_DELAY_MS = 5000;
   let activePromoRedirectUi = null;
   let activePromoRedirectAction = null;
@@ -306,6 +306,13 @@
 
     ui.overlay.style.removeProperty("--promo-redirect-content-scale");
 
+    const isCarouselRedirect = ui.root instanceof HTMLElement && ui.root.classList.contains("promo-carousel__shop-button-wrap");
+
+    if (isCarouselRedirect) {
+      ui.overlay.style.removeProperty("--promo-redirect-inline-gap");
+      return;
+    }
+
     const overlayWidth = ui.overlay.clientWidth;
     if (overlayWidth <= 0) {
       return;
@@ -319,14 +326,35 @@
     const availableWidth = Math.max(0, overlayWidth - paddingInline);
     const bodyWidth = Math.ceil(ui.redirectBody.scrollWidth);
     const actionsWidth = Math.ceil(ui.redirectActions.scrollWidth);
-    const baseContentWidth = bodyWidth + actionsWidth;
     const isLinkCardRedirect = ui.root instanceof HTMLElement && ui.root.classList.contains("promo-redirect-local-wrap--link-card");
+    const isCompactLinkCardRedirect = isLinkCardRedirect && window.matchMedia("(max-width: 48rem)").matches;
+    const leadWidth = isLinkCardRedirect ? Math.ceil(ui.redirectLead?.getBoundingClientRect().width || 0) : 0;
+    const openWidth = isLinkCardRedirect
+      ? Math.ceil(Math.max(ui.openNow?.getBoundingClientRect().width || 0, ui.openNowMobile?.getBoundingClientRect().width || 0))
+      : 0;
+    const cancelWidth = isLinkCardRedirect
+      ? Math.ceil(Math.max(ui.cancel?.getBoundingClientRect().width || 0, ui.cancelDesktop?.getBoundingClientRect().width || 0))
+      : 0;
+    const outerRailWidth = isLinkCardRedirect
+      ? isCompactLinkCardRedirect
+        ? Math.max(openWidth, cancelWidth, leadWidth)
+        : Math.max(actionsWidth, leadWidth)
+      : 0;
+    const baseContentWidth = isLinkCardRedirect ? bodyWidth + outerRailWidth * 2 : bodyWidth + actionsWidth + leadWidth;
 
     if (availableWidth <= 0 || baseContentWidth <= 0) {
       return;
     }
 
     if (isLinkCardRedirect) {
+      if (isCompactLinkCardRedirect) {
+        const nextGap = configuredGap;
+        ui.overlay.style.setProperty("--promo-redirect-inline-gap", `${nextGap.toFixed(3)}px`);
+        const nextScale = Math.max(0.64, Math.min(1, availableWidth / (baseContentWidth + (nextGap * 2))));
+        ui.overlay.style.setProperty("--promo-redirect-content-scale", nextScale.toFixed(4));
+        return;
+      }
+
       const measuredActionsGap =
         ui.openNow instanceof HTMLElement && ui.cancel instanceof HTMLElement
           ? Math.max(0, ui.cancel.getBoundingClientRect().left - ui.openNow.getBoundingClientRect().right)
@@ -336,9 +364,9 @@
         Number.parseFloat(actionsStyles.columnGap || "0") ||
         Number.parseFloat(actionsStyles.gap || "0") ||
         0;
-      const actionsGap = Math.max(measuredActionsGap, configuredActionsGap);
-      const nextGap = Math.max(configuredGap, actionsGap * 2);
-      const nextScale = Math.max(0.64, Math.min(1, availableWidth / (baseContentWidth + nextGap)));
+      const actionsGap = Math.max(measuredActionsGap, configuredActionsGap, configuredGap);
+      const nextGap = actionsGap;
+      const nextScale = Math.max(0.64, Math.min(1, availableWidth / (baseContentWidth + (nextGap * 2))));
 
       ui.overlay.style.setProperty("--promo-redirect-inline-gap", `${nextGap.toFixed(3)}px`);
       ui.overlay.style.setProperty("--promo-redirect-content-scale", nextScale.toFixed(4));
@@ -383,7 +411,7 @@
   }
 
   function setPromoRedirectOverlayInteractiveState(ui, isInteractive) {
-    const controls = [ui?.redirectCode, ui?.openNow, ui?.cancel].filter(
+    const controls = [ui?.redirectCode, ui?.openNow, ui?.openNowMobile, ui?.cancel, ui?.cancelDesktop].filter(
       (control) => control instanceof HTMLElement,
     );
 
@@ -562,13 +590,25 @@
 
   function createPromoRedirectOverlay(action, control, root) {
     const overlay = document.createElement("span");
-    overlay.className = "promo-redirect-local-overlay promo-carousel__shop-button-redirect";
+    const isCarouselRedirectHost =
+      root instanceof HTMLElement && root.classList.contains("promo-carousel__shop-button-wrap");
+    const isLinkCardRedirectHost =
+      root instanceof HTMLElement && root.classList.contains("promo-redirect-local-wrap--link-card");
+    overlay.className = isCarouselRedirectHost
+      ? "promo-redirect-local-overlay promo-carousel__shop-button-redirect"
+      : "promo-redirect-local-overlay";
     overlay.setAttribute("aria-hidden", "true");
     overlay.setAttribute("role", "status");
     overlay.setAttribute("aria-live", "polite");
 
     const content = document.createElement("span");
     content.className = "promo-redirect-local-overlay__content";
+    let redirectLead = null;
+
+    if (isLinkCardRedirectHost) {
+      redirectLead = document.createElement("span");
+      redirectLead.className = "promo-redirect-toast__lead";
+    }
 
     const redirectBody = document.createElement("span");
     redirectBody.className = "promo-redirect-toast__body";
@@ -597,34 +637,83 @@
 
     const redirectText = document.createElement("span");
     redirectText.className = "promo-redirect-toast__text";
-    redirectText.append(getRedirectTextPrefix(action));
+
+    const redirectTextPrefix = document.createElement("span");
+    redirectTextPrefix.className = "promo-redirect-toast__text-prefix";
+
+    const redirectTextLead = document.createElement("span");
+    redirectTextLead.className = "promo-redirect-toast__text-line promo-redirect-toast__text-line--lead";
+    redirectTextLead.textContent = "Redirecting";
+
+    const redirectTextTail = document.createElement("span");
+    redirectTextTail.className = "promo-redirect-toast__text-line promo-redirect-toast__text-line--tail";
+    redirectTextTail.textContent = redirectLabel ? `to ${redirectLabel} in` : "in";
+
+    redirectTextPrefix.append(redirectTextLead, redirectTextTail);
+    redirectText.append(redirectTextPrefix);
+
+    const redirectCountdownBadge = document.createElement("span");
+    redirectCountdownBadge.className = "promo-redirect-toast__countdown-badge";
 
     const redirectCountdown = document.createElement("span");
     redirectCountdown.className = "promo-redirect-toast__countdown";
     redirectCountdown.textContent = String(countdownSeconds);
-    redirectText.append(redirectCountdown);
+
+    const redirectCountdownSuffix = document.createElement("span");
+    redirectCountdownSuffix.className = "promo-redirect-toast__countdown-suffix";
+    redirectCountdownSuffix.textContent = "sec";
+
+    redirectCountdownBadge.append(redirectCountdown, redirectCountdownSuffix);
+    redirectText.append(redirectCountdownBadge);
 
     redirectBody.append(redirectText);
 
     const redirectActions = document.createElement("span");
     redirectActions.className = "promo-redirect-toast__actions";
+    const openIconMarkup =
+      '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path d="M7 17L17 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 7H17V15" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    const cancelIconMarkup =
+      '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path d="M7.4 7.4L16.6 16.6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M16.6 7.4L7.4 16.6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
 
     const openNow = document.createElement("button");
     openNow.type = "button";
     openNow.className = "promo-redirect-toast__action promo-redirect-toast__action--open-now";
     openNow.setAttribute("aria-label", redirectLabel ? `Open ${redirectLabel} now` : "Open link now");
-    openNow.innerHTML =
-      '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path d="M7 17L17 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 7H17V15" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    openNow.innerHTML = openIconMarkup;
+    let openNowMobile = null;
+    let cancelDesktop = null;
+
+    if (isLinkCardRedirectHost && redirectLead instanceof HTMLElement) {
+      cancelDesktop = document.createElement("button");
+      cancelDesktop.type = "button";
+      cancelDesktop.className =
+        "promo-redirect-toast__action promo-redirect-toast__action--cancel promo-redirect-toast__action--cancel-desktop";
+      cancelDesktop.setAttribute("aria-label", redirectLabel ? `Cancel ${redirectLabel} redirect` : "Cancel redirect");
+      cancelDesktop.innerHTML = cancelIconMarkup;
+      redirectLead.append(cancelDesktop);
+
+      openNowMobile = document.createElement("button");
+      openNowMobile.type = "button";
+      openNowMobile.className =
+        "promo-redirect-toast__action promo-redirect-toast__action--open-now promo-redirect-toast__action--open-now-mobile";
+      openNowMobile.setAttribute("aria-label", redirectLabel ? `Open ${redirectLabel} now` : "Open link now");
+      openNowMobile.innerHTML = openIconMarkup;
+      redirectLead.append(openNowMobile);
+    }
 
     const cancel = document.createElement("button");
     cancel.type = "button";
     cancel.className = "promo-redirect-toast__action promo-redirect-toast__action--cancel";
     cancel.setAttribute("aria-label", redirectLabel ? `Cancel ${redirectLabel} redirect` : "Cancel redirect");
-    cancel.innerHTML =
-      '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path d="M7.4 7.4L16.6 16.6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M16.6 7.4L7.4 16.6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
+    cancel.innerHTML = cancelIconMarkup;
 
     redirectActions.append(openNow, cancel);
-    content.append(redirectBody, redirectActions);
+
+    if (redirectLead instanceof HTMLElement) {
+      content.append(redirectLead, redirectBody, redirectActions);
+    } else {
+      content.append(redirectBody, redirectActions);
+    }
     overlay.append(content);
 
     const promoUi = {
@@ -632,11 +721,14 @@
       control,
       overlay,
       content,
+      redirectLead,
       redirectBody,
       redirectActions,
       redirectCode,
       redirectCountdown,
       openNow,
+      openNowMobile,
+      cancelDesktop,
       cancel,
       copyFeedbackTimeout: 0,
     };
@@ -668,7 +760,7 @@
       });
     }
 
-    openNow.addEventListener("click", (event) => {
+    const handleOpenNowClick = (event) => {
       event.preventDefault();
       event.stopPropagation();
       if (activePromoRedirectUi !== promoUi || !promoRedirectHref) {
@@ -678,9 +770,15 @@
       const targetHref = promoRedirectHref;
       hidePromoRedirectToast();
       openPromoRedirectTarget(targetHref);
-    });
+    };
 
-    cancel.addEventListener("click", (event) => {
+    openNow.addEventListener("click", handleOpenNowClick);
+
+    if (openNowMobile instanceof HTMLButtonElement) {
+      openNowMobile.addEventListener("click", handleOpenNowClick);
+    }
+
+    const handleCancelClick = (event) => {
       event.preventDefault();
       event.stopPropagation();
       if (activePromoRedirectUi !== promoUi) {
@@ -688,7 +786,13 @@
       }
 
       hidePromoRedirectToast();
-    });
+    };
+
+    cancel.addEventListener("click", handleCancelClick);
+
+    if (cancelDesktop instanceof HTMLButtonElement) {
+      cancelDesktop.addEventListener("click", handleCancelClick);
+    }
 
     overlay.addEventListener("dragstart", (event) => event.preventDefault());
 
@@ -927,6 +1031,23 @@
     }
 
     const isCompactViewport = window.matchMedia("(max-width: 48rem)").matches;
+    const measureShopButtonContentWidth = (content) => {
+      if (!(content instanceof HTMLElement)) {
+        return 0;
+      }
+
+      const badge = content.querySelector(".promo-carousel__shop-button-badge");
+      const copy = content.querySelector(".promo-carousel__shop-button-copy");
+      const styles = window.getComputedStyle(content);
+      const columnGap =
+        Number.parseFloat(styles.columnGap || "0") ||
+        Number.parseFloat(styles.gap || "0") ||
+        0;
+      const badgeWidth = badge instanceof HTMLElement ? Math.ceil(badge.getBoundingClientRect().width) : 0;
+      const copyWidth = copy instanceof HTMLElement ? Math.ceil(copy.scrollWidth) : 0;
+
+      return Math.ceil(badgeWidth + columnGap + copyWidth);
+    };
 
     root.querySelectorAll(".promo-carousel__cta-actions").forEach((actions) => {
       if (!(actions instanceof HTMLElement)) {
@@ -937,11 +1058,8 @@
         (content) => content instanceof HTMLElement,
       );
 
-      buttonContents.forEach((content) => {
-        content.style.removeProperty("width");
-      });
-
       actions.style.removeProperty("--promo-shop-content-width");
+      actions.style.removeProperty("--promo-shop-fit-scale");
 
       if (!isCompactViewport || buttonContents.length === 0) {
         return;
@@ -958,20 +1076,56 @@
         availableWidth = Math.max(0, Math.floor(referenceButton.clientWidth - paddingInline));
       }
 
-      const widestContentWidth = buttonContents.reduce((maxWidth, content) => {
-        return Math.max(maxWidth, Math.ceil(content.scrollWidth));
+      if (!Number.isFinite(availableWidth) || availableWidth <= 0) {
+        return;
+      }
+
+      actions.style.setProperty("--promo-shop-fit-scale", "1");
+
+      const minScale = 0.58;
+      let widestScaledWidth = buttonContents.reduce((maxWidth, content) => {
+        return Math.max(maxWidth, measureShopButtonContentWidth(content));
+      }, 0);
+      let nextScale = 1;
+
+      if (widestScaledWidth > availableWidth) {
+        for (let iteration = 0; iteration < 4; iteration += 1) {
+          const correctionRatio = availableWidth / widestScaledWidth;
+          const candidateScale = Math.max(minScale, Math.min(nextScale, nextScale * correctionRatio));
+
+          if (Math.abs(candidateScale - nextScale) < 0.005) {
+            nextScale = candidateScale;
+            break;
+          }
+
+          nextScale = candidateScale;
+          actions.style.setProperty("--promo-shop-fit-scale", nextScale.toFixed(4));
+          widestScaledWidth = buttonContents.reduce((maxWidth, content) => {
+            return Math.max(maxWidth, measureShopButtonContentWidth(content));
+          }, 0);
+
+          if (widestScaledWidth <= availableWidth || nextScale <= minScale) {
+            break;
+          }
+        }
+      }
+
+      actions.style.setProperty("--promo-shop-fit-scale", nextScale.toFixed(4));
+      widestScaledWidth = buttonContents.reduce((maxWidth, content) => {
+        return Math.max(maxWidth, measureShopButtonContentWidth(content));
       }, 0);
 
-      const alignedWidth = Math.max(0, Math.min(widestContentWidth, availableWidth));
+      const alignedWidth = Math.min(availableWidth, Math.max(0, widestScaledWidth));
 
       if (alignedWidth <= 0) {
         return;
       }
 
       actions.style.setProperty("--promo-shop-content-width", `${alignedWidth}px`);
-      buttonContents.forEach((content) => {
-        content.style.width = `${alignedWidth}px`;
-      });
+
+      if (activePromoRedirectUi?.root instanceof HTMLElement && actions.contains(activePromoRedirectUi.root)) {
+        schedulePromoRedirectOverlayFit(activePromoRedirectUi);
+      }
     });
   }
 
