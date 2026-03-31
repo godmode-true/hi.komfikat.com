@@ -25,19 +25,19 @@
 
     <meta name="theme-color" content="#fffcfe" />
     <!-- Bump this cache token whenever theme/style/script visuals change, so browsers do not mix old and new theme assets. -->
-    <link rel="icon" href="favicon.ico?v=20260330a" sizes="any" />
-    <link rel="shortcut icon" href="favicon.ico?v=20260330a" />
-    <link rel="icon" href="img/icons/favicon-32x32.png?v=20260330a" sizes="32x32" type="image/png" />
-    <link rel="icon" href="img/icons/favicon-16x16.png?v=20260330a" sizes="16x16" type="image/png" />
-    <link rel="apple-touch-icon" href="img/icons/apple-touch-icon.png?v=20260330a" sizes="180x180" />
-    <link rel="preload" as="image" href="img/logo.webp?v=20260330a" type="image/webp" fetchpriority="high" />
+    <link rel="icon" href="favicon.ico?v=20260401b" sizes="any" />
+    <link rel="shortcut icon" href="favicon.ico?v=20260401b" />
+    <link rel="icon" href="img/icons/favicon-32x32.png?v=20260401b" sizes="32x32" type="image/png" />
+    <link rel="icon" href="img/icons/favicon-16x16.png?v=20260401b" sizes="16x16" type="image/png" />
+    <link rel="apple-touch-icon" href="img/icons/apple-touch-icon.png?v=20260401b" sizes="180x180" />
+    <link rel="preload" as="image" href="img/logo.webp?v=20260401b" type="image/webp" fetchpriority="high" />
     <script>
       (() => {
         const isDevPreviewHost =
           location.hostname === "localhost" ||
           location.hostname === "127.0.0.1" ||
           location.hostname.startsWith("192.168.");
-        const assetVersion = isDevPreviewHost ? Date.now().toString() : "20260330a";
+        const assetVersion = isDevPreviewHost ? Date.now().toString() : "20260401b";
         document.write(`<script src="themes/theme-presets.js?v=${assetVersion}"><\/script>`);
       })();
     </script>
@@ -66,7 +66,7 @@
       as="style"
       href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap"
     />
-    <link rel="preload" href="fonts/comic-story.woff2?v=20260330a" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="fonts/comic-story.woff2?v=20260401a" as="font" type="font/woff2" crossorigin />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap"
@@ -105,13 +105,13 @@
         }
       ]
     </script>
-    <link rel="stylesheet" href="css/style.css?v=20260330a" />
-    <script src="js/main.js?v=20260330a" defer></script>
-    <script src="js/theme.js?v=20260330a" defer></script>
-    <script src="js/share.js?v=20260330a" defer></script>
-    <script src="js/stories.js?v=20260330a" defer></script>
-    <script src="js/carousel-manifest.js?v=20260330a" defer></script>
-    <script src="js/carousel.js?v=20260330a" defer></script>
+    <link rel="stylesheet" href="css/style.css?v=20260401a" />
+    <script src="js/main.js?v=20260401a" defer></script>
+    <script src="js/theme.js?v=20260401a" defer></script>
+    <script src="js/share.js?v=20260401a" defer></script>
+    <script src="js/stories.js?v=20260401a" defer></script>
+    <script src="js/carousel-manifest.js?v=20260401a" defer></script>
+    <script src="js/carousel.js?v=20260401a" defer></script>
   </head>
 
   <body>
@@ -123,85 +123,14 @@
           </button>
           <div class="top-bar__actions cluster">
             <div class="top-bar__share" data-share-menu>
-              <div class="share-rail__hint" data-share-rail-hint aria-hidden="true">
-                <span class="share-rail__hint-text">Tell your friends about Komfi Kat!</span>
-              </div>
-              <div class="share-rail" id="desktop-share-rail" data-share-rail role="group" aria-label="Share options">
-                <button
-                  class="share-rail__button share-rail__button--copy"
-                  type="button"
-                  aria-label="Copy link"
-                  data-share-option="copy"
-                  data-share-hint="Copy link"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      class="share-rail__copy-sheet-back"
-                      d="M8.1 4.35C7.24 4.35 6.55 5.04 6.55 5.9V14.6C6.55 15.46 7.24 16.15 8.1 16.15H8.8V7.95C8.8 6.75 9.78 5.77 10.98 5.77H16.88V5.9C16.88 5.04 16.19 4.35 15.33 4.35H8.1Z"
-                      fill="currentColor"
-                    />
-                    <path
-                      class="share-rail__copy-sheet"
-                      d="M10.78 5.77C9.58 5.77 8.6 6.75 8.6 7.95V18.1C8.6 19.3 9.58 20.28 10.78 20.28H16.63C17.83 20.28 18.8 19.3 18.8 18.1V10.62C18.8 10.08 18.59 9.56 18.2 9.18L15.39 6.37C15.01 5.98 14.49 5.77 13.95 5.77H10.78Z"
-                      fill="currentColor"
-                    />
-                    <path
-                      class="share-rail__copy-fold"
-                      d="M14.12 6.28V9.06C14.12 9.68 14.63 10.19 15.25 10.19H18.03L14.12 6.28Z"
-                      fill="none"
-                    />
-                    <path
-                      class="share-rail__copy-fold-line"
-                      d="M14.12 6.28V9.06C14.12 9.68 14.63 10.19 15.25 10.19H18.03"
-                      fill="none"
-                    />
-                  </svg>
-                </button>
-
-                <button
-                  class="share-rail__button share-rail__button--whatsapp"
-                  type="button"
-                  aria-label="Share via WhatsApp"
-                  data-share-option="whatsapp"
-                  data-share-hint="Share via WhatsApp"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      fill="currentColor"
-                      fill-rule="evenodd"
-                      d="M12.08 4.2C7.68 4.2 4.15 7.62 4.15 11.9C4.15 13.42 4.6 14.82 5.44 16.06L4.65 18.92L7.61 18.15C8.8 18.88 10.22 19.27 11.81 19.27C16.2 19.27 19.74 15.86 19.74 11.57C19.74 7.61 16.43 4.2 12.08 4.2ZM10.24 8.1C10.43 8.1 10.63 8.11 10.81 8.56L11.44 10.08C11.5 10.22 11.47 10.38 11.35 10.53L10.87 11.11C10.8 11.2 10.78 11.34 10.85 11.45C11.41 12.33 12.18 13.05 13.12 13.53C13.24 13.6 13.37 13.57 13.46 13.48L14.14 12.8C14.29 12.66 14.46 12.64 14.61 12.7L16.02 13.3C16.24 13.39 16.32 13.56 16.29 13.76C16.14 14.88 15.13 15.57 14.21 15.57C13.95 15.57 13.68 15.52 13.42 15.43C11.91 14.92 10.64 14.08 9.62 12.91C8.64 11.78 8.03 10.63 7.79 9.45C7.55 8.33 8.68 8.1 9.53 8.1H10.24Z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                </button>
-
-                <button
-                  class="share-rail__button share-rail__button--facebook"
-                  type="button"
-                  aria-label="Share on Facebook"
-                  data-share-option="facebook"
-                  data-share-hint="Share on Facebook"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      d="M12.84 18.65V12.94H14.77L15.05 10.83H12.84V9.41C12.84 8.81 13.01 8.39 13.95 8.39H15.11V6.49C14.91 6.46 14.22 6.4 13.42 6.4C11.73 6.4 10.57 7.41 10.57 9.16V10.83H8.83V12.94H10.57V18.65H12.84Z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                </button>
-              </div>
-
-              <span class="share-rail__hover-bridge" aria-hidden="true"></span>
-
               <button
                 class="action-button action-button--icon-only"
                 type="button"
                 aria-label="Share"
-                aria-haspopup="true"
+                aria-haspopup="dialog"
                 aria-expanded="false"
-                aria-controls="desktop-share-rail"
+                aria-controls="desktop-share-dialog"
                 data-share-page
-                data-tooltip="Share with a friend"
               >
                 <span class="action-button__icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -565,6 +494,277 @@
             </li>
           </ul>
         </section>
+
+        <dialog
+          class="share-dialog"
+          id="desktop-share-dialog"
+          data-share-dialog
+          aria-labelledby="share-dialog-title"
+        >
+          <div class="share-dialog__backdrop">
+            <button
+              class="share-dialog__backdrop-dismiss"
+              type="button"
+              aria-label="Close share dialog"
+              tabindex="-1"
+              data-share-dialog-close
+            ></button>
+          </div>
+
+          <div class="share-dialog__surface">
+            <div class="share-dialog__header">
+              <div class="share-dialog__copy">
+                <h2 class="share-dialog__title" id="share-dialog-title">Tell your friends about Komfi Kat:</h2>
+              </div>
+
+              <button class="share-dialog__close" type="button" aria-label="Close share dialog" data-share-dialog-close>
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7 7L17 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                  <path d="M17 7L7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                </svg>
+              </button>
+            </div>
+
+            <div class="share-dialog__options" role="group" aria-label="Share options">
+              <span class="promo-redirect-local-wrap promo-redirect-local-wrap--link-card share-dialog__option-wrap" data-share-copy-feedback-wrap>
+                <button
+                  class="link-card link-card--share-copy share-dialog__option share-dialog__option--copy"
+                  type="button"
+                  aria-label="Copy link"
+                  data-share-option="copy"
+                  data-promo-redirect-control="true"
+                >
+                  <span class="link-card__badge" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        class="share-rail__copy-sheet-back"
+                        d="M8.1 4.35C7.24 4.35 6.55 5.04 6.55 5.9V14.6C6.55 15.46 7.24 16.15 8.1 16.15H8.8V7.95C8.8 6.75 9.78 5.77 10.98 5.77H16.88V5.9C16.88 5.04 16.19 4.35 15.33 4.35H8.1Z"
+                        fill="currentColor"
+                      />
+                      <path
+                        class="share-rail__copy-sheet"
+                        d="M10.78 5.77C9.58 5.77 8.6 6.75 8.6 7.95V18.1C8.6 19.3 9.58 20.28 10.78 20.28H16.63C17.83 20.28 18.8 19.3 18.8 18.1V10.62C18.8 10.08 18.59 9.56 18.2 9.18L15.39 6.37C15.01 5.98 14.49 5.77 13.95 5.77H10.78Z"
+                        fill="currentColor"
+                      />
+                      <path class="share-rail__copy-fold" d="M14.12 6.28V9.06C14.12 9.68 14.63 10.19 15.25 10.19H18.03L14.12 6.28Z" fill="none" />
+                      <path
+                        class="share-rail__copy-fold-line"
+                        d="M14.12 6.28V9.06C14.12 9.68 14.63 10.19 15.25 10.19H18.03"
+                        fill="none"
+                      />
+                    </svg>
+                  </span>
+                  <span class="link-card__content">
+                    <span class="link-card__title">Copy link</span>
+                    <span class="link-card__subtitle">Copy the page URL</span>
+                  </span>
+                  <span class="link-card__spacer" aria-hidden="true"></span>
+                </button>
+
+                <span class="promo-redirect-local-overlay share-dialog__copy-feedback" data-share-copy-feedback aria-hidden="true">
+                  <span class="promo-redirect-local-overlay__content">
+                    <span class="share-dialog__copy-feedback-side share-dialog__copy-feedback-side--start" aria-hidden="true"></span>
+                    <span class="promo-redirect-toast__body">
+                      <span class="promo-redirect-toast__text">
+                        <span class="promo-redirect-toast__text-prefix">
+                          <span class="promo-redirect-toast__text-line promo-redirect-toast__text-line--lead">Link copied!</span>
+                        </span>
+                      </span>
+                    </span>
+                    <span class="share-dialog__copy-feedback-side share-dialog__copy-feedback-side--end" aria-hidden="true"></span>
+                  </span>
+                </span>
+              </span>
+
+              <a
+                class="link-card link-card--share-whatsapp share-dialog__option share-dialog__option--whatsapp"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Share via WhatsApp"
+                data-share-option="whatsapp"
+                data-local-redirect-target="WhatsApp"
+              >
+                <span class="link-card__badge" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      fill="currentColor"
+                      fill-rule="evenodd"
+                      d="M12.08 4.2C7.68 4.2 4.15 7.62 4.15 11.9C4.15 13.42 4.6 14.82 5.44 16.06L4.65 18.92L7.61 18.15C8.8 18.88 10.22 19.27 11.81 19.27C16.2 19.27 19.74 15.86 19.74 11.57C19.74 7.61 16.43 4.2 12.08 4.2ZM10.24 8.1C10.43 8.1 10.63 8.11 10.81 8.56L11.44 10.08C11.5 10.22 11.47 10.38 11.35 10.53L10.87 11.11C10.8 11.2 10.78 11.34 10.85 11.45C11.41 12.33 12.18 13.05 13.12 13.53C13.24 13.6 13.37 13.57 13.46 13.48L14.14 12.8C14.29 12.66 14.46 12.64 14.61 12.7L16.02 13.3C16.24 13.39 16.32 13.56 16.29 13.76C16.14 14.88 15.13 15.57 14.21 15.57C13.95 15.57 13.68 15.52 13.42 15.43C11.91 14.92 10.64 14.08 9.62 12.91C8.64 11.78 8.03 10.63 7.79 9.45C7.55 8.33 8.68 8.1 9.53 8.1H10.24Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </span>
+                <span class="link-card__content">
+                  <span class="link-card__title">Share via WhatsApp</span>
+                  <span class="link-card__subtitle">Send the page link</span>
+                </span>
+                <span class="link-card__spacer" aria-hidden="true"></span>
+              </a>
+
+              <a
+                class="link-card link-card--share-messenger share-dialog__option share-dialog__option--messenger"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Share via Messenger"
+                data-share-option="messenger"
+                data-local-redirect-target="Messenger"
+              >
+                <span class="link-card__badge" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M12 4.4C7.49 4.4 4 7.65 4 11.78C4 14.14 5.15 16.23 7.08 17.63V20.2C7.08 20.55 7.47 20.76 7.77 20.57L10.43 18.96C10.95 19.09 11.47 19.16 12 19.16C16.51 19.16 20 15.91 20 11.78C20 7.65 16.51 4.4 12 4.4Z"
+                      fill="currentColor"
+                    />
+                    <path
+                      d="M8.63 13.52L10.93 11.08C11.14 10.85 11.51 10.82 11.77 11L13.47 12.2C13.73 12.38 14.1 12.35 14.31 12.12L15.94 10.38"
+                      stroke="#ffffff"
+                      stroke-width="1.65"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+                <span class="link-card__content">
+                  <span class="link-card__title">Share via Messenger</span>
+                  <span class="link-card__subtitle">Send the page in Messenger</span>
+                </span>
+                <span class="link-card__spacer" aria-hidden="true"></span>
+              </a>
+
+              <a
+                class="link-card link-card--share-imessage share-dialog__option share-dialog__option--imessage"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Share via iMessage"
+                data-share-option="imessage"
+                data-local-redirect-target="iMessage"
+              >
+                <span class="link-card__badge" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M5.1 7.95C5.1 6.68 6.13 5.65 7.4 5.65H16.6C17.87 5.65 18.9 6.68 18.9 7.95V14.5C18.9 15.77 17.87 16.8 16.6 16.8H11.45L8.28 18.94C7.9 19.2 7.38 18.93 7.38 18.47V16.8H7.4C6.13 16.8 5.1 15.77 5.1 14.5V7.95Z"
+                      fill="currentColor"
+                    />
+                    <path
+                      d="M9.15 11.22H9.18M12 11.22H12.03M14.85 11.22H14.88"
+                      stroke="#ffffff"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+                <span class="link-card__content">
+                  <span class="link-card__title">Share via iMessage</span>
+                  <span class="link-card__subtitle">Send it in Messages</span>
+                </span>
+                <span class="link-card__spacer" aria-hidden="true"></span>
+              </a>
+
+              <a
+                class="link-card link-card--share-facebook share-dialog__option share-dialog__option--facebook"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Share on Facebook"
+                data-share-option="facebook"
+                data-local-redirect-target="Facebook"
+              >
+                <span class="link-card__badge" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M12.84 18.65V12.94H14.77L15.05 10.83H12.84V9.41C12.84 8.81 13.01 8.39 13.95 8.39H15.11V6.49C14.91 6.46 14.22 6.4 13.42 6.4C11.73 6.4 10.57 7.41 10.57 9.16V10.83H8.83V12.94H10.57V18.65H12.84Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </span>
+                <span class="link-card__content">
+                  <span class="link-card__title">Share on Facebook</span>
+                  <span class="link-card__subtitle">Post the page to Facebook</span>
+                </span>
+                <span class="link-card__spacer" aria-hidden="true"></span>
+              </a>
+
+              <a
+                class="link-card link-card--share-x share-dialog__option share-dialog__option--x"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Share on X"
+                data-share-option="x"
+                data-local-redirect-target="X"
+              >
+                <span class="link-card__badge" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M6.15 5.75H8.96L12.43 10.55L16.46 5.75H18.62L13.38 11.99L18.95 19.75H16.13L12.52 14.69L8.27 19.75H6.1L11.58 13.22L6.15 5.75Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </span>
+                <span class="link-card__content">
+                  <span class="link-card__title">Share on X</span>
+                  <span class="link-card__subtitle">Post it on X (Twitter)</span>
+                </span>
+                <span class="link-card__spacer" aria-hidden="true"></span>
+              </a>
+
+              <a
+                class="link-card link-card--share-reddit share-dialog__option share-dialog__option--reddit"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Share on Reddit"
+                data-share-option="reddit"
+                data-local-redirect-target="Reddit"
+              >
+                <span class="link-card__badge" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M18.79 10.63C19.85 10.63 20.71 11.48 20.71 12.53C20.71 13.3 20.26 13.96 19.61 14.26C19.64 14.44 19.65 14.62 19.65 14.8C19.65 17.58 16.47 19.83 12.54 19.83C8.61 19.83 5.42 17.58 5.42 14.8C5.42 14.61 5.44 14.42 5.47 14.24C4.85 13.93 4.42 13.29 4.42 12.53C4.42 11.48 5.28 10.63 6.34 10.63C6.89 10.63 7.38 10.86 7.73 11.24C8.98 10.42 10.62 9.92 12.4 9.86L13.21 6.15L15.79 6.7C15.86 7.43 16.48 8 17.23 8C18.03 8 18.68 7.36 18.68 6.57C18.68 5.78 18.03 5.14 17.23 5.14C16.71 5.14 16.26 5.41 16.01 5.81L12.88 5.14C12.53 5.07 12.19 5.29 12.11 5.64L11.18 9.88C9.46 9.99 7.89 10.49 6.68 11.28C7.03 10.89 7.52 10.63 8.08 10.63"
+                      fill="currentColor"
+                    />
+                    <circle cx="9.73" cy="13.19" r="1.02" fill="#ffffff" />
+                    <circle cx="15.42" cy="13.19" r="1.02" fill="#ffffff" />
+                    <path d="M10.09 15.94C10.73 16.4 11.55 16.65 12.58 16.65C13.61 16.65 14.42 16.4 15.07 15.94" stroke="#ffffff" stroke-width="1.45" stroke-linecap="round" />
+                  </svg>
+                </span>
+                <span class="link-card__content">
+                  <span class="link-card__title">Share on Reddit</span>
+                  <span class="link-card__subtitle">Start a Reddit post</span>
+                </span>
+                <span class="link-card__spacer" aria-hidden="true"></span>
+              </a>
+
+              <a
+                class="link-card link-card--share-pinterest share-dialog__option share-dialog__option--pinterest"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Share on Pinterest"
+                data-share-option="pinterest"
+                data-local-redirect-target="Pinterest"
+              >
+                <span class="link-card__badge" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M12.21 4.7C8.3 4.7 5.2 7.52 5.2 11.31C5.2 13.72 6.56 15.78 8.73 16.64C8.69 16.06 8.72 15.17 8.9 14.48C9.1 13.74 10.16 9.29 10.16 9.29C10.16 9.29 9.84 8.66 9.84 7.72C9.84 6.24 10.71 5.14 11.79 5.14C12.71 5.14 13.15 5.83 13.15 6.66C13.15 7.58 12.56 8.95 12.26 10.23C12 11.32 12.8 12.21 13.87 12.21C15.8 12.21 17.29 10.18 17.29 7.26C17.29 4.71 15.45 2.94 12.81 2.94C9.72 2.94 7.91 5.24 7.91 7.62C7.91 8.55 8.27 9.54 8.72 10.08C8.81 10.19 8.82 10.29 8.79 10.4C8.7 10.78 8.5 11.6 8.46 11.76C8.41 11.97 8.3 12.01 8.08 11.91C6.61 11.25 5.69 9.18 5.69 7.47C5.69 4.08 8.16 1 12.82 1C16.61 1 19.56 3.69 19.56 7.29C19.56 11.05 17.19 14.08 13.91 14.08C12.81 14.08 11.78 13.51 11.42 12.83C11.42 12.83 10.87 14.92 10.74 15.43C10.51 16.33 9.89 17.45 9.34 18.17C10.26 18.45 11.23 18.59 12.22 18.59C16.12 18.59 19.22 15.78 19.22 11.99C19.22 8.2 16.12 4.7 12.21 4.7Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </span>
+                <span class="link-card__content">
+                  <span class="link-card__title">Share on Pinterest</span>
+                  <span class="link-card__subtitle">Pin the page to Pinterest</span>
+                </span>
+                <span class="link-card__spacer" aria-hidden="true"></span>
+              </a>
+            </div>
+          </div>
+        </dialog>
 
         <dialog class="story-viewer" data-story-viewer aria-labelledby="story-viewer-title">
           <form class="story-viewer__backdrop" method="dialog">

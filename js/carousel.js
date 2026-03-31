@@ -874,7 +874,7 @@
   }
 
   function enhanceLinkSectionRedirects() {
-    document.querySelectorAll(".link-section .link-card[href][target=\"_blank\"]").forEach((link) => {
+    document.querySelectorAll(".link-section .link-card[href][target=\"_blank\"], .share-dialog .link-card[href][target=\"_blank\"]").forEach((link) => {
       if (!(link instanceof HTMLAnchorElement) || link.closest(".promo-redirect-local-wrap")) {
         return;
       }
