@@ -7,7 +7,7 @@
 
   const { dom, helpers } = App;
   const shareMessages = {
-    defaultHint: "Share with your friend 👉",
+    defaultHint: "Tell your friends about Komfi Kat",
     linkCopiedHint: "Link copied!",
     textCopiedHint: "Text copied!",
   };

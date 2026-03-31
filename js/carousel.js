@@ -193,7 +193,8 @@
   let promoRedirectDeadline = 0;
   let promoRedirectHref = "";
   let promoRedirectCode = "";
-  const PROMO_REDIRECT_DELAY_MS = 5000;
+  const DEFAULT_PROMO_REDIRECT_DELAY_MS = 3000;
+  const PROMO_CODE_PROMO_REDIRECT_DELAY_MS = 5000;
   let activePromoRedirectUi = null;
   let activePromoRedirectAction = null;
   let promoRedirectFitFrame = 0;
@@ -266,6 +267,24 @@
     }
 
     return redirectLine;
+  }
+
+  function isPromoCarouselPromoCodeRedirect(ui = null, action = null) {
+    return (
+      isNonEmptyString(action?.promoCode) &&
+      ui?.root instanceof HTMLElement &&
+      ui.root.classList.contains("promo-carousel__shop-button-wrap")
+    );
+  }
+
+  function getPromoRedirectDelayMs(ui = null, action = null) {
+    return isPromoCarouselPromoCodeRedirect(ui, action)
+      ? PROMO_CODE_PROMO_REDIRECT_DELAY_MS
+      : DEFAULT_PROMO_REDIRECT_DELAY_MS;
+  }
+
+  function getPromoRedirectCountdownSeconds(ui = null, action = null) {
+    return Math.ceil(getPromoRedirectDelayMs(ui, action) / 1000);
   }
 
   function clearPromoRedirectTimers() {
@@ -417,6 +436,8 @@
       return;
     }
 
+    const countdownSeconds = getPromoRedirectCountdownSeconds(ui, action);
+
     window.clearTimeout(ui.copyFeedbackTimeout);
     ui.copyFeedbackTimeout = 0;
     ui.overlay?.style.removeProperty("--promo-redirect-content-scale");
@@ -439,8 +460,8 @@
     }
 
     if (ui.redirectCountdown instanceof HTMLElement) {
-      ui.redirectCountdown.textContent = "5";
-      ui.redirectCountdown.dataset.value = "5";
+      ui.redirectCountdown.textContent = String(countdownSeconds);
+      ui.redirectCountdown.dataset.value = String(countdownSeconds);
     }
 
     if (ui.control instanceof HTMLElement) {
@@ -503,10 +524,13 @@
       return;
     }
 
+    const delayMs = getPromoRedirectDelayMs(ui, action);
+    const countdownSeconds = Math.ceil(delayMs / 1000);
+
     clearPromoRedirectTimers();
     promoRedirectHref = href;
     promoRedirectCode = promoCode;
-    promoRedirectDeadline = window.performance.now() + PROMO_REDIRECT_DELAY_MS;
+    promoRedirectDeadline = window.performance.now() + delayMs;
     setActivePromoRedirectUi(ui, action);
 
     if (ui?.root) {
@@ -519,10 +543,10 @@
         ui.redirectCode.setAttribute("aria-label", `Copy promo code ${promoCode}`);
       }
       if (ui.redirectCountdown instanceof HTMLElement) {
-        ui.redirectCountdown.textContent = "5";
-        ui.redirectCountdown.dataset.value = "5";
+        ui.redirectCountdown.textContent = String(countdownSeconds);
+        ui.redirectCountdown.dataset.value = String(countdownSeconds);
       }
-      ui.control.setAttribute("aria-label", getRedirectAriaLabel(action || { href, promoCode }, 5));
+      ui.control.setAttribute("aria-label", getRedirectAriaLabel(action || { href, promoCode }, countdownSeconds));
       schedulePromoRedirectOverlayFit(ui);
     }
 
@@ -533,7 +557,7 @@
       const targetHref = promoRedirectHref;
       hidePromoRedirectToast();
       openPromoRedirectTarget(targetHref);
-    }, PROMO_REDIRECT_DELAY_MS);
+    }, delayMs);
   }
 
   function createPromoRedirectOverlay(action, control, root) {
@@ -550,6 +574,7 @@
     redirectBody.className = "promo-redirect-toast__body";
 
     const hasPromoCode = isNonEmptyString(action?.promoCode);
+    const countdownSeconds = getPromoRedirectCountdownSeconds({ root }, action);
     const redirectLabel = inferRedirectLabel(action);
     let redirectCode = null;
 
@@ -576,7 +601,7 @@
 
     const redirectCountdown = document.createElement("span");
     redirectCountdown.className = "promo-redirect-toast__countdown";
-    redirectCountdown.textContent = "5";
+    redirectCountdown.textContent = String(countdownSeconds);
     redirectText.append(redirectCountdown);
 
     redirectBody.append(redirectText);
