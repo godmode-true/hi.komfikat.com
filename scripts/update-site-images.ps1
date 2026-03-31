@@ -11,7 +11,6 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $indexPath = Join-Path $repoRoot "index.html"
-$storiesPath = Join-Path $repoRoot "js/stories.js"
 $logoSource = Join-Path $repoRoot "img/logo.png"
 $logoWebp = Join-Path $repoRoot "img/logo.webp"
 $storiesDir = Join-Path $repoRoot "img/stories"
@@ -114,36 +113,6 @@ function Update-LogoReferences {
 
   if ($didUpdate) {
     Write-Host "Updated logo references in index.html to img/logo.webp"
-  }
-}
-
-function Update-StoryReferences {
-  if (-not (Test-Path -LiteralPath $storiesPath)) {
-    return
-  }
-
-  $storiesContent = Get-Content -LiteralPath $storiesPath -Raw
-  $updatedStoriesContent = [regex]::Replace(
-    $storiesContent,
-    'image:\s*"img/stories/(?<name>[^"]+)\.(?<ext>png|jpg|jpeg)"',
-    {
-      param($match)
-
-      $name = $match.Groups["name"].Value
-      $webpPath = Join-Path $storiesDir ($name + ".webp")
-
-      if (Test-Path -LiteralPath $webpPath) {
-        return 'image: "img/stories/' + $name + '.webp"'
-      }
-
-      return $match.Value
-    }
-  )
-
-  $didUpdate = Set-FileContentIfChanged -Path $storiesPath -Content $updatedStoriesContent
-
-  if ($didUpdate) {
-    Write-Host "Updated js/stories.js to prefer generated WebP story assets"
   }
 }
 
@@ -343,7 +312,6 @@ foreach ($file in $carouselSources) {
 }
 
 Update-LogoReferences
-Update-StoryReferences
 Update-CarouselManifest -DirectoryPath $resolvedCarouselDir -ManifestPath $resolvedManifestPath
 
 Write-Host ""

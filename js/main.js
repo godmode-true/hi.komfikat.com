@@ -16,7 +16,7 @@
     shareButton: document.querySelector("[data-share-page]"),
     subscribeButton: document.querySelector(".action-button--subscribe"),
     socialHandleLinks: document.querySelectorAll(".social-links__link[data-handle-label]"),
-    socialHashtagLinks: document.querySelectorAll(".social-links__hashtag[data-hashtag-tooltip]"),
+    socialHashtagLinks: document.querySelectorAll(".social-links__hashtag"),
     shareCopyButton: document.querySelector('[data-share-option="copy"]'),
     shareOptions: document.querySelectorAll("[data-share-option]"),
     themeColorMeta: document.querySelector('meta[name="theme-color"]'),
@@ -64,12 +64,19 @@
   let promoViewportFitResizeTimeout = 0;
   let promoViewportFitStableHeight = 0;
   let promoViewportFitStableWidth = 0;
+  let stickyHeaderMaskSyncFrame = 0;
+  let stickyHeaderMaskSyncResizeTimeout = 0;
   let topBarTooltipOwner = "";
   let topBarTooltipStickyOwner = "";
   let topBarTooltipClickOwner = "";
   let topBarTooltipCleanupTimeout = 0;
   let topBarTooltipIdleRestoreTimeout = 0;
-  const topBarTooltipTransitionMs = 180;
+  let topBarTooltipSwapTimeout = 0;
+  let topBarTooltipSwapFrame = 0;
+  const topBarTooltipTransitionMs = 120;
+  const topBarTooltipSwapOutMs = 90;
+  const socialHandleTooltipHideDelayMs = 220;
+  const socialHandleTooltipIdleRestoreDelayMs = 150;
   const topBarTooltipIdleOwner = "top-bar-idle";
   const topBarTooltipIdleDesktopText = "Welcome to Komfi Kat community!";
   const topBarTooltipIdleMobileText = "Welcome to Komfi Kat community!";
@@ -301,6 +308,51 @@
     runSync();
   }
 
+  function syncStickyHeaderMaskGeometry() {
+    const root = App.dom.root;
+    const topBar = App.dom.topBar;
+
+    if (!(root instanceof HTMLElement) || !(topBar instanceof HTMLElement)) {
+      return;
+    }
+
+    const rect = topBar.getBoundingClientRect();
+
+    if (rect.width <= 0 || rect.height <= 0) {
+      return;
+    }
+
+    const halfHeight = rect.height / 2;
+
+    root.style.setProperty("--sticky-header-mask-rect-height", `${rect.top + halfHeight}px`);
+    root.style.setProperty("--sticky-header-mask-half-height", `${halfHeight}px`);
+    root.style.setProperty("--sticky-header-mask-top", `${rect.top}px`);
+    root.style.setProperty("--sticky-header-mask-overlay-height", `${rect.bottom}px`);
+    root.style.setProperty("--sticky-header-mask-shell-top", `${rect.top}px`);
+    root.style.setProperty("--sticky-header-mask-shell-height", `${rect.height}px`);
+    root.style.setProperty("--sticky-header-mask-left", `${rect.left}px`);
+    root.style.setProperty("--sticky-header-mask-width", `${rect.width}px`);
+    root.style.setProperty("--sticky-header-mask-translate-x", "0px");
+  }
+
+  function scheduleStickyHeaderMaskGeometrySync({ debounce = false } = {}) {
+    window.cancelAnimationFrame(stickyHeaderMaskSyncFrame);
+    window.clearTimeout(stickyHeaderMaskSyncResizeTimeout);
+
+    const runSync = () => {
+      stickyHeaderMaskSyncFrame = window.requestAnimationFrame(() => {
+        syncStickyHeaderMaskGeometry();
+      });
+    };
+
+    if (debounce) {
+      stickyHeaderMaskSyncResizeTimeout = window.setTimeout(runSync, 180);
+      return;
+    }
+
+    runSync();
+  }
+
   function scrollPageToAbsoluteTop() {
     const scrollingElement = document.scrollingElement;
     const root = document.documentElement;
@@ -308,6 +360,14 @@
     const previousRootScrollBehavior = root?.style.scrollBehavior || "";
     const previousBodyScrollBehavior = body?.style.scrollBehavior || "";
     let settleRestoreScheduled = false;
+    const clearPageTopHash = () => {
+      if (window.location.hash !== "#page-top") {
+        return;
+      }
+
+      const cleanUrl = `${window.location.pathname}${window.location.search}`;
+      window.history.replaceState(window.history.state, "", cleanUrl);
+    };
 
     const restoreScrollBehavior = () => {
       if (settleRestoreScheduled) {
@@ -344,12 +404,14 @@
       body.style.scrollBehavior = "auto";
     }
 
+    clearPageTopHash();
     forceTop();
 
     window.requestAnimationFrame(() => {
       forceTop();
 
       window.requestAnimationFrame(() => {
+        clearPageTopHash();
         forceTop();
 
         promoViewportFitStableHeight = 0;
@@ -362,6 +424,7 @@
     window.setTimeout(forceTop, 60);
     window.setTimeout(forceTop, 140);
     window.setTimeout(() => {
+      clearPageTopHash();
       forceTop();
       promoViewportFitStableHeight = 0;
       promoViewportFitStableWidth = 0;
@@ -482,63 +545,20 @@
     );
   }
 
-  function showIdleTopBarTooltip() {
-    if (!canShowIdleTopBarTooltip()) {
-      return false;
+  function clearTopBarTooltipSwapState() {
+    window.clearTimeout(topBarTooltipSwapTimeout);
+    window.cancelAnimationFrame(topBarTooltipSwapFrame);
+    topBarTooltipSwapTimeout = 0;
+    topBarTooltipSwapFrame = 0;
+
+    if (App.dom.topBarTooltip) {
+      delete App.dom.topBarTooltip.dataset.swapState;
     }
-
-    const idleLabel = createTopBarTooltipLabel(getIdleTopBarTooltipText(), { variant: "welcome" });
-
-    if (!(idleLabel instanceof HTMLElement) || !setTopBarTooltipContent(idleLabel)) {
-      return false;
-    }
-
-    window.clearTimeout(topBarTooltipCleanupTimeout);
-    window.clearTimeout(topBarTooltipIdleRestoreTimeout);
-    topBarTooltipOwner = topBarTooltipIdleOwner;
-    topBarTooltipStickyOwner = "";
-    topBarTooltipClickOwner = "";
-    App.dom.topBarTooltip.dataset.anchor = "center";
-    delete App.dom.topBarTooltip.dataset.interactive;
-    App.dom.topBarTooltip.dataset.visible = "true";
-    return true;
   }
 
-  function scheduleIdleTopBarTooltipRestore() {
-    window.clearTimeout(topBarTooltipIdleRestoreTimeout);
-    topBarTooltipIdleRestoreTimeout = window.setTimeout(() => {
-      if (topBarTooltipOwner && topBarTooltipOwner !== topBarTooltipIdleOwner) {
-        return;
-      }
-
-      showIdleTopBarTooltip();
-    }, 0);
-  }
-
-  function showTopBarTooltip(content, owner = "default", anchor = "center", options = {}) {
-    if (!App.dom.topBarTooltip || !isDesktopPointerDevice()) {
-      return;
-    }
-
-    if (isPromoRedirectToastVisible()) {
-      return;
-    }
-
-    window.clearTimeout(topBarTooltipIdleRestoreTimeout);
-    const trigger = options.trigger === "click" ? "click" : "hover";
-
-    if (
-      App.dom.topBarTooltip.dataset.visible === "true" &&
-      topBarTooltipStickyOwner &&
-      topBarTooltipStickyOwner !== owner &&
-      trigger !== "click" &&
-      topBarTooltipStickyBlockedHoverOwners.has(owner)
-    ) {
-      return;
-    }
-
+  function applyTopBarTooltipState(content, owner = "default", anchor = "center", options = {}, trigger = "hover") {
     if (!setTopBarTooltipContent(content)) {
-      return;
+      return false;
     }
 
     dismissStickyMenuPrompts("top-bar-tooltip");
@@ -563,6 +583,99 @@
       topBarTooltipClickOwner = "";
     }
     App.dom.topBarTooltip.dataset.visible = "true";
+    scheduleStickyHeaderMaskGeometrySync();
+    return true;
+  }
+
+  function showIdleTopBarTooltip() {
+    if (!canShowIdleTopBarTooltip()) {
+      return false;
+    }
+
+    const idleLabel = createTopBarTooltipLabel(getIdleTopBarTooltipText(), { variant: "welcome" });
+
+    if (!(idleLabel instanceof HTMLElement) || !setTopBarTooltipContent(idleLabel)) {
+      return false;
+    }
+
+    clearTopBarTooltipSwapState();
+    window.clearTimeout(topBarTooltipCleanupTimeout);
+    window.clearTimeout(topBarTooltipIdleRestoreTimeout);
+    topBarTooltipOwner = topBarTooltipIdleOwner;
+    topBarTooltipStickyOwner = "";
+    topBarTooltipClickOwner = "";
+    App.dom.topBarTooltip.dataset.anchor = "center";
+    delete App.dom.topBarTooltip.dataset.interactive;
+    App.dom.topBarTooltip.dataset.visible = "true";
+    return true;
+  }
+
+  function scheduleIdleTopBarTooltipRestore(delayMs = 0) {
+    window.clearTimeout(topBarTooltipIdleRestoreTimeout);
+    topBarTooltipIdleRestoreTimeout = window.setTimeout(() => {
+      if (topBarTooltipSwapTimeout || App.dom.topBarTooltip?.dataset.swapState === "out") {
+        return;
+      }
+
+      if (topBarTooltipOwner && topBarTooltipOwner !== topBarTooltipIdleOwner) {
+        return;
+      }
+
+      showIdleTopBarTooltip();
+    }, Math.max(0, delayMs));
+  }
+
+  function showTopBarTooltip(content, owner = "default", anchor = "center", options = {}) {
+    if (!App.dom.topBarTooltip || !isDesktopPointerDevice()) {
+      return;
+    }
+
+    if (isPromoRedirectToastVisible()) {
+      return;
+    }
+
+    window.clearTimeout(topBarTooltipIdleRestoreTimeout);
+    clearTopBarTooltipSwapState();
+    const trigger = options.trigger === "click" ? "click" : "hover";
+
+    if (
+      App.dom.topBarTooltip.dataset.visible === "true" &&
+      topBarTooltipStickyOwner &&
+      topBarTooltipStickyOwner !== owner &&
+      trigger !== "click" &&
+      topBarTooltipStickyBlockedHoverOwners.has(owner)
+    ) {
+      return;
+    }
+
+    const shouldFadeBetweenOwners =
+      App.dom.topBarTooltip.dataset.visible === "true" &&
+      topBarTooltipOwner &&
+      topBarTooltipOwner !== owner;
+
+    if (shouldFadeBetweenOwners) {
+      App.dom.topBarTooltip.dataset.swapState = "out";
+      topBarTooltipSwapTimeout = window.setTimeout(() => {
+        if (
+          !App.dom.topBarTooltip ||
+          !applyTopBarTooltipState(content, owner, anchor, options, trigger)
+        ) {
+          clearTopBarTooltipSwapState();
+          return;
+        }
+
+        topBarTooltipSwapFrame = window.requestAnimationFrame(() => {
+          if (!App.dom.topBarTooltip) {
+            return;
+          }
+
+          delete App.dom.topBarTooltip.dataset.swapState;
+        });
+      }, topBarTooltipSwapOutMs);
+      return;
+    }
+
+    applyTopBarTooltipState(content, owner, anchor, options, trigger);
   }
 
   function scheduleTopBarTooltipCleanup() {
@@ -575,6 +688,7 @@
       delete App.dom.topBarTooltip.dataset.anchor;
       delete App.dom.topBarTooltip.dataset.interactive;
       App.dom.topBarTooltip.replaceChildren();
+      scheduleStickyHeaderMaskGeometrySync();
     }, topBarTooltipTransitionMs);
   }
 
@@ -583,6 +697,7 @@
       return;
     }
 
+    clearTopBarTooltipSwapState();
     window.clearTimeout(topBarTooltipIdleRestoreTimeout);
     topBarTooltipOwner = "";
     topBarTooltipStickyOwner = "";
@@ -590,6 +705,7 @@
     delete App.dom.topBarTooltip.dataset.visible;
     delete App.dom.topBarTooltip.dataset.interactive;
     scheduleTopBarTooltipCleanup();
+    scheduleStickyHeaderMaskGeometrySync();
   }
 
   function dismissTopBarTooltipUntilNextStateChange() {
@@ -597,6 +713,7 @@
       return;
     }
 
+    clearTopBarTooltipSwapState();
     window.clearTimeout(topBarTooltipIdleRestoreTimeout);
     topBarTooltipOwner = "__dismissed__";
     topBarTooltipStickyOwner = "";
@@ -604,9 +721,10 @@
     delete App.dom.topBarTooltip.dataset.visible;
     delete App.dom.topBarTooltip.dataset.interactive;
     scheduleTopBarTooltipCleanup();
+    scheduleStickyHeaderMaskGeometrySync();
   }
 
-  function hideTopBarTooltip(owner = "") {
+  function hideTopBarTooltip(owner = "", options = {}) {
     if (!App.dom.topBarTooltip) {
       return;
     }
@@ -615,6 +733,7 @@
       return;
     }
 
+    clearTopBarTooltipSwapState();
     window.clearTimeout(topBarTooltipIdleRestoreTimeout);
     topBarTooltipOwner = "";
     topBarTooltipStickyOwner = "";
@@ -622,7 +741,8 @@
     delete App.dom.topBarTooltip.dataset.visible;
     delete App.dom.topBarTooltip.dataset.interactive;
     scheduleTopBarTooltipCleanup();
-    scheduleIdleTopBarTooltipRestore();
+    scheduleIdleTopBarTooltipRestore(options.restoreIdleDelayMs);
+    scheduleStickyHeaderMaskGeometrySync();
   }
 
   function dismissStickyMenuPrompts(except = "") {
@@ -703,9 +823,25 @@
     isPromoRedirectToastVisible,
     copyText,
     lockViewportGestureZoom,
+    scheduleStickyHeaderMaskGeometrySync,
   };
 
   document.addEventListener("DOMContentLoaded", () => {
+    let socialHandleTooltipHideTimeout = 0;
+    const clearSocialHandleTooltipHideTimeout = () => {
+      window.clearTimeout(socialHandleTooltipHideTimeout);
+      socialHandleTooltipHideTimeout = 0;
+    };
+    const getSocialHandleLinkFromTarget = (target) =>
+      target instanceof Element ? target.closest(".social-links__link[data-handle-label]") : null;
+    const scheduleSocialHandleTooltipHide = (owner) => {
+      clearSocialHandleTooltipHideTimeout();
+      socialHandleTooltipHideTimeout = window.setTimeout(() => {
+        socialHandleTooltipHideTimeout = 0;
+        App.helpers.hideTopBarTooltip(owner, { restoreIdleDelayMs: socialHandleTooltipIdleRestoreDelayMs });
+      }, socialHandleTooltipHideDelayMs);
+    };
+
     App.dom.socialHandleLinks?.forEach((link, index) => {
       const tooltipText = link.dataset.handleLabel?.trim() || "";
       const tooltipOwner = `social-handle-${index}`;
@@ -714,6 +850,7 @@
         const label = document.createElement("span");
 
         label.className = "top-bar__tooltip-label";
+        label.classList.add("top-bar__tooltip-label--accent");
         label.textContent = tooltipText;
 
         if (!(icon instanceof SVGElement)) {
@@ -722,6 +859,7 @@
 
         icon.classList.remove("social-links__icon");
         icon.classList.add("top-bar__tooltip-social-icon");
+        icon.classList.add("top-bar__tooltip-social-icon--accent");
         icon.setAttribute("aria-hidden", "true");
 
         return [icon, label];
@@ -732,25 +870,36 @@
       }
 
       link.addEventListener("mouseenter", () => {
+        clearSocialHandleTooltipHideTimeout();
         App.helpers.showTopBarTooltip(createTooltipContent(), tooltipOwner, "center", { sticky: true });
       });
 
-      link.addEventListener("mouseleave", () => {
-        App.helpers.hideTopBarTooltip(tooltipOwner);
+      link.addEventListener("mouseleave", (event) => {
+        if (getSocialHandleLinkFromTarget(event.relatedTarget)) {
+          return;
+        }
+
+        scheduleSocialHandleTooltipHide(tooltipOwner);
       });
 
       link.addEventListener("focus", () => {
+        clearSocialHandleTooltipHideTimeout();
         App.helpers.showTopBarTooltip(createTooltipContent(), tooltipOwner, "center", { sticky: true });
       });
 
-      link.addEventListener("blur", () => {
-        App.helpers.hideTopBarTooltip(tooltipOwner);
+      link.addEventListener("blur", (event) => {
+        if (getSocialHandleLinkFromTarget(event.relatedTarget)) {
+          return;
+        }
+
+        scheduleSocialHandleTooltipHide(tooltipOwner);
       });
     });
 
     const createHashtagCopyFeedback = (link) => {
       const feedback = document.createElement("span");
-      const label = document.createElement("button");
+      const content = document.createElement("span");
+      const label = document.createElement("span");
       const platforms = document.createElement("span");
       const platformConfigs = [
         { key: "instagram", label: "Instagram", url: link.dataset.hashtagInstagramUrl?.trim() || "" },
@@ -759,8 +908,8 @@
       ];
 
       feedback.className = "social-links__hashtag-feedback";
+      content.className = "social-links__hashtag-feedback-content";
       label.className = "social-links__hashtag-feedback-label";
-      label.type = "button";
       label.textContent = "Tag copied!";
       platforms.className = "social-links__hashtag-feedback-links";
 
@@ -791,7 +940,8 @@
         return null;
       }
 
-      feedback.append(label, platforms);
+      content.append(label, platforms);
+      feedback.append(content);
       return feedback;
     };
 
@@ -801,35 +951,76 @@
       const hashtagLabel = link.querySelector(".social-links__hashtag-label");
       const defaultHashtagLabel = hashtagLabel?.textContent?.trim() || "";
       const hashtagFeedback = createHashtagCopyFeedback(link);
-      let hashtagFeedbackTimeout = 0;
+      let hashtagFeedbackModeTimeout = 0;
+      const hashtagFeedbackStageDelayMs = 720;
       const getHashtagCopyText = () => defaultHashtagLabel;
-      const setHashtagFeedbackVisible = (isVisible) => {
+      const clearHashtagFeedbackModeTimeout = () => {
+        window.clearTimeout(hashtagFeedbackModeTimeout);
+        hashtagFeedbackModeTimeout = 0;
+      };
+      const isHashtagFeedbackPinned = () =>
+        hashtagItem instanceof HTMLElement &&
+        (hashtagItem.matches(":hover") || hashtagItem.contains(document.activeElement));
+      const hideHashtagFeedback = () => {
         if (!(hashtagItem instanceof HTMLElement) || !hashtagFeedback) {
           return;
         }
 
-        window.clearTimeout(hashtagFeedbackTimeout);
-        hashtagFeedbackTimeout = 0;
-
-        if (isVisible) {
-          hashtagItem.dataset.feedbackVisible = "true";
-          hashtagFeedbackTimeout = window.setTimeout(() => {
-            delete hashtagItem.dataset.feedbackVisible;
-            hashtagFeedbackTimeout = 0;
-          }, 10000);
+        clearHashtagFeedbackModeTimeout();
+        delete hashtagItem.dataset.feedbackVisible;
+        delete hashtagItem.dataset.feedbackMode;
+      };
+      const setHashtagFeedbackVisible = (mode = "") => {
+        if (!(hashtagItem instanceof HTMLElement) || !hashtagFeedback) {
           return;
         }
 
-        delete hashtagItem.dataset.feedbackVisible;
+        clearHashtagFeedbackModeTimeout();
+        hashtagItem.dataset.feedbackVisible = "true";
+
+        if (mode) {
+          hashtagItem.dataset.feedbackMode = mode;
+        } else {
+          delete hashtagItem.dataset.feedbackMode;
+        }
+      };
+      const scheduleHashtagFeedbackLinksMode = () => {
+        if (!(hashtagItem instanceof HTMLElement) || !hashtagFeedback) {
+          return;
+        }
+
+        clearHashtagFeedbackModeTimeout();
+        hashtagFeedbackModeTimeout = window.setTimeout(() => {
+          if (!isHashtagFeedbackPinned()) {
+            hideHashtagFeedback();
+            return;
+          }
+
+          hashtagItem.dataset.feedbackVisible = "true";
+          hashtagItem.dataset.feedbackMode = "links";
+          hashtagFeedbackModeTimeout = 0;
+        }, hashtagFeedbackStageDelayMs);
       };
 
       if (hashtagFeedback && hashtagItem instanceof HTMLElement) {
         hashtagItem.append(hashtagFeedback);
 
-        hashtagFeedback.querySelector(".social-links__hashtag-feedback-label")?.addEventListener("click", (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          setHashtagFeedbackVisible(false);
+        hashtagFeedback.querySelectorAll(".social-links__hashtag-feedback-link").forEach((platformLink) => {
+          platformLink.addEventListener("click", () => {
+            hideHashtagFeedback();
+          });
+        });
+
+        hashtagItem.addEventListener("mouseleave", () => {
+          hideHashtagFeedback();
+        });
+
+        hashtagItem.addEventListener("focusout", (event) => {
+          if (!(hashtagItem instanceof HTMLElement) || hashtagItem.contains(event.relatedTarget)) {
+            return;
+          }
+
+          hideHashtagFeedback();
         });
       }
 
@@ -850,12 +1041,14 @@
         }
 
         App.helpers.hideTopBarTooltip(tooltipOwner);
-        setHashtagFeedbackVisible(true);
+        setHashtagFeedbackVisible("copied");
+        scheduleHashtagFeedbackLinksMode();
       });
     });
 
     App.dom.socialHandleLinks?.forEach((link) => {
       link.addEventListener("click", () => {
+        clearSocialHandleTooltipHideTimeout();
         App.helpers.hideTopBarTooltip();
       });
     });
@@ -922,6 +1115,7 @@
     App.initStories?.();
     App.initCarousel?.();
     App.helpers.scheduleIdleTopBarTooltipRestore?.();
+    scheduleStickyHeaderMaskGeometrySync();
 
     document.addEventListener("keydown", (event) => {
       if (
@@ -937,13 +1131,18 @@
     });
 
     schedulePromoCarouselViewportFitSync();
+    window.addEventListener("load", () => scheduleStickyHeaderMaskGeometrySync());
     window.addEventListener("resize", () => schedulePromoCarouselViewportFitSync({ debounce: true }));
     window.visualViewport?.addEventListener("resize", () => schedulePromoCarouselViewportFitSync({ debounce: true }));
+    window.addEventListener("resize", () => scheduleStickyHeaderMaskGeometrySync({ debounce: true }));
+    window.visualViewport?.addEventListener("resize", () => scheduleStickyHeaderMaskGeometrySync({ debounce: true }));
     window.addEventListener("orientationchange", () => {
       promoViewportFitStableHeight = 0;
       promoViewportFitStableWidth = 0;
       schedulePromoCarouselViewportFitSync();
+      scheduleStickyHeaderMaskGeometrySync();
     });
+    document.fonts?.ready.then(() => scheduleStickyHeaderMaskGeometrySync()).catch(() => {});
     window.addEventListener("resize", () => {
       if (topBarTooltipOwner === topBarTooltipIdleOwner && !canShowIdleTopBarTooltip()) {
         forceHideTopBarTooltip();
