@@ -1,3 +1,7 @@
+/**
+ * Promo carousel: manifest → DOM, Instagram-style track (clone loop, drag, dots),
+ * shop CTA buttons with optional external-link redirect toast (shared with link cards).
+ */
 (() => {
   const App = window.KomfiKatApp;
 
@@ -5,7 +9,10 @@
     return;
   }
 
-  const { dom } = App;
+  const { dom, helpers } = App;
+
+  /** Video source switch; keep aligned with CSS / manifest `sizes`. */
+  const MQ_MOBILE_VIDEO = "(max-width: 30rem)";
   const defaultManifest = {
     ctaTitle: "Hobby Girl",
     ctaSubtitle: "Cute & Cozy Coloring Book",
@@ -157,7 +164,7 @@
   }
 
   function getVisibleCards() {
-    return window.matchMedia("(max-width: 48rem)").matches ? 1 : 2;
+    return helpers.matchesCompactLayout() ? 1 : 2;
   }
 
   function getCarouselCtaCoverImage(mediaSlides) {
@@ -247,8 +254,8 @@
   let promoRedirectDeadline = 0;
   let promoRedirectHref = "";
   let promoRedirectCode = "";
-  const DEFAULT_PROMO_REDIRECT_DELAY_MS = 5000;
-  const PROMO_CODE_PROMO_REDIRECT_DELAY_MS = 5000;
+  /** Default delay before opening external URL; promo-code branch uses same value today. */
+  const PROMO_REDIRECT_DELAY_MS = 5000;
   let activePromoRedirectUi = null;
   let activePromoRedirectAction = null;
   let promoRedirectFitFrame = 0;
@@ -343,22 +350,12 @@
     return redirectLine;
   }
 
-  function isPromoCarouselPromoCodeRedirect(ui = null, action = null) {
-    return (
-      isNonEmptyString(action?.promoCode) &&
-      ui?.root instanceof HTMLElement &&
-      ui.root.classList.contains("promo-carousel__shop-button-wrap")
-    );
+  function getPromoRedirectDelayMs() {
+    return PROMO_REDIRECT_DELAY_MS;
   }
 
-  function getPromoRedirectDelayMs(ui = null, action = null) {
-    return isPromoCarouselPromoCodeRedirect(ui, action)
-      ? PROMO_CODE_PROMO_REDIRECT_DELAY_MS
-      : DEFAULT_PROMO_REDIRECT_DELAY_MS;
-  }
-
-  function getPromoRedirectCountdownSeconds(ui = null, action = null) {
-    return Math.ceil(getPromoRedirectDelayMs(ui, action) / 1000);
+  function getPromoRedirectCountdownSeconds() {
+    return Math.ceil(getPromoRedirectDelayMs() / 1000);
   }
 
   function clearPromoRedirectTimers() {
@@ -366,6 +363,29 @@
     window.clearInterval(promoRedirectInterval);
     promoRedirectTimeout = 0;
     promoRedirectInterval = 0;
+  }
+
+  function applyCarouselShopRedirectSizing(ui) {
+    ui.overlay.style.removeProperty("--promo-redirect-inline-gap");
+    const redirectLayout = ui.content?.dataset?.redirectLayout || "";
+    const isInlineWidthLayout = redirectLayout === "single" || redirectLayout === "stacked" || redirectLayout === "promo";
+    if (isInlineWidthLayout) {
+      const textPrefix = ui.redirectBody.querySelector(".promo-redirect-toast__text-prefix");
+      const textWidth = Math.ceil(textPrefix?.getBoundingClientRect?.().width || 0);
+      const eyebrow = ui.content.querySelector(".promo-redirect-toast__eyebrow");
+      const eyebrowWidth = Math.ceil(eyebrow?.getBoundingClientRect?.().width || 0);
+      const baseWidth = Math.max(textWidth, eyebrowWidth);
+      const fontSizePx = Number.parseFloat(window.getComputedStyle(textPrefix).fontSize || "0") || 0;
+      const fudgePx = Math.max(6, Math.ceil(fontSizePx * 0.32));
+      const paddedWidth = baseWidth > 0 ? baseWidth + fudgePx : 0;
+      if (paddedWidth > 0) {
+        ui.overlay.style.setProperty("--promo-redirect-single-inline-width", `${paddedWidth}px`);
+      } else {
+        ui.overlay.style.removeProperty("--promo-redirect-single-inline-width");
+      }
+    } else {
+      ui.overlay.style.removeProperty("--promo-redirect-single-inline-width");
+    }
   }
 
   function fitPromoRedirectOverlay(ui = activePromoRedirectUi) {
@@ -383,26 +403,7 @@
     const isCarouselRedirect = ui.root instanceof HTMLElement && ui.root.classList.contains("promo-carousel__shop-button-wrap");
 
     if (isCarouselRedirect) {
-      ui.overlay.style.removeProperty("--promo-redirect-inline-gap");
-      const redirectLayout = ui.content?.dataset?.redirectLayout || "";
-      const isInlineWidthLayout = redirectLayout === "single" || redirectLayout === "stacked" || redirectLayout === "promo";
-      if (isInlineWidthLayout) {
-        const textPrefix = ui.redirectBody.querySelector(".promo-redirect-toast__text-prefix");
-        const textWidth = Math.ceil(textPrefix?.getBoundingClientRect?.().width || 0);
-        const eyebrow = ui.content.querySelector(".promo-redirect-toast__eyebrow");
-        const eyebrowWidth = Math.ceil(eyebrow?.getBoundingClientRect?.().width || 0);
-        const baseWidth = Math.max(textWidth, eyebrowWidth);
-        const fontSizePx = Number.parseFloat(window.getComputedStyle(textPrefix).fontSize || "0") || 0;
-        const fudgePx = Math.max(6, Math.ceil(fontSizePx * 0.32));
-        const paddedWidth = baseWidth > 0 ? baseWidth + fudgePx : 0;
-        if (paddedWidth > 0) {
-          ui.overlay.style.setProperty("--promo-redirect-single-inline-width", `${paddedWidth}px`);
-        } else {
-          ui.overlay.style.removeProperty("--promo-redirect-single-inline-width");
-        }
-      } else {
-        ui.overlay.style.removeProperty("--promo-redirect-single-inline-width");
-      }
+      applyCarouselShopRedirectSizing(ui);
       return;
     }
 
@@ -425,7 +426,7 @@
       ui.overlay.style.removeProperty("--promo-redirect-inline-gap");
       return;
     }
-    const isCompactLinkCardRedirect = isLinkCardRedirect && window.matchMedia("(max-width: 48rem)").matches;
+    const isCompactLinkCardRedirect = isLinkCardRedirect && helpers.matchesCompactLayout();
     const leadWidth = isLinkCardRedirect ? Math.ceil(ui.redirectLead?.getBoundingClientRect().width || 0) : 0;
     const openWidth = isLinkCardRedirect
       ? Math.ceil(Math.max(ui.openNow?.getBoundingClientRect().width || 0, ui.openNowMobile?.getBoundingClientRect().width || 0))
@@ -562,7 +563,7 @@
       return;
     }
 
-    const countdownSeconds = getPromoRedirectCountdownSeconds(ui, action);
+    const countdownSeconds = getPromoRedirectCountdownSeconds();
 
     window.clearTimeout(ui.copyFeedbackTimeout);
     ui.copyFeedbackTimeout = 0;
@@ -613,10 +614,6 @@
     return Boolean(activePromoRedirectUi);
   };
 
-  function dismissPromoRedirectToast() {
-    hidePromoRedirectToast();
-  }
-
   function hidePromoRedirectToast() {
     clearPromoRedirectTimers();
     promoRedirectHref = "";
@@ -628,10 +625,10 @@
     }
 
     setActivePromoRedirectUi(null, null);
-    App.helpers.scheduleIdleTopBarTooltipRestore();
+    helpers.scheduleIdleTopBarTooltipRestore();
   }
 
-  App.dismissPromoRedirectToast = dismissPromoRedirectToast;
+  App.dismissPromoRedirectToast = hidePromoRedirectToast;
   App.hidePromoRedirectToast = hidePromoRedirectToast;
 
   function updatePromoRedirectCountdown() {
@@ -651,7 +648,7 @@
       return;
     }
 
-    const delayMs = getPromoRedirectDelayMs(ui, action);
+    const delayMs = getPromoRedirectDelayMs();
     const countdownSeconds = Math.ceil(delayMs / 1000);
 
     clearPromoRedirectTimers();
@@ -715,7 +712,7 @@
     const hasPromoCode = isNonEmptyString(action?.promoCode);
     const isCarouselSingleLineRedirect = isCarouselRedirectHost && !hasPromoCode;
     const isCarouselPromoRedirect = isCarouselRedirectHost && hasPromoCode;
-    const countdownSeconds = getPromoRedirectCountdownSeconds({ root }, action);
+    const countdownSeconds = getPromoRedirectCountdownSeconds();
     const redirectLabel = inferRedirectLabel(action);
     let redirectCode = null;
     let redirectEyebrow = null;
@@ -863,7 +860,7 @@
         event.preventDefault();
         event.stopPropagation();
 
-        const didCopy = await App.helpers.copyText(action.promoCode);
+        const didCopy = await helpers.copyText(action.promoCode);
         if (!didCopy) {
           return;
         }
@@ -946,7 +943,7 @@
 
     const title = document.createElement("span");
     title.className = "promo-carousel__shop-button-title";
-    const useMobileLabel = window.matchMedia("(max-width: 48rem)").matches;
+    const useMobileLabel = helpers.matchesCompactLayout();
     title.textContent = (useMobileLabel ? action.mobileLabel : "") || action.label;
 
     const subtitle = document.createElement("span");
@@ -1036,119 +1033,141 @@
     });
   }
 
-  function createCard(item, index) {
-    const card = document.createElement("article");
-    card.className = `promo-carousel__card promo-carousel__card--${item.type}`;
-
-    if (item.type === "cta") {
-      card.setAttribute("aria-label", item.title);
-
-      const panel = document.createElement("div");
-      panel.className = "promo-carousel__cta-panel";
-
-      const header = document.createElement("div");
-      header.className = "promo-carousel__cta-header";
-
-      if (item.coverImage) {
-        const cover = document.createElement("img");
-        cover.className = "promo-carousel__cta-cover";
-        cover.src = item.coverImage;
-        cover.alt = item.coverImageAlt || "";
-        cover.width = 240;
-        cover.height = 240;
-        cover.decoding = "async";
-        cover.draggable = false;
-        header.append(cover);
-      }
-
-      const copy = document.createElement("div");
-      copy.className = "promo-carousel__cta-copy";
-
-      const title = document.createElement("h3");
-      title.className = "promo-carousel__cta-title";
-      title.textContent = item.title;
-
-      const subtitle = document.createElement("p");
-      subtitle.className = "promo-carousel__cta-subtitle";
-      subtitle.textContent = item.subtitle || "";
-
-      copy.append(title, subtitle);
-      header.append(copy);
-
-      const actions = document.createElement("div");
-      actions.className = "promo-carousel__cta-actions";
-      actions.style.setProperty("--promo-cta-action-count", String(item.actions.length || 0));
-      item.actions.forEach((action) => actions.append(createShopButton(action)));
-
-      panel.append(header, actions);
-      card.append(panel);
-      return card;
+  function togglePromoCarouselVideo(video) {
+    if (!(video instanceof HTMLVideoElement)) {
+      return;
     }
 
-    if (item.type === "video") {
-      card.setAttribute("aria-label", item.alt || `Carousel preview ${index + 1}`);
-      card.dataset.imageState = "loading";
+    if (video.paused) {
+      delete video.dataset.carouselUserPaused;
+      video.play().catch(() => {});
+    } else {
+      video.dataset.carouselUserPaused = "true";
+      video.pause();
+    }
+  }
 
-      const video = document.createElement("video");
-      video.className = "promo-carousel__video";
-      video.width = item.width || 1152;
-      video.height = item.height || 1152;
-      video.muted = true;
-      video.defaultMuted = true;
-      video.loop = true;
-      video.playsInline = true;
-      video.setAttribute("playsinline", "");
-      video.preload = item.preload ? "auto" : "metadata";
-      video.draggable = false;
+  function createCarouselCtaCard(item) {
+    const card = document.createElement("article");
+    card.className = "promo-carousel__card promo-carousel__card--cta";
+    card.setAttribute("aria-label", item.title);
 
-      if (item.poster) {
-        video.poster = item.poster;
+    const panel = document.createElement("div");
+    panel.className = "promo-carousel__cta-panel";
+
+    const header = document.createElement("div");
+    header.className = "promo-carousel__cta-header";
+
+    if (item.coverImage) {
+      const cover = document.createElement("img");
+      cover.className = "promo-carousel__cta-cover";
+      cover.src = item.coverImage;
+      cover.alt = item.coverImageAlt || "";
+      cover.width = 240;
+      cover.height = 240;
+      cover.decoding = "async";
+      cover.draggable = false;
+      header.append(cover);
+    }
+
+    const copy = document.createElement("div");
+    copy.className = "promo-carousel__cta-copy";
+
+    const title = document.createElement("h3");
+    title.className = "promo-carousel__cta-title";
+    title.textContent = item.title;
+
+    const subtitle = document.createElement("p");
+    subtitle.className = "promo-carousel__cta-subtitle";
+    subtitle.textContent = item.subtitle || "";
+
+    copy.append(title, subtitle);
+    header.append(copy);
+
+    const actions = document.createElement("div");
+    actions.className = "promo-carousel__cta-actions";
+    actions.style.setProperty("--promo-cta-action-count", String(item.actions.length || 0));
+    item.actions.forEach((action) => actions.append(createShopButton(action)));
+
+    panel.append(header, actions);
+    card.append(panel);
+    return card;
+  }
+
+  function createCarouselVideoCard(item, index) {
+    const card = document.createElement("article");
+    card.className = "promo-carousel__card promo-carousel__card--video";
+    card.setAttribute("aria-label", item.alt || `Carousel preview ${index + 1}`);
+    card.dataset.imageState = "loading";
+
+    const video = document.createElement("video");
+    video.className = "promo-carousel__video";
+    video.width = item.width || 1152;
+    video.height = item.height || 1152;
+    video.muted = true;
+    video.defaultMuted = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.setAttribute("playsinline", "");
+    video.preload = item.preload ? "auto" : "metadata";
+    video.draggable = false;
+
+    if (item.poster) {
+      video.poster = item.poster;
+    }
+
+    const mobileSrc = item.mobileSrc && item.mobileSrc !== item.src ? item.mobileSrc : "";
+    if (mobileSrc) {
+      const mobileSource = document.createElement("source");
+      mobileSource.media = MQ_MOBILE_VIDEO;
+      mobileSource.src = mobileSrc;
+      mobileSource.type = "video/mp4";
+      video.append(mobileSource);
+    }
+
+    const desktopSource = document.createElement("source");
+    desktopSource.src = item.src;
+    desktopSource.type = "video/mp4";
+    video.append(desktopSource);
+
+    let videoRevealed = false;
+
+    const revealVideo = () => {
+      if (videoRevealed) {
+        return;
       }
 
-      const mobileSrc = item.mobileSrc && item.mobileSrc !== item.src ? item.mobileSrc : "";
-      if (mobileSrc) {
-        const mobileSource = document.createElement("source");
-        mobileSource.media = "(max-width: 30rem)";
-        mobileSource.src = mobileSrc;
-        mobileSource.type = "video/mp4";
-        video.append(mobileSource);
-      }
+      videoRevealed = true;
+      card.dataset.imageState = "ready";
+      video.classList.add("promo-carousel__video--ready");
+    };
 
-      const desktopSource = document.createElement("source");
-      desktopSource.src = item.src;
-      desktopSource.type = "video/mp4";
-      video.append(desktopSource);
-
-      let videoRevealed = false;
-
-      const revealVideo = () => {
-        if (videoRevealed) {
-          return;
-        }
-
-        videoRevealed = true;
+    video.addEventListener("loadeddata", revealVideo, { once: true });
+    video.addEventListener(
+      "error",
+      () => {
         card.dataset.imageState = "ready";
         video.classList.add("promo-carousel__video--ready");
-      };
+      },
+      { once: true },
+    );
 
-      video.addEventListener("loadeddata", revealVideo, { once: true });
-      video.addEventListener(
-        "error",
-        () => {
-          card.dataset.imageState = "ready";
-          video.classList.add("promo-carousel__video--ready");
-        },
-        { once: true },
-      );
-
-      if (video.readyState >= 2) {
-        revealVideo();
-      }
-
-      card.append(video);
-      return card;
+    if (video.readyState >= 2) {
+      revealVideo();
     }
 
+    video.addEventListener("click", (event) => {
+      event.stopPropagation();
+      togglePromoCarouselVideo(video);
+    });
+
+    card.append(video);
+    return card;
+  }
+
+  function createCarouselImageCard(item, index) {
+    const card = document.createElement("article");
+    card.className = "promo-carousel__card promo-carousel__card--image";
     card.setAttribute("aria-label", item.alt || `Carousel preview ${index + 1}`);
     card.dataset.imageState = "loading";
 
@@ -1209,8 +1228,17 @@
     }
 
     card.append(image);
-
     return card;
+  }
+
+  function createCard(item, index) {
+    if (item.type === "cta") {
+      return createCarouselCtaCard(item);
+    }
+    if (item.type === "video") {
+      return createCarouselVideoCard(item, index);
+    }
+    return createCarouselImageCard(item, index);
   }
 
   function syncShopButtonAlignment(root) {
@@ -1218,7 +1246,7 @@
       return;
     }
 
-    const isCompactViewport = window.matchMedia("(max-width: 48rem)").matches;
+    const isCompactViewport = helpers.matchesCompactLayout();
     const measureShopButtonContentWidth = (content) => {
       if (!(content instanceof HTMLElement)) {
         return 0;
@@ -1398,6 +1426,23 @@
       promoSection.style.setProperty("--promo-carousel-bottom-space", `${Math.ceil(protrusion)}px`);
     }
 
+    function syncCarouselLayoutAfterViewportChange() {
+      const nextVisibleCards = getVisibleCards();
+
+      if (nextVisibleCards !== currentVisibleCards) {
+        rebuildCarouselStructure();
+      }
+
+      syncShopButtonAlignment(track);
+      updateMetrics();
+      syncPosition(true);
+      syncCarouselSectionBottomSpace();
+
+      if (activePromoRedirectUi) {
+        schedulePromoRedirectOverlayFit(activePromoRedirectUi);
+      }
+    }
+
     function rebuildCarouselStructure() {
       if (activePromoRedirectUi) {
         hidePromoRedirectToast();
@@ -1498,9 +1543,14 @@
         const video = card.querySelector("video.promo-carousel__video");
         if (video instanceof HTMLVideoElement) {
           if (isActiveCard) {
-            video.play().catch(() => {});
+            if (video.dataset.carouselUserPaused === "true") {
+              video.pause();
+            } else {
+              video.play().catch(() => {});
+            }
           } else {
             video.pause();
+            delete video.dataset.carouselUserPaused;
           }
         }
       });
@@ -1989,30 +2039,12 @@
 
     if (typeof ResizeObserver === "function") {
       const resizeObserver = new ResizeObserver(() => {
-        const nextVisibleCards = getVisibleCards();
-
-        if (nextVisibleCards !== currentVisibleCards) {
-          rebuildCarouselStructure();
-        }
-
-        syncShopButtonAlignment(track);
-        updateMetrics();
-        syncPosition(true);
-        syncCarouselSectionBottomSpace();
+        syncCarouselLayoutAfterViewportChange();
       });
       resizeObserver.observe(viewport);
     } else {
       window.addEventListener("resize", () => {
-        const nextVisibleCards = getVisibleCards();
-
-        if (nextVisibleCards !== currentVisibleCards) {
-          rebuildCarouselStructure();
-        }
-
-        syncShopButtonAlignment(track);
-        updateMetrics();
-        syncPosition(true);
-        syncCarouselSectionBottomSpace();
+        syncCarouselLayoutAfterViewportChange();
       });
     }
 
@@ -2022,16 +2054,14 @@
         updateMetrics();
         syncPosition(true);
         syncCarouselSectionBottomSpace();
+        if (activePromoRedirectUi) {
+          schedulePromoRedirectOverlayFit(activePromoRedirectUi);
+        }
       });
     }
 
     window.addEventListener("blur", clearNavRepeat);
     window.addEventListener("komfi:themeswitchend", recoverFromInterruptedAnimation);
-    window.addEventListener("resize", () => {
-      if (activePromoRedirectUi) {
-        schedulePromoRedirectOverlayFit(activePromoRedirectUi);
-      }
-    });
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         clearNavRepeat();

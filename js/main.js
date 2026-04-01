@@ -1,3 +1,7 @@
+/**
+ * Site bootstrap: `KomfiKatApp` singleton, DOM refs, shared helpers, and non-module init
+ * (social widgets, scroll-to-top, viewport fit, lazy feature init).
+ */
 (() => {
   const App = (window.KomfiKatApp = window.KomfiKatApp || {});
 
@@ -59,12 +63,8 @@
     carouselInitialized: false,
   };
 
-  let promoViewportFitFrame = 0;
-  let promoViewportFitResizeTimeout = 0;
   let promoViewportFitStableHeight = 0;
   let promoViewportFitStableWidth = 0;
-  let stickyHeaderMaskSyncFrame = 0;
-  let stickyHeaderMaskSyncResizeTimeout = 0;
   const monthMap = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   function formatStoryDate(dateString) {
@@ -110,6 +110,17 @@
 
   function isTouchLikeDevice() {
     return !isDesktopPointerDevice();
+  }
+
+  /** Keep in sync with CSS layout breakpoints (carousel, shop buttons, etc.). */
+  const MQ_COMPACT_LAYOUT = "(max-width: 48rem)";
+
+  function matchesMediaQuery(query) {
+    return window.matchMedia(query).matches;
+  }
+
+  function matchesCompactLayout() {
+    return matchesMediaQuery(MQ_COMPACT_LAYOUT);
   }
 
   function isDevPreviewHost() {
@@ -205,6 +216,29 @@
     );
   }
 
+  function createRafDebouncedScheduler(syncFn, debounceMs = 180) {
+    let rafId = 0;
+    let timeoutId = 0;
+
+    return function schedule({ debounce = false } = {}) {
+      window.cancelAnimationFrame(rafId);
+      window.clearTimeout(timeoutId);
+
+      const runSync = () => {
+        rafId = window.requestAnimationFrame(() => {
+          syncFn();
+        });
+      };
+
+      if (debounce) {
+        timeoutId = window.setTimeout(runSync, debounceMs);
+        return;
+      }
+
+      runSync();
+    };
+  }
+
   function syncPromoCarouselViewportFit() {
     const page = document.querySelector(".page");
     const homeHero = App.dom.homeHero;
@@ -271,23 +305,7 @@
     promoSection.style.setProperty("--promo-screen-available-height", `${availablePromoHeight}px`);
   }
 
-  function schedulePromoCarouselViewportFitSync({ debounce = false } = {}) {
-    window.cancelAnimationFrame(promoViewportFitFrame);
-    window.clearTimeout(promoViewportFitResizeTimeout);
-
-    const runSync = () => {
-      promoViewportFitFrame = window.requestAnimationFrame(() => {
-        syncPromoCarouselViewportFit();
-      });
-    };
-
-    if (debounce) {
-      promoViewportFitResizeTimeout = window.setTimeout(runSync, 180);
-      return;
-    }
-
-    runSync();
-  }
+  const schedulePromoCarouselViewportFitSync = createRafDebouncedScheduler(syncPromoCarouselViewportFit, 180);
 
   function syncStickyHeaderMaskGeometry() {
     const root = App.dom.root;
@@ -313,23 +331,7 @@
     root.style.setProperty("--sticky-header-mask-translate-x", "0px");
   }
 
-  function scheduleStickyHeaderMaskGeometrySync({ debounce = false } = {}) {
-    window.cancelAnimationFrame(stickyHeaderMaskSyncFrame);
-    window.clearTimeout(stickyHeaderMaskSyncResizeTimeout);
-
-    const runSync = () => {
-      stickyHeaderMaskSyncFrame = window.requestAnimationFrame(() => {
-        syncStickyHeaderMaskGeometry();
-      });
-    };
-
-    if (debounce) {
-      stickyHeaderMaskSyncResizeTimeout = window.setTimeout(runSync, 180);
-      return;
-    }
-
-    runSync();
-  }
+  const scheduleStickyHeaderMaskGeometrySync = createRafDebouncedScheduler(syncStickyHeaderMaskGeometry, 180);
 
   function scrollPageToAbsoluteTop() {
     const scrollingElement = document.scrollingElement;
@@ -458,6 +460,8 @@
     removeStorageValue,
     isDesktopPointerDevice,
     isTouchLikeDevice,
+    matchesMediaQuery,
+    matchesCompactLayout,
     isDevPreviewHost,
     copyText,
     lockViewportGestureZoom,

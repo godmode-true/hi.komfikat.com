@@ -1,3 +1,6 @@
+/**
+ * Light/dark theme and color presets: CSS variables from `theme-presets.js`, localStorage, meta theme-color.
+ */
 (() => {
   const App = window.KomfiKatApp;
 

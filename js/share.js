@@ -1,3 +1,6 @@
+/**
+ * Share entry point: native Web Share API fallback, desktop `<dialog>`, copy-to-clipboard feedback.
+ */
 (() => {
   const App = window.KomfiKatApp;
 
@@ -325,18 +328,13 @@
       }
     });
 
-    if (dom.themeToggle) {
-      dom.themeToggle.addEventListener("mouseenter", () => {
-        if (canUseDesktopShareDialog()) {
-          closeShareMenu({ restoreFocus: false });
-        }
-      });
+    const closeShareMenuIfDesktopDialog = () => {
+      if (canUseDesktopShareDialog()) {
+        closeShareMenu({ restoreFocus: false });
+      }
+    };
 
-      dom.themeToggle.addEventListener("focusin", () => {
-        if (canUseDesktopShareDialog()) {
-          closeShareMenu({ restoreFocus: false });
-        }
-      });
-    }
+    dom.themeToggle?.addEventListener("mouseenter", closeShareMenuIfDesktopDialog);
+    dom.themeToggle?.addEventListener("focusin", closeShareMenuIfDesktopDialog);
   };
 })();
