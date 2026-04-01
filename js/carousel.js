@@ -51,17 +51,28 @@
     const slideFiles = Array.isArray(slideConfig.files)
       ? slideConfig.files
           .filter((slide) => slide && typeof slide.src === "string" && slide.src.trim())
-          .map((slide, index) => ({
-            src: slide.src.trim(),
-            srcset: typeof slide.srcset === "string" && slide.srcset.trim() ? slide.srcset.trim() : "",
-            sizes: typeof slide.sizes === "string" && slide.sizes.trim() ? slide.sizes.trim() : "",
-            width: Number.isFinite(slide.width) ? slide.width : 1152,
-            height: Number.isFinite(slide.height) ? slide.height : 1152,
-            alt:
-              typeof slide.alt === "string" && slide.alt.trim()
-                ? slide.alt.trim()
-                : `Instagram carousel image ${index + 1}`,
-          }))
+          .map((slide, index) => {
+            const isVideo = slide.type === "video";
+            const mobileSrc =
+              typeof slide.mobileSrc === "string" && slide.mobileSrc.trim() ? slide.mobileSrc.trim() : "";
+            const poster = typeof slide.poster === "string" && slide.poster.trim() ? slide.poster.trim() : "";
+            return {
+              type: isVideo ? "video" : "image",
+              src: slide.src.trim(),
+              mobileSrc,
+              poster,
+              srcset: typeof slide.srcset === "string" && slide.srcset.trim() ? slide.srcset.trim() : "",
+              sizes: typeof slide.sizes === "string" && slide.sizes.trim() ? slide.sizes.trim() : "",
+              width: Number.isFinite(slide.width) ? slide.width : 1152,
+              height: Number.isFinite(slide.height) ? slide.height : 1152,
+              alt:
+                typeof slide.alt === "string" && slide.alt.trim()
+                  ? slide.alt.trim()
+                  : isVideo
+                    ? `Instagram carousel video ${index + 1}`
+                    : `Instagram carousel image ${index + 1}`,
+            };
+          })
       : defaultManifest.slides.files;
 
     return {
@@ -79,71 +90,112 @@
     };
   }
 
-  function createImageSlides(slideConfig) {
-    return slideConfig.files.map((slide, index) => ({
-      type: "image",
-      image: slide.src,
-      srcset: slide.srcset,
-      sizes: slide.sizes,
-      width: slide.width,
-      height: slide.height,
-      alt: slide.alt,
-      preload: index === 0,
-      priority: index === 0,
-    }));
+  function createMediaSlides(slideConfig) {
+    return slideConfig.files.map((slide, index) => {
+      if (slide.type === "video") {
+        return {
+          type: "video",
+          src: slide.src,
+          mobileSrc: slide.mobileSrc,
+          poster: slide.poster,
+          width: slide.width,
+          height: slide.height,
+          alt: slide.alt,
+          preload: index === 0,
+          priority: index === 0,
+        };
+      }
+
+      return {
+        type: "image",
+        image: slide.src,
+        srcset: slide.srcset,
+        sizes: slide.sizes,
+        width: slide.width,
+        height: slide.height,
+        alt: slide.alt,
+        preload: index === 0,
+        priority: index === 0,
+      };
+    });
   }
 
-  function preloadCarouselImages(imageSlides) {
-    imageSlides
-      .filter((slide) => slide.preload)
-      .forEach((slide) => {
-        if (!slide.image || document.head.querySelector(`link[rel="preload"][href="${slide.image}"]`)) {
-          return;
-        }
+  function preloadCarouselMedia(mediaSlides) {
+    const first = mediaSlides.find((slide) => slide.preload);
+    if (!first) {
+      return;
+    }
 
-        const preload = document.createElement("link");
-        preload.rel = "preload";
-        preload.as = "image";
-        preload.href = slide.image;
-        if (slide.srcset) {
-          preload.setAttribute("imagesrcset", slide.srcset);
-        }
-        if (slide.sizes) {
-          preload.setAttribute("imagesizes", slide.sizes);
-        }
-        document.head.append(preload);
-      });
+    if (first.type === "video") {
+      if (!first.poster || document.head.querySelector(`link[rel="preload"][href="${first.poster}"]`)) {
+        return;
+      }
+
+      const preload = document.createElement("link");
+      preload.rel = "preload";
+      preload.as = "image";
+      preload.href = first.poster;
+      document.head.append(preload);
+      return;
+    }
+
+    if (!first.image || document.head.querySelector(`link[rel="preload"][href="${first.image}"]`)) {
+      return;
+    }
+
+    const preload = document.createElement("link");
+    preload.rel = "preload";
+    preload.as = "image";
+    preload.href = first.image;
+    if (first.srcset) {
+      preload.setAttribute("imagesrcset", first.srcset);
+    }
+    if (first.sizes) {
+      preload.setAttribute("imagesizes", first.sizes);
+    }
+    document.head.append(preload);
   }
 
   function getVisibleCards() {
     return window.matchMedia("(max-width: 48rem)").matches ? 1 : 2;
   }
 
-  function createCarouselItems(imageSlides, ctaTitle, ctaSubtitle, actions, visibleCardsCount) {
+  function getCarouselCtaCoverImage(mediaSlides) {
+    const first = mediaSlides[0];
+    if (!first) {
+      return "img/carousel/1-1152.webp";
+    }
+    if (first.type === "video") {
+      return first.poster || "img/carousel/1-1152.webp";
+    }
+    return first.image;
+  }
+
+  function createCarouselItems(mediaSlides, ctaTitle, ctaSubtitle, actions, visibleCardsCount) {
     const ctaItem = {
       type: "cta",
       title: ctaTitle,
       subtitle: ctaSubtitle,
-      coverImage: "img/carousel/1.png",
-      coverImageAlt: imageSlides[0]?.alt || ctaTitle,
+      coverImage: getCarouselCtaCoverImage(mediaSlides),
+      coverImageAlt: mediaSlides[0]?.alt || ctaTitle,
       actions,
     };
 
     if (visibleCardsCount === 1) {
-      return [ctaItem, ...imageSlides];
+      return [ctaItem, ...mediaSlides];
     }
 
-    if (imageSlides.length === 0) {
+    if (mediaSlides.length === 0) {
       return [ctaItem];
     }
 
     // Desktop starts with the first image + CTA. Mobile starts with the first image and keeps CTA last.
     // With only two images, repeat the first one at the tail so the second desktop state can still be image-only.
-    if (imageSlides.length === 2) {
-      return [imageSlides[0], ctaItem, imageSlides[1], imageSlides[0]];
+    if (mediaSlides.length === 2) {
+      return [mediaSlides[0], ctaItem, mediaSlides[1], mediaSlides[0]];
     }
 
-    return [imageSlides[0], ctaItem, ...imageSlides.slice(1)];
+    return [mediaSlides[0], ctaItem, ...mediaSlides.slice(1)];
   }
 
   function getInitialActiveIndexForViewport(visibleCardsCount, items) {
@@ -1013,6 +1065,70 @@
       return card;
     }
 
+    if (item.type === "video") {
+      card.setAttribute("aria-label", item.alt || `Carousel preview ${index + 1}`);
+      card.dataset.imageState = "loading";
+
+      const video = document.createElement("video");
+      video.className = "promo-carousel__video";
+      video.width = item.width || 1152;
+      video.height = item.height || 1152;
+      video.muted = true;
+      video.defaultMuted = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.setAttribute("playsinline", "");
+      video.preload = item.preload ? "auto" : "metadata";
+      video.draggable = false;
+
+      if (item.poster) {
+        video.poster = item.poster;
+      }
+
+      const mobileSrc = item.mobileSrc && item.mobileSrc !== item.src ? item.mobileSrc : "";
+      if (mobileSrc) {
+        const mobileSource = document.createElement("source");
+        mobileSource.media = "(max-width: 30rem)";
+        mobileSource.src = mobileSrc;
+        mobileSource.type = "video/mp4";
+        video.append(mobileSource);
+      }
+
+      const desktopSource = document.createElement("source");
+      desktopSource.src = item.src;
+      desktopSource.type = "video/mp4";
+      video.append(desktopSource);
+
+      let videoRevealed = false;
+
+      const revealVideo = () => {
+        if (videoRevealed) {
+          return;
+        }
+
+        videoRevealed = true;
+        card.dataset.imageState = "ready";
+        video.classList.add("promo-carousel__video--ready");
+      };
+
+      video.addEventListener("loadeddata", revealVideo, { once: true });
+      video.addEventListener(
+        "error",
+        () => {
+          card.dataset.imageState = "ready";
+          video.classList.add("promo-carousel__video--ready");
+        },
+        { once: true },
+      );
+
+      if (video.readyState >= 2) {
+        revealVideo();
+      }
+
+      card.append(video);
+      return card;
+    }
+
     card.setAttribute("aria-label", item.alt || `Carousel preview ${index + 1}`);
     card.dataset.imageState = "loading";
 
@@ -1202,12 +1318,12 @@
     }
 
     const manifest = getCarouselManifest();
-    const imageSlides = createImageSlides(manifest.slides);
-    preloadCarouselImages(imageSlides);
+    const mediaSlides = createMediaSlides(manifest.slides);
+    preloadCarouselMedia(mediaSlides);
 
     let currentVisibleCards = getVisibleCards();
     let carouselItems = createCarouselItems(
-      imageSlides,
+      mediaSlides,
       manifest.ctaTitle,
       manifest.ctaSubtitle,
       manifest.actions,
@@ -1272,7 +1388,7 @@
 
       currentVisibleCards = nextVisibleCards;
       carouselItems = createCarouselItems(
-        imageSlides,
+        mediaSlides,
         manifest.ctaTitle,
         manifest.ctaSubtitle,
         manifest.actions,
@@ -1356,7 +1472,17 @@
           return;
         }
 
-        card.dataset.cardState = index >= renderedIndex && index < renderedIndex + currentVisibleCards ? "active" : "rest";
+        const isActiveCard = index >= renderedIndex && index < renderedIndex + currentVisibleCards;
+        card.dataset.cardState = isActiveCard ? "active" : "rest";
+
+        const video = card.querySelector("video.promo-carousel__video");
+        if (video instanceof HTMLVideoElement) {
+          if (isActiveCard) {
+            video.play().catch(() => {});
+          } else {
+            video.pause();
+          }
+        }
       });
 
       dots.forEach((dot, index) => {
@@ -1889,6 +2015,13 @@
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         clearNavRepeat();
+        track.querySelectorAll("video.promo-carousel__video").forEach((node) => {
+          if (node instanceof HTMLVideoElement) {
+            node.pause();
+          }
+        });
+      } else {
+        syncControls();
       }
     });
 

@@ -2106,14 +2106,16 @@ input[type="reset"] {
   content: none;
 }
 
-.promo-carousel__card--image {
+.promo-carousel__card--image,
+.promo-carousel__card--video {
   position: relative;
   background:
     radial-gradient(circle at 50% 38%, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.12) 34%, transparent 72%),
     linear-gradient(180deg, rgba(255, 252, 254, 0.52) 0%, rgba(255, 246, 250, 0.2) 100%);
 }
 
-.promo-carousel__card--image::after {
+.promo-carousel__card--image::after,
+.promo-carousel__card--video::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -2124,7 +2126,8 @@ input[type="reset"] {
   z-index: 2;
 }
 
-.promo-carousel__image {
+.promo-carousel__image,
+.promo-carousel__video {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -2142,11 +2145,13 @@ input[type="reset"] {
     filter 460ms ease;
 }
 
-.promo-carousel__image:not(.promo-carousel__image--ready) {
+.promo-carousel__image:not(.promo-carousel__image--ready),
+.promo-carousel__video:not(.promo-carousel__video--ready) {
   will-change: opacity, transform, filter;
 }
 
-.promo-carousel__image--ready {
+.promo-carousel__image--ready,
+.promo-carousel__video--ready {
   opacity: 1;
   transform: none;
   filter: none;
@@ -3081,24 +3086,28 @@ input[type="reset"] {
     gap: var(--promo-gap);
   }
 
-  .promo-carousel__card--image {
+  .promo-carousel__card--image,
+  .promo-carousel__card--video {
     background: transparent;
     background-image: none;
     box-shadow: none;
   }
 
-  :root[data-theme="dark"] .promo-carousel__card--image {
+  :root[data-theme="dark"] .promo-carousel__card--image,
+  :root[data-theme="dark"] .promo-carousel__card--video {
     background: transparent;
     background-image: none;
   }
 
-  .promo-carousel__card--image::after {
+  .promo-carousel__card--image::after,
+  .promo-carousel__card--video::after {
     inset: var(--promo-desktop-slide-inset);
     border-radius: var(--promo-content-radius);
     box-shadow: none;
   }
 
-  .promo-carousel__image {
+  .promo-carousel__image,
+  .promo-carousel__video {
     inset: var(--promo-desktop-slide-inset);
     width: calc(100% - (var(--promo-desktop-slide-inset) * 2));
     height: calc(100% - (var(--promo-desktop-slide-inset) * 2));
@@ -3336,7 +3345,8 @@ input[type="reset"] {
   color: var(--profile-subtext);
 }
 
-:root[data-theme="dark"] .promo-carousel__card--image {
+:root[data-theme="dark"] .promo-carousel__card--image,
+:root[data-theme="dark"] .promo-carousel__card--video {
   background:
     radial-gradient(circle at 50% 38%, rgba(255, 247, 250, 0.1) 0%, rgba(255, 247, 250, 0.03) 34%, transparent 72%),
     linear-gradient(180deg, rgba(96, 67, 74, 0.34) 0%, rgba(70, 51, 57, 0.18) 100%);
