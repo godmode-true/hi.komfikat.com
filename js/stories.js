@@ -1,3 +1,6 @@
+/**
+ * Instagram-style story viewer: manifest-driven slides, progress, hold-to-pause, keyboard nav.
+ */
 (() => {
   const App = window.KomfiKatApp;
 
@@ -376,45 +379,36 @@
       activeStoryNavTarget = null;
     };
 
-    dom.storyPrev?.addEventListener("pointerdown", (event) => {
-      handleStoryNavPointerDown(event, "prev");
-    });
-
-    dom.storyPrev?.addEventListener("pointerup", () => {
-      handleStoryNavPointerEnd("prev");
-    });
-
-    dom.storyPrev?.addEventListener("pointercancel", () => {
-      handleStoryNavPointerCancel("prev");
-    });
-
-    dom.storyPrev?.addEventListener("click", (event) => {
-      if (event.detail !== 0) {
-        event.preventDefault();
-      } else {
-        goToPreviousStory();
+    function bindStoryNavArrows(button, direction) {
+      if (!button) {
+        return;
       }
-    });
 
-    dom.storyNext?.addEventListener("pointerdown", (event) => {
-      handleStoryNavPointerDown(event, "next");
-    });
+      const go = direction === "prev" ? goToPreviousStory : goToNextStory;
 
-    dom.storyNext?.addEventListener("pointerup", () => {
-      handleStoryNavPointerEnd("next");
-    });
+      button.addEventListener("pointerdown", (event) => {
+        handleStoryNavPointerDown(event, direction);
+      });
 
-    dom.storyNext?.addEventListener("pointercancel", () => {
-      handleStoryNavPointerCancel("next");
-    });
+      button.addEventListener("pointerup", () => {
+        handleStoryNavPointerEnd(direction);
+      });
 
-    dom.storyNext?.addEventListener("click", (event) => {
-      if (event.detail !== 0) {
-        event.preventDefault();
-      } else {
-        goToNextStory();
-      }
-    });
+      button.addEventListener("pointercancel", () => {
+        handleStoryNavPointerCancel(direction);
+      });
+
+      button.addEventListener("click", (event) => {
+        if (event.detail !== 0) {
+          event.preventDefault();
+        } else {
+          go();
+        }
+      });
+    }
+
+    bindStoryNavArrows(dom.storyPrev, "prev");
+    bindStoryNavArrows(dom.storyNext, "next");
   }
 
   App.initStories = function initStories() {
