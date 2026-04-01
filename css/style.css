@@ -8,9 +8,9 @@
 
 /* Design tokens */
 :root {
-  --theme-bg-transition-duration: 2400ms;
+  --theme-bg-transition-duration: 0ms;
   --theme-bg-transition-easing: cubic-bezier(0.16, 1, 0.3, 1);
-  --theme-switch-fx-duration: 1600ms;
+  --theme-switch-fx-duration: 0ms;
   --theme-switch-fx-bleed: 18vmax;
   --theme-switch-origin-x: 50vw;
   --theme-switch-origin-y: 4.25rem;
