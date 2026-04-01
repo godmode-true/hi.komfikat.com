@@ -15,7 +15,7 @@
     shareCopyFeedbackWrap: document.querySelector("[data-share-copy-feedback-wrap]"),
     shareCopyFeedbackOverlay: document.querySelector("[data-share-copy-feedback]"),
     socialHandleLinks: document.querySelectorAll(".social-links__link[data-handle-label]"),
-    socialHashtagLinks: document.querySelectorAll(".social-links__hashtag"),
+    socialHashtagButtons: document.querySelectorAll(".social-hashtag__btn"),
     shareCopyButton: document.querySelector('[data-share-option="copy"]'),
     shareOptions: document.querySelectorAll("[data-share-option]"),
     themeColorMeta: document.querySelector('meta[name="theme-color"]'),
@@ -494,210 +494,244 @@
       };
     };
 
-    const createHashtagCopyFeedback = (link) => {
-      const feedback = document.createElement("span");
-      const content = document.createElement("span");
-      const inner = document.createElement("span");
-      const label = document.createElement("span");
-      const labelText = document.createElement("span");
-      const platforms = document.createElement("span");
-      const platformConfigs = [
-        { key: "instagram", label: "Instagram", url: link.dataset.hashtagInstagramUrl?.trim() || "" },
-        { key: "youtube", label: "YouTube", url: link.dataset.hashtagYoutubeUrl?.trim() || "" },
-        { key: "tiktok", label: "TikTok", url: link.dataset.hashtagTiktokUrl?.trim() || "" },
-      ];
-
-      feedback.className = "social-links__hashtag-feedback";
-      content.className = "social-links__hashtag-feedback-content";
-      inner.className = "social-links__hashtag-feedback-inner";
-      label.className = "social-links__hashtag-feedback-label";
-      labelText.className = "social-links__hashtag-feedback-label-text";
-      labelText.textContent = "Tag copied!";
-      platforms.className = "social-links__hashtag-feedback-links";
-
-      platformConfigs.forEach(({ key: platformKey, label: platformLabel, url }) => {
-        const sourceIcon = document
-          .querySelector(`.social-links__link[data-platform="${platformKey}"] .social-links__icon`)
-          ?.cloneNode(true);
-
-        if (!(sourceIcon instanceof SVGElement) || !url) {
+    const populateSocialHashtagNavs = () => {
+      document.querySelectorAll(".social-hashtag").forEach((root) => {
+        const btn = root.querySelector(".social-hashtag__btn");
+        const nav = root.querySelector(".social-hashtag__nav");
+        if (!(btn instanceof HTMLButtonElement) || !(nav instanceof HTMLElement)) {
           return;
         }
 
-        const platform = document.createElement("a");
+        if (nav.childElementCount > 0) {
+          return;
+        }
 
-        platform.className = "social-links__hashtag-feedback-link";
-        platform.href = url;
-        platform.target = "_blank";
-        platform.rel = "noopener noreferrer";
-        platform.setAttribute(
-          "aria-label",
-          `Open ${platformLabel} posts for ${link.textContent?.trim() || "this hashtag"}`,
-        );
-        sourceIcon.classList.remove("social-links__icon");
-        sourceIcon.classList.add("social-links__hashtag-feedback-icon");
-        sourceIcon.setAttribute("aria-hidden", "true");
-        platform.append(sourceIcon);
-        platforms.append(platform);
+        const platforms = [
+          { key: "instagram", label: "Instagram", url: btn.dataset.hashtagInstagramUrl?.trim() || "" },
+          { key: "youtube", label: "YouTube", url: btn.dataset.hashtagYoutubeUrl?.trim() || "" },
+          { key: "tiktok", label: "TikTok", url: btn.dataset.hashtagTiktokUrl?.trim() || "" },
+        ];
+
+        platforms.forEach(({ key, label, url }) => {
+          if (!url) {
+            return;
+          }
+
+          const sourceIcon = document.querySelector(
+            `.social-links__icons .social-links__link[data-platform="${key}"] .social-links__icon`,
+          )?.cloneNode(true);
+
+          if (!(sourceIcon instanceof SVGElement)) {
+            return;
+          }
+
+          sourceIcon.classList.remove("social-links__icon");
+          sourceIcon.classList.add("social-hashtag__platform-icon");
+          sourceIcon.setAttribute("aria-hidden", "true");
+
+          const a = document.createElement("a");
+          a.className = "social-hashtag__platform";
+          a.href = url;
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          a.setAttribute(
+            "aria-label",
+            `Open ${label} posts for ${btn.querySelector(".social-hashtag__label")?.textContent?.trim() || "this hashtag"}`,
+          );
+          a.append(sourceIcon);
+          nav.append(a);
+        });
       });
-
-      if (!platforms.childElementCount) {
-        return null;
-      }
-
-      label.append(labelText);
-      inner.append(label, platforms);
-      content.append(inner);
-      feedback.append(content);
-      return feedback;
     };
 
-    const initHashtagFeedback = runOnce(() => {
-      App.dom.socialHashtagLinks?.forEach((link) => {
-      const hashtagItem = link.closest(".social-links__hashtag-item");
-      const hashtagLabel = link.querySelector(".social-links__hashtag-label");
-      const defaultHashtagLabel = hashtagLabel?.textContent?.trim() || "";
-      const hashtagFeedback = createHashtagCopyFeedback(link);
-      const getHashtagCopyText = () => defaultHashtagLabel;
-      const dismissOtherHashtagFeedback = () => {
-        document
-          .querySelectorAll('.social-links__hashtag-item[data-feedback-visible="true"]')
-          .forEach((activeItem) => {
-            if (!(activeItem instanceof HTMLElement) || activeItem === hashtagItem) {
-              return;
-            }
-
-            delete activeItem.dataset.feedbackVisible;
-            delete activeItem.dataset.feedbackArming;
-
-            const activeFeedback = activeItem.querySelector(".social-links__hashtag-feedback");
-            if (activeFeedback instanceof HTMLElement) {
-              activeFeedback.style.removeProperty("--social-hashtag-feedback-label-scale");
-            }
-          });
-      };
-      const syncHashtagFeedbackScale = () => {
-        if (!(hashtagItem instanceof HTMLElement) || !(hashtagFeedback instanceof HTMLElement)) {
-          return;
-        }
-
-        const inner = hashtagFeedback.querySelector(".social-links__hashtag-feedback-inner");
-        const label = hashtagFeedback.querySelector(".social-links__hashtag-feedback-label");
-        const labelText = hashtagFeedback.querySelector(".social-links__hashtag-feedback-label-text");
-        const links = hashtagFeedback.querySelector(".social-links__hashtag-feedback-links");
-
-        if (
-          !(inner instanceof HTMLElement) ||
-          !(label instanceof HTMLElement) ||
-          !(labelText instanceof HTMLElement) ||
-          !(links instanceof HTMLElement)
-        ) {
-          return;
-        }
-
-        // Ensure measurements happen at scale 1.
-        hashtagFeedback.style.setProperty("--social-hashtag-feedback-label-scale", "1");
-
-        const feedbackRect = hashtagFeedback.getBoundingClientRect();
-
-        if (!(feedbackRect.width > 0)) {
-          return;
-        }
-
-        const styles = window.getComputedStyle(hashtagFeedback);
-        const padLeft = Number.parseFloat(styles.paddingLeft || "0") || 0;
-        const padRight = Number.parseFloat(styles.paddingRight || "0") || 0;
-        const availableWidth = Math.max(1, feedbackRect.width - padLeft - padRight);
-        const innerStyles = window.getComputedStyle(inner);
-        const gap = Number.parseFloat(innerStyles.columnGap || innerStyles.gap || "0") || 0;
-        const availableLabelWidth = Math.max(1, availableWidth - links.scrollWidth - gap);
-        const naturalLabelWidth = Math.max(1, labelText.scrollWidth);
-        const scale = Math.min(1, availableLabelWidth / naturalLabelWidth);
-
-        hashtagFeedback.style.setProperty("--social-hashtag-feedback-label-scale", String(scale));
-      };
-      const hideHashtagFeedback = () => {
-        if (!(hashtagItem instanceof HTMLElement) || !hashtagFeedback) {
-          return;
-        }
-
-        delete hashtagItem.dataset.feedbackVisible;
-        delete hashtagItem.dataset.feedbackArming;
-        if (hashtagFeedback instanceof HTMLElement) {
-          hashtagFeedback.style.removeProperty("--social-hashtag-feedback-label-scale");
-        }
-      };
-      const setHashtagFeedbackVisible = () => {
-        if (!(hashtagItem instanceof HTMLElement) || !hashtagFeedback) {
-          return;
-        }
-
-        dismissOtherHashtagFeedback();
-        hashtagItem.dataset.feedbackVisible = "true";
-        // Prevent "click-through" into the overlay links on the same interaction
-        // that revealed the overlay.
-        hashtagItem.dataset.feedbackArming = "true";
-        window.setTimeout(() => {
-          if (hashtagItem instanceof HTMLElement) {
-            delete hashtagItem.dataset.feedbackArming;
-          }
-        }, 140);
-        window.requestAnimationFrame(() => window.requestAnimationFrame(() => syncHashtagFeedbackScale()));
-      };
-
-      if (hashtagFeedback && hashtagItem instanceof HTMLElement) {
-        hashtagItem.append(hashtagFeedback);
-
-        hashtagFeedback.addEventListener(
-          "click",
-          (event) => {
-            if (!hashtagItem?.dataset.feedbackVisible) {
-              return;
-            }
-
-            if (event.target instanceof Element && event.target.closest(".social-links__hashtag-feedback-content")) {
-              // If the overlay was *just* shown, swallow the click so it can't trigger a platform link.
-              if (hashtagItem?.dataset.feedbackArming) {
-                event.preventDefault();
-                event.stopPropagation();
-                return;
-              }
-
-              const clickedLink = event.target instanceof Element ? event.target.closest("a") : null;
-
-              hideHashtagFeedback();
-
-              // Allow platform links to navigate; otherwise swallow the click.
-              if (!clickedLink) {
-                event.preventDefault();
-                event.stopPropagation();
-              }
-            }
-          },
-          { capture: true },
-        );
+    const syncSocialHashtagToastScale = (root) => {
+      const panel = root.querySelector(".social-hashtag__panel");
+      const inner = root.querySelector(".social-hashtag__panel-inner");
+      const toast = root.querySelector(".social-hashtag__toast");
+      const nav = root.querySelector(".social-hashtag__nav");
+      if (
+        !(panel instanceof HTMLElement) ||
+        !(inner instanceof HTMLElement) ||
+        !(toast instanceof HTMLElement) ||
+        !(nav instanceof HTMLElement)
+      ) {
+        return;
       }
 
-      link.addEventListener("click", async (event) => {
-        event.preventDefault();
-        event.stopPropagation();
+      panel.style.setProperty("--social-hashtag-toast-scale", "1");
 
-        const hashtagText = getHashtagCopyText();
+      const rect = panel.getBoundingClientRect();
+      if (!(rect.width > 0)) {
+        return;
+      }
 
-        if (!hashtagText) {
-          return;
+      const styles = window.getComputedStyle(panel);
+      const padLeft = Number.parseFloat(styles.paddingLeft || "0") || 0;
+      const padRight = Number.parseFloat(styles.paddingRight || "0") || 0;
+      const availableWidth = Math.max(1, rect.width - padLeft - padRight);
+      const innerStyles = window.getComputedStyle(inner);
+      const gap = Number.parseFloat(innerStyles.columnGap || innerStyles.gap || "0") || 0;
+      const availableToastWidth = Math.max(1, availableWidth - nav.scrollWidth - gap);
+      const naturalToastWidth = Math.max(1, toast.scrollWidth);
+      const scale = Math.min(1, availableToastWidth / naturalToastWidth);
+
+      panel.style.setProperty("--social-hashtag-toast-scale", String(scale));
+    };
+
+    const closeSocialHashtag = (root) => {
+      const btn = root.querySelector(".social-hashtag__btn");
+      const panel = root.querySelector(".social-hashtag__panel");
+      if (!(btn instanceof HTMLButtonElement) || !(panel instanceof HTMLElement)) {
+        return;
+      }
+
+      root.classList.remove("is-open");
+      panel.hidden = true;
+      panel.setAttribute("aria-hidden", "true");
+      btn.setAttribute("aria-expanded", "false");
+      panel.style.removeProperty("--social-hashtag-toast-scale");
+    };
+
+    const closeAllSocialHashtagsExcept = (except) => {
+      document.querySelectorAll(".social-hashtag.is-open").forEach((root) => {
+        if (root !== except) {
+          closeSocialHashtag(root);
         }
-
-        const didCopy = await App.helpers.copyText(hashtagText);
-
-        if (!didCopy) {
-          return;
-        }
-
-        setHashtagFeedbackVisible();
       });
+    };
+
+    const openSocialHashtag = (root) => {
+      const btn = root.querySelector(".social-hashtag__btn");
+      const panel = root.querySelector(".social-hashtag__panel");
+      if (!(btn instanceof HTMLButtonElement) || !(panel instanceof HTMLElement)) {
+        return;
+      }
+
+      closeAllSocialHashtagsExcept(root);
+
+      root.classList.add("is-open");
+      panel.hidden = false;
+      panel.setAttribute("aria-hidden", "false");
+      btn.setAttribute("aria-expanded", "true");
+
+      window.requestAnimationFrame(() => window.requestAnimationFrame(() => syncSocialHashtagToastScale(root)));
+    };
+
+    const initSocialHashtagWidgets = runOnce(() => {
+      populateSocialHashtagNavs();
+
+      document.querySelectorAll(".social-hashtag").forEach((root) => {
+        const btn = root.querySelector(".social-hashtag__btn");
+        const panel = root.querySelector(".social-hashtag__panel");
+        if (!(btn instanceof HTMLButtonElement) || !(panel instanceof HTMLElement)) {
+          return;
+        }
+
+        btn.addEventListener("click", async (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+
+          const labelEl = btn.querySelector(".social-hashtag__label");
+          const hashtagText = labelEl?.textContent?.trim() || "";
+          if (!hashtagText) {
+            return;
+          }
+
+          const didCopy = await App.helpers.copyText(hashtagText);
+          if (!didCopy) {
+            return;
+          }
+
+          openSocialHashtag(root);
+        });
+
+        panel.addEventListener(
+          "click",
+          (event) => {
+            if (!root.classList.contains("is-open")) {
+              return;
+            }
+
+            const link = event.target instanceof Element ? event.target.closest("a.social-hashtag__platform") : null;
+
+            if (link instanceof HTMLAnchorElement) {
+              closeSocialHashtag(root);
+              return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+            closeSocialHashtag(root);
+          },
+          true,
+        );
+      });
+
+      document.addEventListener("click", (event) => {
+        if (!(event.target instanceof Element)) {
+          return;
+        }
+
+        document.querySelectorAll(".social-hashtag.is-open").forEach((root) => {
+          if (!root.contains(event.target)) {
+            closeSocialHashtag(root);
+          }
+        });
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape") {
+          return;
+        }
+
+        document.querySelectorAll(".social-hashtag.is-open").forEach((root) => {
+          closeSocialHashtag(root);
+        });
       });
     });
+
+    initSocialHashtagWidgets();
+
+    const initSocialIconRowLinks = runOnce(() => {
+      const section = document.querySelector("section.social-links");
+      if (!(section instanceof HTMLElement)) {
+        return;
+      }
+
+      const openSocialRowButtonUrl = (btn) => {
+        const url = btn.dataset.href?.trim();
+        if (!url) {
+          return;
+        }
+
+        window.open(url, "_blank", "noopener,noreferrer");
+      };
+
+      section.addEventListener("click", (event) => {
+        const btn = event.target instanceof Element ? event.target.closest("ul.social-links__icons .social-links__link") : null;
+        if (!(btn instanceof HTMLButtonElement)) {
+          return;
+        }
+
+        openSocialRowButtonUrl(btn);
+      });
+
+      section.addEventListener("auxclick", (event) => {
+        if (event.button !== 1) {
+          return;
+        }
+
+        const btn = event.target instanceof Element ? event.target.closest("ul.social-links__icons .social-links__link") : null;
+        if (!(btn instanceof HTMLButtonElement)) {
+          return;
+        }
+
+        event.preventDefault();
+        openSocialRowButtonUrl(btn);
+      });
+    });
+
+    initSocialIconRowLinks();
 
     if (App.helpers.isDevPreviewHost()) {
       App.helpers.removeStorageValue(App.storageKeys.storyViewed);
@@ -743,7 +777,6 @@
       initShareOnce();
       initStoriesOnce();
       initCarouselOnce();
-      initHashtagFeedback();
     });
 
     scheduleStickyHeaderMaskGeometrySync();
