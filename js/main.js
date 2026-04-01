@@ -1074,7 +1074,6 @@
     });
 
     App.helpers.lockViewportGestureZoom();
-
     App.initTheme?.();
     App.initShare?.();
     App.initStories?.();

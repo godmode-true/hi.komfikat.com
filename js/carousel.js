@@ -1311,8 +1311,13 @@
         dot.setAttribute("aria-current", String(index === activeIndex));
       });
 
-      prevButton.hidden = !hasPagination;
-      nextButton.hidden = !hasPagination;
+      const navHidden = !hasPagination;
+      prevButton.dataset.hidden = String(navHidden);
+      nextButton.dataset.hidden = String(navHidden);
+      prevButton.setAttribute("aria-hidden", String(navHidden));
+      nextButton.setAttribute("aria-hidden", String(navHidden));
+      prevButton.tabIndex = navHidden ? -1 : 0;
+      nextButton.tabIndex = navHidden ? -1 : 0;
     }
 
     function syncPosition(immediate = false) {
@@ -1330,6 +1335,22 @@
 
       syncControls();
       syncCarouselSectionBottomSpace();
+    }
+
+    function recoverFromInterruptedAnimation() {
+      if (!isAnimating) {
+        return;
+      }
+
+      isAnimating = false;
+      pendingSnapIndex = null;
+      dragOffset = 0;
+      pointerId = null;
+      touchId = null;
+      pointerDragReady = false;
+      gestureAxis = "";
+      delete shell.dataset.dragging;
+      syncPosition(true);
     }
 
     function isPagerTarget(target) {
@@ -1807,6 +1828,7 @@
     }
 
     window.addEventListener("blur", clearNavRepeat);
+    window.addEventListener("komfi:themeswitchend", recoverFromInterruptedAnimation);
     window.addEventListener("resize", () => {
       if (activePromoRedirectUi) {
         schedulePromoRedirectOverlayFit(activePromoRedirectUi);

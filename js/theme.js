@@ -80,12 +80,14 @@
     window.clearTimeout(themeSwitchCleanupTimeout);
     themeSwitchCleanupTimeout = 0;
     delete dom.root.dataset.themeSwitching;
+    window.dispatchEvent(new CustomEvent("komfi:themeswitchend"));
   }
 
   function runThemeChange(applyChange) {
     clearThemeSwitchState();
     syncThemeSwitchOrigin();
     dom.root.dataset.themeSwitching = "true";
+    window.dispatchEvent(new CustomEvent("komfi:themeswitchstart"));
     applyChange();
 
     if (isReducedMotionPreferred()) {

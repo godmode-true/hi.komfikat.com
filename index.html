@@ -33,14 +33,10 @@
     <link rel="preload" as="image" href="img/logo.webp?v=20260401b" type="image/webp" fetchpriority="high" />
     <script>
       (() => {
-        const isDevPreviewHost =
-          location.hostname === "localhost" ||
-          location.hostname === "127.0.0.1" ||
-          location.hostname.startsWith("192.168.");
-        const assetVersion = isDevPreviewHost ? Date.now().toString() : "20260401b";
-        document.write(`<script src="themes/theme-presets.js?v=${assetVersion}"><\/script>`);
+        window.KomfiKatAssetVersion = "20260401b";
       })();
     </script>
+    <script src="themes/theme-presets.js?v=20260401b"></script>
     <script>
       try {
         const root = document.documentElement;
