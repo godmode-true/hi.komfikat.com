@@ -375,29 +375,6 @@
     promoRedirectInterval = 0;
   }
 
-  function applyCarouselShopRedirectSizing(ui) {
-    ui.overlay.style.removeProperty("--promo-redirect-inline-gap");
-    const redirectLayout = ui.content?.dataset?.redirectLayout || "";
-    const isInlineWidthLayout = redirectLayout === "single" || redirectLayout === "stacked" || redirectLayout === "promo";
-    if (isInlineWidthLayout) {
-      const textPrefix = ui.redirectBody.querySelector(".promo-redirect-toast__text-prefix");
-      const textWidth = Math.ceil(textPrefix?.getBoundingClientRect?.().width || 0);
-      const eyebrow = ui.content.querySelector(".promo-redirect-toast__eyebrow");
-      const eyebrowWidth = Math.ceil(eyebrow?.getBoundingClientRect?.().width || 0);
-      const baseWidth = Math.max(textWidth, eyebrowWidth);
-      const fontSizePx = Number.parseFloat(window.getComputedStyle(textPrefix).fontSize || "0") || 0;
-      const fudgePx = Math.max(6, Math.ceil(fontSizePx * 0.32));
-      const paddedWidth = baseWidth > 0 ? baseWidth + fudgePx : 0;
-      if (paddedWidth > 0) {
-        ui.overlay.style.setProperty("--promo-redirect-single-inline-width", `${paddedWidth}px`);
-      } else {
-        ui.overlay.style.removeProperty("--promo-redirect-single-inline-width");
-      }
-    } else {
-      ui.overlay.style.removeProperty("--promo-redirect-single-inline-width");
-    }
-  }
-
   function fitPromoRedirectOverlay(ui = activePromoRedirectUi) {
     if (
       !(ui?.overlay instanceof HTMLElement) ||
@@ -409,13 +386,6 @@
     }
 
     ui.overlay.style.removeProperty("--promo-redirect-content-scale");
-
-    const isCarouselRedirect = ui.root instanceof HTMLElement && ui.root.classList.contains("promo-carousel__shop-button-wrap");
-
-    if (isCarouselRedirect) {
-      applyCarouselShopRedirectSizing(ui);
-      return;
-    }
 
     const overlayWidth = ui.overlay.clientWidth;
     if (overlayWidth <= 0) {
@@ -705,13 +675,9 @@
 
   function createPromoRedirectOverlay(action, control, root) {
     const overlay = document.createElement("span");
-    const isCarouselRedirectHost =
-      root instanceof HTMLElement && root.classList.contains("promo-carousel__shop-button-wrap");
     const isLinkCardRedirectHost =
       root instanceof HTMLElement && root.classList.contains("promo-redirect-local-wrap--link-card");
-    overlay.className = isCarouselRedirectHost
-      ? "promo-redirect-local-overlay promo-carousel__shop-button-redirect"
-      : "promo-redirect-local-overlay";
+    overlay.className = "promo-redirect-local-overlay";
     overlay.setAttribute("aria-hidden", "true");
     overlay.setAttribute("role", "status");
     overlay.setAttribute("aria-live", "polite");
@@ -729,8 +695,6 @@
     redirectBody.className = "promo-redirect-toast__body";
 
     const hasPromoCode = isNonEmptyString(action?.promoCode);
-    const isCarouselSingleLineRedirect = isCarouselRedirectHost && !hasPromoCode;
-    const isCarouselPromoRedirect = isCarouselRedirectHost && hasPromoCode;
     const countdownSeconds = getPromoRedirectCountdownSeconds();
     const redirectLabel = inferRedirectLabel(action);
     let redirectCode = null;
@@ -742,7 +706,6 @@
       const redirectEyebrowText = document.createElement("span");
       redirectEyebrowText.className = "promo-redirect-toast__eyebrow-text";
       redirectEyebrowText.textContent = "Save 10% with code";
-      redirectEyebrow.append(redirectEyebrowText, " ");
 
       redirectCode = document.createElement("button");
       redirectCode.type = "button";
@@ -752,10 +715,8 @@
       redirectCodeLabel.className = "promo-redirect-toast__code-label";
       redirectCodeLabel.textContent = action.promoCode;
       redirectCode.append(redirectCodeLabel);
-      redirectEyebrow.append(redirectCode);
-      if (!isCarouselPromoRedirect) {
-        redirectBody.append(redirectEyebrow);
-      }
+      redirectEyebrow.append(redirectEyebrowText, redirectCode);
+      redirectBody.append(redirectEyebrow);
     }
 
     const redirectText = document.createElement("span");
@@ -797,9 +758,7 @@
     redirectCountdownSuffix.textContent = "sec";
 
     redirectCountdownBadge.append(redirectCountdown, redirectCountdownSuffix);
-    if (!isCarouselRedirectHost) {
-      redirectText.append(redirectCountdownBadge);
-    }
+    redirectText.append(redirectCountdownBadge);
 
     redirectBody.append(redirectText);
 
@@ -842,26 +801,12 @@
     cancel.setAttribute("aria-label", redirectLabel ? `Cancel ${redirectLabel} redirect` : "Cancel redirect");
     cancel.innerHTML = cancelIconMarkup;
 
-    if (isCarouselSingleLineRedirect) {
-      overlay.dataset.redirectLayout = "single";
-      content.dataset.redirectLayout = "single";
-      redirectActions.append(cancel, redirectCountdownBadge, openNow);
-    } else if (isCarouselPromoRedirect) {
-      overlay.dataset.redirectLayout = "promo";
-      content.dataset.redirectLayout = "promo";
-      redirectActions.append(cancel, redirectCountdownBadge, openNow);
-    } else {
-      redirectActions.append(openNow, cancel);
-    }
+    redirectActions.append(openNow, cancel);
 
     if (redirectLead instanceof HTMLElement) {
       content.append(redirectLead, redirectBody, redirectActions);
     } else {
-      if (isCarouselPromoRedirect && redirectEyebrow instanceof HTMLElement) {
-        content.append(redirectBody, redirectActions, redirectEyebrow);
-      } else {
-        content.append(redirectBody, redirectActions);
-      }
+      content.append(redirectBody, redirectActions);
     }
     overlay.append(content);
 
@@ -983,26 +928,6 @@
     copy.append(title, subtitle);
     content.append(badge, copy);
 
-    const buildWrap = (control) => {
-      if (action.disabled || !isExternalNavigationHref(action.href)) {
-        return control;
-      }
-
-      const wrap = document.createElement("span");
-      wrap.className = "promo-redirect-local-wrap promo-carousel__shop-button-wrap";
-      control.dataset.promoRedirectControl = "true";
-      const promoUi = createPromoRedirectOverlay(action, control, wrap);
-      wrap.append(control, promoUi.overlay);
-
-      control.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        schedulePromoRedirect(action.href, action.promoCode, promoUi, action);
-      });
-
-      return wrap;
-    };
-
     if (action.disabled) {
       const button = document.createElement("button");
       button.className = className;
@@ -1010,7 +935,7 @@
       button.setAttribute("aria-disabled", "true");
       button.addEventListener("dragstart", (event) => event.preventDefault());
       button.append(content);
-      return buildWrap(button);
+      return button;
     }
 
     const link = document.createElement("a");
@@ -1021,7 +946,7 @@
     link.draggable = false;
     link.addEventListener("dragstart", (event) => event.preventDefault());
     link.append(content);
-    return buildWrap(link);
+    return link;
   }
 
   function enhanceLinkSectionRedirects() {
