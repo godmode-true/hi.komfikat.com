@@ -11,37 +11,7 @@
   const htmlDefaultPresetName = dom.root.dataset.defaultPreset || dom.root.dataset.themePreset || "default-rose";
   const defaultPresetName = window.KomfiKatThemeConfig?.defaultPreset || htmlDefaultPresetName || "default-rose";
   const allowStoredPresetOverride = window.KomfiKatThemeConfig?.allowStoredPresetOverride === true;
-  const themeSwitchCleanupBufferMs = 90;
-  let themeSwitchCleanupTimeout = 0;
   let themeSwitchRunId = 0;
-
-  function isReducedMotionPreferred() {
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  }
-
-  function parseDurationToMs(value) {
-    const normalizedValue = typeof value === "string" ? value.trim() : "";
-
-    if (!normalizedValue) {
-      return 0;
-    }
-
-    if (normalizedValue.endsWith("ms")) {
-      return Number.parseFloat(normalizedValue) || 0;
-    }
-
-    if (normalizedValue.endsWith("s")) {
-      return (Number.parseFloat(normalizedValue) || 0) * 1000;
-    }
-
-    return Number.parseFloat(normalizedValue) || 0;
-  }
-
-  function getThemeBackgroundTransitionMs() {
-    const rawDuration =
-      getComputedStyle(dom.root).getPropertyValue("--theme-bg-transition-duration").trim() || "560ms";
-    return parseDurationToMs(rawDuration);
-  }
 
   function syncThemeSwitchOrigin() {
     if (!dom.root) {
@@ -83,8 +53,6 @@
       return;
     }
 
-    window.clearTimeout(themeSwitchCleanupTimeout);
-    themeSwitchCleanupTimeout = 0;
     delete dom.root.dataset.themeSwitching;
     window.dispatchEvent(new CustomEvent("komfi:themeswitchend"));
   }
@@ -97,17 +65,7 @@
     dom.root.dataset.themeSwitching = "true";
     window.dispatchEvent(new CustomEvent("komfi:themeswitchstart"));
     applyChange();
-
-    if (isReducedMotionPreferred()) {
-      clearThemeSwitchState(runId);
-      return;
-    }
-
-    window.requestAnimationFrame(() => {
-      themeSwitchCleanupTimeout = window.setTimeout(() => {
-        clearThemeSwitchState(runId);
-      }, getThemeBackgroundTransitionMs() + themeSwitchCleanupBufferMs);
-    });
+    clearThemeSwitchState(runId);
   }
 
   function updateThemeColor() {

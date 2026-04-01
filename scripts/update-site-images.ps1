@@ -4,6 +4,7 @@ param(
   [int]$WebpQuality = 92,
   [int]$CarouselDesktopDimension = 1152,
   [int]$CarouselMobileDimension = 768,
+  [int]$CarouselVideoCrf = 26,
   [switch]$RebuildWebp
 )
 
@@ -16,6 +17,13 @@ $logoWebp = Join-Path $repoRoot "img/logo.webp"
 $storiesDir = Join-Path $repoRoot "img/stories"
 $resolvedManifestPath = Join-Path $repoRoot $ManifestPath
 $resolvedCarouselDir = Join-Path $repoRoot $CarouselDir
+
+$script:VideoExtensionPriority = @{
+  ".mp4"  = 0
+  ".mov"  = 1
+  ".webm" = 2
+  ".mkv"  = 3
+}
 
 function Get-FfmpegCommand {
   $ffmpegCommand = Get-Command ffmpeg -ErrorAction SilentlyContinue
@@ -85,6 +93,111 @@ function Convert-ToWebp {
   return $true
 }
 
+function Convert-CarouselVideo {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$SourcePath,
+    [Parameter(Mandatory = $true)]
+    [string]$OutputPath,
+    [Parameter(Mandatory = $true)]
+    [string]$ScaleFilter,
+    [int]$Crf = 26,
+    [bool]$ForceRebuild = $false
+  )
+
+  if (-not (Test-Path -LiteralPath $SourcePath)) {
+    return $false
+  }
+
+  $sourceItem = Get-Item -LiteralPath $SourcePath
+  $shouldConvert = $true
+
+  if ((Test-Path -LiteralPath $OutputPath) -and -not $ForceRebuild) {
+    $outputItem = Get-Item -LiteralPath $OutputPath
+    $shouldConvert = $sourceItem.LastWriteTimeUtc -gt $outputItem.LastWriteTimeUtc
+  }
+
+  if (-not $shouldConvert) {
+    return $false
+  }
+
+  $ffmpeg = Get-FfmpegCommand
+  $ffmpegArgs = @(
+    "-y",
+    "-loglevel", "error",
+    "-i", $SourcePath,
+    "-vf", $ScaleFilter,
+    "-an",
+    "-c:v", "libx264",
+    "-profile:v", "main",
+    "-pix_fmt", "yuv420p",
+    "-crf", "$Crf",
+    "-preset", "medium",
+    "-movflags", "+faststart",
+    $OutputPath
+  )
+
+  & $ffmpeg @ffmpegArgs
+
+  if ($LASTEXITCODE -ne 0) {
+    throw "ffmpeg failed while encoding carousel video: $SourcePath -> $OutputPath"
+  }
+
+  return $true
+}
+
+function Convert-CarouselVideoPoster {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$SourcePath,
+    [Parameter(Mandatory = $true)]
+    [string]$OutputPath,
+    [Parameter(Mandatory = $true)]
+    [string]$ScaleFilter,
+    [int]$Quality = 88,
+    [bool]$ForceRebuild = $false
+  )
+
+  if (-not (Test-Path -LiteralPath $SourcePath)) {
+    return $false
+  }
+
+  $sourceItem = Get-Item -LiteralPath $SourcePath
+  $shouldConvert = $true
+
+  if ((Test-Path -LiteralPath $OutputPath) -and -not $ForceRebuild) {
+    $outputItem = Get-Item -LiteralPath $OutputPath
+    $shouldConvert = $sourceItem.LastWriteTimeUtc -gt $outputItem.LastWriteTimeUtc
+  }
+
+  if (-not $shouldConvert) {
+    return $false
+  }
+
+  $ffmpeg = Get-FfmpegCommand
+  $ffmpegArgs = @(
+    "-y",
+    "-loglevel", "error",
+    "-ss", "0.5",
+    "-i", $SourcePath,
+    "-vf", $ScaleFilter,
+    "-vframes", "1",
+    "-c:v", "libwebp",
+    "-quality", "$Quality",
+    "-compression_level", "6",
+    "-preset", "picture",
+    $OutputPath
+  )
+
+  & $ffmpeg @ffmpegArgs
+
+  if ($LASTEXITCODE -ne 0) {
+    throw "ffmpeg failed while creating carousel video poster: $SourcePath -> $OutputPath"
+  }
+
+  return $true
+}
+
 function Set-FileContentIfChanged {
   param(
     [Parameter(Mandatory = $true)]
@@ -136,7 +249,7 @@ function Update-CarouselManifest {
 
   $existingAltBySrc = @{}
   $existingAltBySlideNumber = @{}
-  $entryPattern = [regex]'(?s)\{\s*src:\s*"(?<src>img/carousel/[^"]+)"(?:(?!\}).)*?alt:\s*"(?<alt>(?:[^"\\]|\\.)*)"\s*,?\s*\}'
+  $entryPattern = [regex]'(?s)\{\s*(?:type:\s*"video",\s*)?src:\s*"(?<src>img/carousel/[^"]+)"(?:(?!\}).)*?alt:\s*"(?<alt>(?:[^"\\]|\\.)*)"\s*,?\s*\}'
   foreach ($match in $entryPattern.Matches($manifestContent)) {
     $src = $match.Groups["src"].Value
     $alt = $match.Groups["alt"].Value.Replace('\"', '"').Replace('\\', '\')
@@ -158,36 +271,77 @@ function Update-CarouselManifest {
     ".png"  = 4
   }
 
-  $slideSourceFiles = Get-ChildItem -LiteralPath $DirectoryPath -File |
+  $imageSlideSourceFiles = Get-ChildItem -LiteralPath $DirectoryPath -File |
     Where-Object { $_.BaseName -match '^\d+(?:-\d+)?$' -and $_.Extension -match '^\.(png|jpe?g|webp|avif)$' }
 
-  $slideNumbers = $slideSourceFiles |
-    ForEach-Object {
-      if ($_.BaseName -match '^(?<number>\d+)(?:-\d+)?$') {
-        [int]$Matches["number"]
-      }
-    } |
+  $videoSlideSourceFiles = Get-ChildItem -LiteralPath $DirectoryPath -File |
+    Where-Object { $_.BaseName -match '^\d+$' -and $_.Extension -match '^\.(mp4|mov|webm|mkv)$' }
+
+  $slideNumbers = @(
+    @($imageSlideSourceFiles | ForEach-Object {
+        if ($_.BaseName -match '^(?<number>\d+)(?:-\d+)?$') {
+          [int]$Matches["number"]
+        }
+      })
+    @($videoSlideSourceFiles | ForEach-Object {
+        if ($_.BaseName -match '^(?<number>\d+)$') {
+          [int]$Matches["number"]
+        }
+      })
+  ) |
+    Where-Object { $_ -ne $null } |
     Sort-Object -Unique
 
-  $slideFiles = foreach ($slideNumber in $slideNumbers) {
-    $slideSourceFiles |
+  $videoSlideNumberSet = [System.Collections.Generic.HashSet[int]]::new()
+  foreach ($f in $videoSlideSourceFiles) {
+    if ($f.BaseName -match '^(?<number>\d+)$') {
+      [void]$videoSlideNumberSet.Add([int]$Matches["number"])
+    }
+  }
+
+  $lines = foreach ($slideNumber in $slideNumbers) {
+    $file = $imageSlideSourceFiles |
       Where-Object { $_.BaseName -match "^$slideNumber(?:-(?:$CarouselMobileDimension|$CarouselDesktopDimension))?$" } |
       Where-Object { $_.BaseName -match "^$slideNumber(?:-\\d+)?$" } |
       Sort-Object { $extensionPriority[$_.Extension.ToLowerInvariant()] } |
       Select-Object -First 1
-  }
 
-  $lines = foreach ($slideNumber in $slideNumbers) {
-    $file = $slideFiles | Where-Object {
-      $_ -and $_.BaseName -match "^$slideNumber(?:-\d+)?$"
-    } | Select-Object -First 1
+    $desktopVideoSrc = "img/carousel/$slideNumber-$CarouselDesktopDimension.mp4"
+    $mobileVideoSrc = "img/carousel/$slideNumber-$CarouselMobileDimension.mp4"
+    $posterSrc = "img/carousel/$slideNumber-poster.webp"
+    $desktopVideoPath = Join-Path $DirectoryPath "$slideNumber-$CarouselDesktopDimension.mp4"
+    $mobileVideoPath = Join-Path $DirectoryPath "$slideNumber-$CarouselMobileDimension.mp4"
+
+    $hasVideoOutputs = (Test-Path -LiteralPath $desktopVideoPath) -and (Test-Path -LiteralPath $mobileVideoPath)
+
+    if ($hasVideoOutputs) {
+      $relativeSrc = $desktopVideoSrc
+      $alt = $null
+
+      if ($existingAltBySrc.ContainsKey($relativeSrc)) {
+        $alt = $existingAltBySrc[$relativeSrc]
+      } elseif ($existingAltBySrc.ContainsKey($posterSrc)) {
+        $alt = $existingAltBySrc[$posterSrc]
+      } elseif ($existingAltBySlideNumber.ContainsKey($slideNumber)) {
+        $alt = $existingAltBySlideNumber[$slideNumber]
+      }
+
+      if (-not $alt) {
+        $alt = "Instagram carousel video $slideNumber"
+      }
+
+      '      { type: "video", src: "' + (Escape-JsString $desktopVideoSrc) + '", mobileSrc: "' + (Escape-JsString $mobileVideoSrc) + '", poster: "' + (Escape-JsString $posterSrc) + '", width: ' + $CarouselDesktopDimension + ', height: ' + $CarouselDesktopDimension + ', alt: "' + (Escape-JsString $alt) + '" },'
+      continue
+    }
 
     $desktopRelativeSrc = "img/carousel/$slideNumber-$CarouselDesktopDimension.webp"
     $mobileRelativeSrc = "img/carousel/$slideNumber-$CarouselMobileDimension.webp"
     $relativeSrc = if (Test-Path -LiteralPath (Join-Path $DirectoryPath "$slideNumber-$CarouselDesktopDimension.webp")) {
       $desktopRelativeSrc
-    } else {
+    } elseif ($file) {
       "img/carousel/$($file.Name)"
+    } else {
+      $desktopRelativeSrc
     }
     $alt = $null
 
@@ -243,7 +397,7 @@ function Update-CarouselManifest {
     Write-Host "Detected slide files: none"
   }
 
-  Write-Host "Updated carousel manifest with $($slideNumbers.Count) image(s) from $CarouselDir"
+  Write-Host "Updated carousel manifest with $($slideNumbers.Count) slide(s) from $CarouselDir"
 }
 
 Write-Host "Updating site images..."
@@ -280,11 +434,75 @@ if (-not (Test-Path -LiteralPath $resolvedCarouselDir)) {
   throw "Carousel directory not found: $resolvedCarouselDir"
 }
 
+$carouselVideoSources = Get-ChildItem -LiteralPath $resolvedCarouselDir -File |
+  Where-Object { $_.BaseName -match '^\d+$' -and $_.Extension -match '^\.(mp4|mov|webm|mkv)$' }
+
+$carouselVideoSlideNumberSet = [System.Collections.Generic.HashSet[int]]::new()
+foreach ($vf in $carouselVideoSources) {
+  if ($vf.BaseName -match '^(?<number>\d+)$') {
+    [void]$carouselVideoSlideNumberSet.Add([int]$Matches["number"])
+  }
+}
+
+foreach ($slideNumber in ($carouselVideoSources | ForEach-Object { [int]$_.BaseName } | Sort-Object -Unique)) {
+  $sourceFile = $carouselVideoSources |
+    Where-Object { [int]$_.BaseName -eq $slideNumber } |
+    Sort-Object { $script:VideoExtensionPriority[$_.Extension.ToLowerInvariant()] } |
+    Select-Object -First 1
+
+  if (-not $sourceFile) {
+    continue
+  }
+
+  $desktopVideoOut = Join-Path $resolvedCarouselDir "$slideNumber-$CarouselDesktopDimension.mp4"
+  $mobileVideoOut = Join-Path $resolvedCarouselDir "$slideNumber-$CarouselMobileDimension.mp4"
+  $posterOut = Join-Path $resolvedCarouselDir "$slideNumber-poster.webp"
+
+  $desktopVideoScale = "scale='min($CarouselDesktopDimension,iw)':'min($CarouselDesktopDimension,ih)':force_original_aspect_ratio=decrease"
+  $mobileVideoScale = "scale='min($CarouselMobileDimension,iw)':'min($CarouselMobileDimension,ih)':force_original_aspect_ratio=decrease"
+
+  $didDesktop = Convert-CarouselVideo `
+    -SourcePath $sourceFile.FullName `
+    -OutputPath $desktopVideoOut `
+    -ScaleFilter $desktopVideoScale `
+    -Crf $CarouselVideoCrf `
+    -ForceRebuild:$RebuildWebp
+
+  $didMobile = Convert-CarouselVideo `
+    -SourcePath $sourceFile.FullName `
+    -OutputPath $mobileVideoOut `
+    -ScaleFilter $mobileVideoScale `
+    -Crf $CarouselVideoCrf `
+    -ForceRebuild:$RebuildWebp
+
+  $didPoster = Convert-CarouselVideoPoster `
+    -SourcePath $sourceFile.FullName `
+    -OutputPath $posterOut `
+    -ScaleFilter $desktopVideoScale `
+    -ForceRebuild:$RebuildWebp
+
+  if ($didDesktop) {
+    Write-Host "Created or refreshed img/carousel/$slideNumber-$CarouselDesktopDimension.mp4"
+  }
+
+  if ($didMobile) {
+    Write-Host "Created or refreshed img/carousel/$slideNumber-$CarouselMobileDimension.mp4"
+  }
+
+  if ($didPoster) {
+    Write-Host "Created or refreshed img/carousel/$slideNumber-poster.webp"
+  }
+}
+
 $carouselSources = Get-ChildItem -LiteralPath $resolvedCarouselDir -File |
   Where-Object { $_.BaseName -match '^\d+$' -and $_.Extension -match '^\.(png|jpe?g)$' } |
   Sort-Object { [int]$_.BaseName }
 
 foreach ($file in $carouselSources) {
+  if ($carouselVideoSlideNumberSet.Contains([int]$file.BaseName)) {
+    continue
+  }
+
   $desktopOutputPath = Join-Path $resolvedCarouselDir ($file.BaseName + "-$CarouselDesktopDimension.webp")
   $mobileOutputPath = Join-Path $resolvedCarouselDir ($file.BaseName + "-$CarouselMobileDimension.webp")
 
@@ -323,6 +541,7 @@ Write-Host "Optimized automatically:"
 Write-Host " - img/logo.png -> img/logo.webp (max 1200 px)"
 Write-Host " - img/stories/*.png/jpg -> .webp (max 1080x1350)"
 Write-Host " - img/carousel/*.png/jpg -> responsive WebP files ($CarouselMobileDimension px and $CarouselDesktopDimension px)"
+Write-Host " - img/carousel/*.mp4/mov/webm/mkv -> H.264 MP4 ($CarouselMobileDimension px and $CarouselDesktopDimension px) + poster WebP"
 Write-Host ""
 Write-Host "Kept as original formats:"
 Write-Host " - SVG icons"
