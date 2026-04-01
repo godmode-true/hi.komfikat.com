@@ -1,6 +1,6 @@
 /**
  * Site bootstrap: `KomfiKatApp` singleton, DOM refs, shared helpers, and non-module init
- * (social widgets, scroll-to-top, viewport fit, lazy feature init).
+ * (social widgets, scroll-to-top, promo carousel layout sync, lazy feature init).
  */
 (() => {
   const App = (window.KomfiKatApp = window.KomfiKatApp || {});
@@ -10,7 +10,6 @@
     root: document.documentElement,
     body: document.body,
     topBar: document.querySelector(".top-bar"),
-    homeHero: document.querySelector("[data-home-hero]"),
     themeToggle: document.querySelector("[data-theme-toggle]"),
     shareMenu: document.querySelector("[data-share-menu]"),
     shareButton: document.querySelector("[data-share-page]"),
@@ -63,8 +62,6 @@
     carouselInitialized: false,
   };
 
-  let promoViewportFitStableHeight = 0;
-  let promoViewportFitStableWidth = 0;
   const monthMap = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   function formatStoryDate(dateString) {
@@ -239,74 +236,6 @@
     };
   }
 
-  function syncPromoCarouselViewportFit() {
-    const page = document.querySelector(".page");
-    const homeHero = App.dom.homeHero;
-    const promoShell = App.dom.promoCarousel;
-    const promoSection = promoShell?.closest(".promo-carousel");
-    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
-
-    if (!page || !homeHero || !promoShell || !promoSection) {
-      return;
-    }
-
-    delete homeHero.dataset.homeHeroFit;
-    delete promoSection.dataset.viewportFit;
-    promoSection.style.removeProperty("--promo-screen-available-height");
-
-    if (viewportWidth > 1024 || isTouchLikeDevice()) {
-      promoViewportFitStableHeight = 0;
-      promoViewportFitStableWidth = 0;
-      return;
-    }
-
-    const rawViewportHeight = window.visualViewport?.height || window.innerHeight || 0;
-    const shouldUseStableMobileViewportHeight = isTouchLikeDevice();
-
-    if (
-      shouldUseStableMobileViewportHeight &&
-      (!promoViewportFitStableHeight || Math.abs(viewportWidth - promoViewportFitStableWidth) > 24)
-    ) {
-      promoViewportFitStableHeight = rawViewportHeight;
-      promoViewportFitStableWidth = viewportWidth;
-    } else if (shouldUseStableMobileViewportHeight) {
-      promoViewportFitStableHeight = Math.min(promoViewportFitStableHeight, rawViewportHeight);
-      promoViewportFitStableWidth = viewportWidth;
-    }
-
-    const viewportHeight = shouldUseStableMobileViewportHeight ? promoViewportFitStableHeight : rawViewportHeight;
-    const pageStyles = window.getComputedStyle(page);
-    const pageTopPadding = Number.parseFloat(pageStyles.paddingTop || "0") || 0;
-    const pageBottomPadding = Number.parseFloat(pageStyles.paddingBottom || "0") || 0;
-    const availableHeroHeight = Math.floor(viewportHeight - pageTopPadding - pageBottomPadding);
-
-    if (availableHeroHeight <= 0) {
-      return;
-    }
-
-    const naturalHeight = homeHero.offsetHeight;
-
-    if (naturalHeight <= availableHeroHeight) {
-      return;
-    }
-
-    homeHero.dataset.homeHeroFit = "true";
-
-    const heroRect = homeHero.getBoundingClientRect();
-    const promoRect = promoSection.getBoundingClientRect();
-    const availablePromoHeight = Math.floor(heroRect.bottom - promoRect.top);
-
-    if (availablePromoHeight <= 0) {
-      delete homeHero.dataset.homeHeroFit;
-      return;
-    }
-
-    promoSection.dataset.viewportFit = "true";
-    promoSection.style.setProperty("--promo-screen-available-height", `${availablePromoHeight}px`);
-  }
-
-  const schedulePromoCarouselViewportFitSync = createRafDebouncedScheduler(syncPromoCarouselViewportFit, 180);
-
   function syncStickyHeaderMaskGeometry() {
     const root = App.dom.root;
     const topBar = App.dom.topBar;
@@ -394,9 +323,6 @@
         clearPageTopHash();
         forceTop();
 
-        promoViewportFitStableHeight = 0;
-        promoViewportFitStableWidth = 0;
-        schedulePromoCarouselViewportFitSync();
         restoreScrollBehavior();
       });
     });
@@ -406,9 +332,6 @@
     window.setTimeout(() => {
       clearPageTopHash();
       forceTop();
-      promoViewportFitStableHeight = 0;
-      promoViewportFitStableWidth = 0;
-      schedulePromoCarouselViewportFitSync();
       restoreScrollBehavior();
     }, 220);
   }
@@ -784,10 +707,8 @@
 
     scheduleStickyHeaderMaskGeometrySync();
 
-    schedulePromoCarouselViewportFitSync();
     window.addEventListener("load", () => scheduleStickyHeaderMaskGeometrySync());
     const onViewportResizeDebounced = () => {
-      schedulePromoCarouselViewportFitSync({ debounce: true });
       scheduleStickyHeaderMaskGeometrySync({ debounce: true });
       document.querySelectorAll(".social-hashtag.is-open").forEach((root) => {
         syncSocialHashtagToastScale(root);
@@ -796,9 +717,6 @@
     window.addEventListener("resize", onViewportResizeDebounced);
     window.visualViewport?.addEventListener("resize", onViewportResizeDebounced);
     window.addEventListener("orientationchange", () => {
-      promoViewportFitStableHeight = 0;
-      promoViewportFitStableWidth = 0;
-      schedulePromoCarouselViewportFitSync();
       scheduleStickyHeaderMaskGeometrySync();
     });
     document.fonts?.ready.then(() => scheduleStickyHeaderMaskGeometrySync()).catch(() => {});

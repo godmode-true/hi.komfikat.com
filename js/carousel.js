@@ -259,6 +259,7 @@
   let activePromoRedirectUi = null;
   let activePromoRedirectAction = null;
   let promoRedirectFitFrame = 0;
+  let promoRedirectResizeWired = false;
 
   function isNonEmptyString(value) {
     return typeof value === "string" && value.trim().length > 0;
@@ -375,6 +376,75 @@
     promoRedirectInterval = 0;
   }
 
+  function updateLinkCardRedirectTextSplit(ui) {
+    const root = ui?.root;
+    if (!(root instanceof HTMLElement) || !root.classList.contains("promo-redirect-local-wrap--link-card")) {
+      return;
+    }
+
+    if (root.closest(".share-dialog")) {
+      root.removeAttribute("data-redirect-text-split");
+      return;
+    }
+
+    const redirectBody = ui.redirectBody;
+    const redirectText = ui.redirectText;
+    const redirectTextPrefix = ui.redirectTextPrefix;
+    const redirectTextLead = ui.redirectTextLead;
+    const redirectSubline = ui.redirectSubline;
+    const redirectCountdownBadge = ui.redirectCountdownBadge;
+
+    if (
+      !(redirectBody instanceof HTMLElement) ||
+      !(redirectText instanceof HTMLElement) ||
+      !(redirectTextPrefix instanceof HTMLElement) ||
+      !(redirectTextLead instanceof HTMLElement) ||
+      !(redirectSubline instanceof HTMLElement) ||
+      !(redirectCountdownBadge instanceof HTMLElement)
+    ) {
+      root.removeAttribute("data-redirect-text-split");
+      return;
+    }
+
+    const bodyWidth = redirectBody.clientWidth;
+    if (bodyWidth <= 0) {
+      return;
+    }
+
+    const textStyles = window.getComputedStyle(redirectText);
+    const prefixStyles = window.getComputedStyle(redirectTextPrefix);
+
+    const measureHost = document.createElement("span");
+    measureHost.setAttribute("aria-hidden", "true");
+    measureHost.style.cssText =
+      "position:absolute;left:0;top:0;visibility:hidden;pointer-events:none;display:inline-flex;flex-direction:row;align-items:center;white-space:nowrap;box-sizing:border-box;";
+    measureHost.style.gap = textStyles.gap;
+    measureHost.style.font = textStyles.font;
+    measureHost.style.fontSize = textStyles.fontSize;
+    measureHost.style.fontFamily = textStyles.fontFamily;
+    measureHost.style.fontWeight = textStyles.fontWeight;
+    measureHost.style.fontStyle = textStyles.fontStyle;
+    measureHost.style.letterSpacing = textStyles.letterSpacing;
+    measureHost.style.lineHeight = textStyles.lineHeight;
+
+    const measurePrefix = document.createElement("span");
+    measurePrefix.style.cssText =
+      "display:inline-flex;flex-direction:row;align-items:baseline;white-space:nowrap;box-sizing:border-box;";
+    measurePrefix.style.gap = prefixStyles.gap;
+    measurePrefix.append(redirectTextLead.cloneNode(true), redirectSubline.cloneNode(true));
+    measureHost.append(measurePrefix, redirectCountdownBadge.cloneNode(true));
+
+    document.documentElement.append(measureHost);
+    const neededWidth = Math.ceil(measureHost.getBoundingClientRect().width);
+    measureHost.remove();
+
+    if (neededWidth > bodyWidth + 2) {
+      root.setAttribute("data-redirect-text-split", "");
+    } else {
+      root.removeAttribute("data-redirect-text-split");
+    }
+  }
+
   function fitPromoRedirectOverlay(ui = activePromoRedirectUi) {
     if (
       !(ui?.overlay instanceof HTMLElement) ||
@@ -392,6 +462,18 @@
       return;
     }
 
+    const isLinkCardRedirect = ui.root instanceof HTMLElement && ui.root.classList.contains("promo-redirect-local-wrap--link-card");
+    /* Share dialog: fluid CSS (clamp + wrap) instead of scaling the whole row. */
+    if (isLinkCardRedirect && ui.root.closest?.(".share-dialog")) {
+      ui.root.removeAttribute("data-redirect-text-split");
+      ui.overlay.style.removeProperty("--promo-redirect-inline-gap");
+      return;
+    }
+
+    if (isLinkCardRedirect) {
+      updateLinkCardRedirectTextSplit(ui);
+    }
+
     const overlayStyles = window.getComputedStyle(ui.overlay);
     const paddingInline =
       (Number.parseFloat(overlayStyles.paddingLeft || "0") || 0) +
@@ -400,12 +482,6 @@
     const availableWidth = Math.max(0, overlayWidth - paddingInline);
     const bodyWidth = Math.ceil(ui.redirectBody.scrollWidth);
     const actionsWidth = Math.ceil(ui.redirectActions.scrollWidth);
-    const isLinkCardRedirect = ui.root instanceof HTMLElement && ui.root.classList.contains("promo-redirect-local-wrap--link-card");
-    /* Share dialog: fluid CSS (clamp + wrap) instead of scaling the whole row. */
-    if (isLinkCardRedirect && ui.root.closest?.(".share-dialog")) {
-      ui.overlay.style.removeProperty("--promo-redirect-inline-gap");
-      return;
-    }
     const isCompactLinkCardRedirect = isLinkCardRedirect && helpers.matchesCompactLayout();
     const leadWidth = isLinkCardRedirect ? Math.ceil(ui.redirectLead?.getBoundingClientRect().width || 0) : 0;
     const openWidth = isLinkCardRedirect
@@ -552,6 +628,7 @@
     ui.overlay?.style.removeProperty("--promo-redirect-single-inline-width");
 
     delete ui.root.dataset.promoRedirectActive;
+    ui.root.removeAttribute("data-redirect-text-split");
 
     if (ui.overlay instanceof HTMLElement) {
       ui.overlay.setAttribute("aria-hidden", "true");
@@ -821,6 +898,10 @@
       redirectCode,
       redirectCountdown,
       redirectSubline,
+      redirectText,
+      redirectTextPrefix,
+      redirectTextLead,
+      redirectCountdownBadge,
       openNow,
       openNowMobile,
       cancelDesktop,
@@ -1373,6 +1454,19 @@
 
     App.flags.carouselInitialized = true;
     enhanceLinkSectionRedirects();
+
+    if (!promoRedirectResizeWired) {
+      promoRedirectResizeWired = true;
+      window.addEventListener(
+        "resize",
+        () => {
+          if (activePromoRedirectUi) {
+            schedulePromoRedirectOverlayFit(activePromoRedirectUi);
+          }
+        },
+        { passive: true },
+      );
+    }
 
     const shell = dom.promoCarousel;
     const promoSection = shell?.closest(".promo-carousel");
