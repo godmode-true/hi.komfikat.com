@@ -733,7 +733,7 @@ input[type="reset"] {
   align-items: flex-start;
   justify-content: center;
   gap: 0.12rem;
-  width: max-content;
+  width: 100%;
   max-width: 100%;
   min-width: 0;
   text-align: left;
@@ -809,6 +809,7 @@ input[type="reset"] {
   pointer-events: auto;
   border-radius: var(--promo-content-radius);
   transform: translateY(-50%) scale(1);
+  white-space: normal;
 }
 
 .promo-carousel__shop-button-wrap[data-promo-redirect-active="true"] .promo-carousel__promo-chip {
@@ -904,6 +905,10 @@ input[type="reset"] {
   display: block;
   line-height: 1.02;
   text-wrap: pretty;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 
 .promo-carousel__shop-button-redirect .promo-redirect-toast__actions {

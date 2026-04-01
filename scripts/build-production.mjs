@@ -16,6 +16,7 @@ const jsFiles = [
   "js/main.js",
   "js/theme.js",
   "js/share.js",
+  "js/stories-manifest.js",
   "js/stories.js",
   "js/carousel-manifest.js",
   "js/carousel.js",
