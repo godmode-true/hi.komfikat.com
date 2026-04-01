@@ -13,6 +13,7 @@
   const allowStoredPresetOverride = window.KomfiKatThemeConfig?.allowStoredPresetOverride === true;
   const themeSwitchCleanupBufferMs = 90;
   let themeSwitchCleanupTimeout = 0;
+  let themeSwitchRunId = 0;
 
   function isReducedMotionPreferred() {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -49,9 +50,10 @@
 
     const fallbackX = `${window.innerWidth / 2}px`;
     const fallbackY = `${Math.max(0, Math.min(window.innerHeight * 0.18, 96))}px`;
+    const logoFrame = dom.profileLogo?.closest(".profile__logo-frame");
     const originElement =
-      dom.profileLogo?.closest(".profile__logo-frame") instanceof HTMLElement
-        ? dom.profileLogo.closest(".profile__logo-frame")
+      logoFrame instanceof HTMLElement
+        ? logoFrame
         : dom.profileLogo instanceof HTMLElement
           ? dom.profileLogo
           : dom.themeToggle instanceof HTMLElement
@@ -76,26 +78,34 @@
     dom.root.style.setProperty("--theme-switch-origin-y", `${rect.top + (rect.height / 2)}px`);
   }
 
-  function clearThemeSwitchState() {
+  function clearThemeSwitchState(expectedRunId = null) {
+    if (expectedRunId !== null && expectedRunId !== themeSwitchRunId) {
+      return;
+    }
+
     window.clearTimeout(themeSwitchCleanupTimeout);
     themeSwitchCleanupTimeout = 0;
     delete dom.root.dataset.themeSwitching;
+    window.dispatchEvent(new CustomEvent("komfi:themeswitchend"));
   }
 
   function runThemeChange(applyChange) {
+    themeSwitchRunId += 1;
+    const runId = themeSwitchRunId;
     clearThemeSwitchState();
     syncThemeSwitchOrigin();
     dom.root.dataset.themeSwitching = "true";
+    window.dispatchEvent(new CustomEvent("komfi:themeswitchstart"));
     applyChange();
 
     if (isReducedMotionPreferred()) {
-      clearThemeSwitchState();
+      clearThemeSwitchState(runId);
       return;
     }
 
     window.requestAnimationFrame(() => {
       themeSwitchCleanupTimeout = window.setTimeout(() => {
-        clearThemeSwitchState();
+        clearThemeSwitchState(runId);
       }, getThemeBackgroundTransitionMs() + themeSwitchCleanupBufferMs);
     });
   }

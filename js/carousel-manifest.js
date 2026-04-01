@@ -6,7 +6,8 @@ window.KomfiKatCarouselManifest = {
   actions: [
     {
       label: "Buy on Etsy",
-      subtitle: "Hobby Girl Digital Version",
+      mobileLabel: "Buy Hobby Girl on Etsy",
+      subtitle: "Digital Version",
       icon: "img/icons/etsy.svg",
       href: "https://komfikatcoloring.etsy.com/listing/4472798201",
       className: "promo-carousel__shop-button--etsy",
@@ -18,7 +19,8 @@ window.KomfiKatCarouselManifest = {
     },
     {
       label: "Buy on Amazon",
-      subtitle: "Hobby Girl Paperback Version",
+      mobileLabel: "Buy Hobby Girl on Amazon",
+      subtitle: "Paperback Version",
       icon: "img/icons/amazon.svg",
       href: "https://www.amazon.com/dp/B0GVF789ZJ",
       className: "promo-carousel__shop-button--amazon",
@@ -27,7 +29,7 @@ window.KomfiKatCarouselManifest = {
       label: "View on Website",
       subtitle: "Coming soon",
       icon: "img/icons/favicon.png",
-      href: "http://komfikat.com/",
+      href: "https://komfikat.com/",
       className: "promo-carousel__shop-button--website",
       disabled: true,
     },
