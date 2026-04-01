@@ -300,6 +300,26 @@
         return "Amazon";
       }
 
+      if (host.includes("instagram")) {
+        return "Instagram";
+      }
+
+      if (host.includes("tiktok")) {
+        return "TikTok";
+      }
+
+      if (host.includes("youtube") || host.includes("youtu.be")) {
+        return "YouTube";
+      }
+
+      if (host.includes("pinterest")) {
+        return "Pinterest";
+      }
+
+      if (host.includes("threads.net") || host.includes("threads.com")) {
+        return "Threads";
+      }
+
       if (host.includes("komfikat")) {
         return "Komfi Kat";
       }

@@ -582,14 +582,16 @@ input[type="reset"] {
   margin-inline: auto;
 }
 
+/* Same vertical rhythm as .container (gap between its sections). */
 .home-hero {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--section-stack-gap);
 }
 
 .home-hero[data-home-hero-fit="true"] {
   min-height: calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - (var(--page-space-block) * 2));
-  display: flex;
-  flex-direction: column;
 }
 
 .stack {
@@ -1723,6 +1725,11 @@ input[type="reset"] {
 .social-links {
   margin-top: var(--hero-social-gap);
   margin-bottom: var(--hero-carousel-gap);
+}
+
+.home-hero > .social-links {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .social-links__list {
@@ -3413,6 +3420,24 @@ input[type="reset"] {
   contain-intrinsic-size: 900px;
 }
 
+.home-hero > .link-section {
+  width: 100%;
+}
+
+.link-card--social-follow {
+  background: var(--surface-panel);
+  color: var(--panel-text);
+}
+
+.link-card--social-follow .link-card__badge {
+  background-color: var(--surface-panel-muted);
+}
+
+.link-section--social-follow .link-card__badge svg {
+  width: 58%;
+  height: 58%;
+}
+
 .link-list {
   gap: var(--link-list-gap);
 }
@@ -3747,6 +3772,25 @@ input[type="reset"] {
 
 :root[data-theme="dark"] .link-card--etsy .link-card__subtitle {
   color: var(--profile-subtext);
+}
+
+:root[data-theme="dark"] .link-card--social-follow {
+  background: var(--surface-panel-dark);
+  color: var(--profile-text);
+}
+
+:root[data-theme="dark"] .link-card--social-follow .link-card__subtitle {
+  color: var(--profile-subtext);
+}
+
+:root[data-theme="dark"] .link-card--social-follow .link-card__badge {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: var(--surface-border-soft);
+  color: var(--profile-text);
+}
+
+:root[data-theme="dark"] .link-card--social-follow .link-card__badge svg {
+  color: inherit;
 }
 
 :root[data-theme="dark"] .link-card--share-copy,
@@ -5118,6 +5162,11 @@ input[type="reset"] {
 
   :root[data-theme="dark"] .link-card--etsy:hover,
   :root[data-theme="dark"] .link-card--etsy:focus-visible {
+    background: linear-gradient(180deg, #56484c 0%, #4a3d41 100%);
+  }
+
+  :root[data-theme="dark"] .link-card--social-follow:hover,
+  :root[data-theme="dark"] .link-card--social-follow:focus-visible {
     background: linear-gradient(180deg, #56484c 0%, #4a3d41 100%);
   }
 
