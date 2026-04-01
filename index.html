@@ -73,7 +73,7 @@
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap" />
     </noscript>
 
-    <link rel="stylesheet" href="css/style.css?v=20260401a" />
+    <link rel="stylesheet" href="css/style.css?v=20260401b" />
     <script src="js/main.js?v=20260401a" defer></script>
     <script src="js/theme.js?v=20260401a" defer></script>
     <script src="js/share.js?v=20260401a" defer></script>
@@ -90,6 +90,9 @@
           <button class="action-button action-button--subscribe" type="button" aria-label="Subscribe">
             <span class="action-button__label">SUBSCRIBE</span>
           </button>
+          <div class="top-bar__center" aria-hidden="true">
+            <span class="top-bar__center-label">WELCOME</span>
+          </div>
           <div class="top-bar__actions cluster">
             <div class="top-bar__share" data-share-menu>
               <button
@@ -168,7 +171,6 @@
               </svg>
             </button>
           </div>
-          <div class="top-bar__tooltip" data-top-bar-tooltip aria-hidden="true"></div>
         </header>
 
         <div class="home-hero" data-home-hero>
@@ -404,6 +406,7 @@
                     width="24"
                     height="24"
                     decoding="async"
+                    loading="lazy"
                   />
                 </span>
                 <span class="link-card__content">
@@ -429,6 +432,7 @@
                     width="24"
                     height="24"
                     decoding="async"
+                    loading="lazy"
                   />
                 </span>
                 <span class="link-card__content">
@@ -452,6 +456,7 @@
                     width="200"
                     height="200"
                     decoding="async"
+                    loading="lazy"
                   />
                 </span>
                 <span class="link-card__content">
@@ -555,12 +560,10 @@
                 data-local-redirect-target="WhatsApp"
               >
                 <span class="link-card__badge" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path
                       fill="currentColor"
-                      fill-rule="evenodd"
-                      d="M12.08 4.2C7.68 4.2 4.15 7.62 4.15 11.9C4.15 13.42 4.6 14.82 5.44 16.06L4.65 18.92L7.61 18.15C8.8 18.88 10.22 19.27 11.81 19.27C16.2 19.27 19.74 15.86 19.74 11.57C19.74 7.61 16.43 4.2 12.08 4.2ZM10.24 8.1C10.43 8.1 10.63 8.11 10.81 8.56L11.44 10.08C11.5 10.22 11.47 10.38 11.35 10.53L10.87 11.11C10.8 11.2 10.78 11.34 10.85 11.45C11.41 12.33 12.18 13.05 13.12 13.53C13.24 13.6 13.37 13.57 13.46 13.48L14.14 12.8C14.29 12.66 14.46 12.64 14.61 12.7L16.02 13.3C16.24 13.39 16.32 13.56 16.29 13.76C16.14 14.88 15.13 15.57 14.21 15.57C13.95 15.57 13.68 15.52 13.42 15.43C11.91 14.92 10.64 14.08 9.62 12.91C8.64 11.78 8.03 10.63 7.79 9.45C7.55 8.33 8.68 8.1 9.53 8.1H10.24Z"
-                      clip-rule="evenodd"
+                      d="M12 4.25c-4.21 0-7.62 3.32-7.62 7.41 0 1.47.39 2.84 1.13 4.03L4.25 19.75l4.18-1.33c1.1.61 2.35.94 3.62.94 4.21 0 7.62-3.32 7.62-7.41S16.21 4.25 12 4.25Zm4.44 10.68c-.18.5-.99.96-1.38 1.02-.37.06-.83.09-1.35-.08-.31-.1-.71-.23-1.22-.46-2.15-1-3.55-3.34-3.66-3.49-.1-.14-.87-1.14-.87-2.18 0-1.05.56-1.56.76-1.78.2-.22.43-.27.58-.27h.42c.13 0 .31-.05.49.37.18.43.62 1.49.67 1.6.06.12.1.26.02.41-.08.15-.12.26-.25.4l-.37.43c-.12.12-.24.25-.11.48.13.23.59.96 1.27 1.55.88.78 1.62 1.02 1.86 1.13.23.11.37.1.5-.06l.58-.67c.18-.2.35-.16.59-.07.24.1 1.55.72 1.82.85.27.13.45.2.52.31.07.11.07.65-.11 1.15Z"
                     />
                   </svg>
                 </span>
@@ -581,17 +584,10 @@
                 data-local-redirect-target="Messenger"
               >
                 <span class="link-card__badge" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path
-                      d="M12 4.4C7.49 4.4 4 7.65 4 11.78C4 14.14 5.15 16.23 7.08 17.63V20.2C7.08 20.55 7.47 20.76 7.77 20.57L10.43 18.96C10.95 19.09 11.47 19.16 12 19.16C16.51 19.16 20 15.91 20 11.78C20 7.65 16.51 4.4 12 4.4Z"
                       fill="currentColor"
-                    />
-                    <path
-                      d="M8.63 13.52L10.93 11.08C11.14 10.85 11.51 10.82 11.77 11L13.47 12.2C13.73 12.38 14.1 12.35 14.31 12.12L15.94 10.38"
-                      stroke="#ffffff"
-                      stroke-width="1.65"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      d="M12 4.25c-4.3 0-7.8 3.18-7.8 7.1 0 2.25 1.16 4.22 3 5.54v2.48c0 .35.39.56.69.38l2.31-1.31c.58.15 1.18.23 1.8.23 4.3 0 7.8-3.18 7.8-7.1 0-3.92-3.5-7.32-7.8-7.32Zm4.1 6.26-2.28 3.63a.78.78 0 0 1-1.13.22l-1.8-1.34a.3.3 0 0 0-.36 0l-2.44 1.85c-.33.25-.75-.1-.6-.48l2.28-3.63a.78.78 0 0 1 1.13-.22l1.8 1.34c.11.08.26.08.36 0l2.44-1.85c.33-.25.75.1.6.48Z"
                     />
                   </svg>
                 </span>
@@ -612,17 +608,10 @@
                 data-local-redirect-target="iMessage"
               >
                 <span class="link-card__badge" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path
-                      d="M5.1 7.95C5.1 6.68 6.13 5.65 7.4 5.65H16.6C17.87 5.65 18.9 6.68 18.9 7.95V14.5C18.9 15.77 17.87 16.8 16.6 16.8H11.45L8.28 18.94C7.9 19.2 7.38 18.93 7.38 18.47V16.8H7.4C6.13 16.8 5.1 15.77 5.1 14.5V7.95Z"
                       fill="currentColor"
-                    />
-                    <path
-                      d="M9.15 11.22H9.18M12 11.22H12.03M14.85 11.22H14.88"
-                      stroke="#ffffff"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      d="M7.55 6.1h8.9c1.3 0 2.35 1.03 2.35 2.3v5.95c0 1.27-1.05 2.3-2.35 2.3h-4.93l-2.88 1.73c-.37.22-.86-.03-.86-.47v-1.26h-.21c-1.3 0-2.35-1.03-2.35-2.3V8.4c0-1.27 1.05-2.3 2.35-2.3Zm2.1 6.1a.9.9 0 1 0 0-1.8.9.9 0 0 0 0 1.8Zm2.85 0a.9.9 0 1 0 0-1.8.9.9 0 0 0 0 1.8Zm2.85 0a.9.9 0 1 0 0-1.8.9.9 0 0 0 0 1.8Z"
                     />
                   </svg>
                 </span>
@@ -643,10 +632,10 @@
                 data-local-redirect-target="Facebook"
               >
                 <span class="link-card__badge" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path
-                      d="M12.84 18.65V12.94H14.77L15.05 10.83H12.84V9.41C12.84 8.81 13.01 8.39 13.95 8.39H15.11V6.49C14.91 6.46 14.22 6.4 13.42 6.4C11.73 6.4 10.57 7.41 10.57 9.16V10.83H8.83V12.94H10.57V18.65H12.84Z"
                       fill="currentColor"
+                      d="M13.64 20v-6.24h2.1l.32-2.43h-2.42V9.78c0-.7.2-1.18 1.22-1.18h1.3V6.42c-.22-.03-.98-.1-1.86-.1-1.84 0-3.1 1.1-3.1 3.12v1.9H9.1v2.43h2.1V20h2.44Z"
                     />
                   </svg>
                 </span>
@@ -667,10 +656,10 @@
                 data-local-redirect-target="X"
               >
                 <span class="link-card__badge" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path
-                      d="M6.15 5.75H8.96L12.43 10.55L16.46 5.75H18.62L13.38 11.99L18.95 19.75H16.13L12.52 14.69L8.27 19.75H6.1L11.58 13.22L6.15 5.75Z"
                       fill="currentColor"
+                      d="M18.7 19.75h-3.57l-3.76-5.2-4.52 5.2H5.3l5.72-6.58L5.2 5.75h3.6l3.46 4.8 4.12-4.8h1.56l-4.98 5.8 5.74 8.2Z"
                     />
                   </svg>
                 </span>
@@ -691,14 +680,11 @@
                 data-local-redirect-target="Reddit"
               >
                 <span class="link-card__badge" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path
-                      d="M18.79 10.63C19.85 10.63 20.71 11.48 20.71 12.53C20.71 13.3 20.26 13.96 19.61 14.26C19.64 14.44 19.65 14.62 19.65 14.8C19.65 17.58 16.47 19.83 12.54 19.83C8.61 19.83 5.42 17.58 5.42 14.8C5.42 14.61 5.44 14.42 5.47 14.24C4.85 13.93 4.42 13.29 4.42 12.53C4.42 11.48 5.28 10.63 6.34 10.63C6.89 10.63 7.38 10.86 7.73 11.24C8.98 10.42 10.62 9.92 12.4 9.86L13.21 6.15L15.79 6.7C15.86 7.43 16.48 8 17.23 8C18.03 8 18.68 7.36 18.68 6.57C18.68 5.78 18.03 5.14 17.23 5.14C16.71 5.14 16.26 5.41 16.01 5.81L12.88 5.14C12.53 5.07 12.19 5.29 12.11 5.64L11.18 9.88C9.46 9.99 7.89 10.49 6.68 11.28C7.03 10.89 7.52 10.63 8.08 10.63"
                       fill="currentColor"
+                      d="M18.35 11.2c.92 0 1.67.73 1.67 1.62 0 .67-.43 1.25-1.03 1.49.02.17.03.34.03.51 0 2.28-3.1 4.13-6.92 4.13-3.82 0-6.92-1.85-6.92-4.13 0-.17.01-.34.03-.5-.57-.25-.98-.8-.98-1.5 0-.9.75-1.62 1.67-1.62.54 0 1.02.25 1.33.64 1.14-.78 2.73-1.25 4.5-1.3l.66-3.04a.5.5 0 0 1 .58-.38l2.6.55a1.55 1.55 0 1 1-.04 1.06l-2.18-.47-.5 2.32c1.79.08 3.4.56 4.55 1.35.31-.39.8-.63 1.35-.63Zm-9.3 2.35a.9.9 0 1 0 0-1.8.9.9 0 0 0 0 1.8Zm5.9 0a.9.9 0 1 0 0-1.8.9.9 0 0 0 0 1.8Zm-5.2 2.25c.62.48 1.48.72 2.58.72 1.1 0 1.96-.24 2.58-.72.2-.16.5-.14.67.06.17.2.14.48-.06.64-.8.63-1.85.96-3.19.96-1.34 0-2.39-.33-3.19-.96a.46.46 0 0 1-.06-.64c.17-.2.47-.22.67-.06Z"
                     />
-                    <circle cx="9.73" cy="13.19" r="1.02" fill="#ffffff" />
-                    <circle cx="15.42" cy="13.19" r="1.02" fill="#ffffff" />
-                    <path d="M10.09 15.94C10.73 16.4 11.55 16.65 12.58 16.65C13.61 16.65 14.42 16.4 15.07 15.94" stroke="#ffffff" stroke-width="1.45" stroke-linecap="round" />
                   </svg>
                 </span>
                 <span class="link-card__content">
@@ -718,10 +704,10 @@
                 data-local-redirect-target="Pinterest"
               >
                 <span class="link-card__badge" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path
-                      d="M12.21 4.7C8.3 4.7 5.2 7.52 5.2 11.31C5.2 13.72 6.56 15.78 8.73 16.64C8.69 16.06 8.72 15.17 8.9 14.48C9.1 13.74 10.16 9.29 10.16 9.29C10.16 9.29 9.84 8.66 9.84 7.72C9.84 6.24 10.71 5.14 11.79 5.14C12.71 5.14 13.15 5.83 13.15 6.66C13.15 7.58 12.56 8.95 12.26 10.23C12 11.32 12.8 12.21 13.87 12.21C15.8 12.21 17.29 10.18 17.29 7.26C17.29 4.71 15.45 2.94 12.81 2.94C9.72 2.94 7.91 5.24 7.91 7.62C7.91 8.55 8.27 9.54 8.72 10.08C8.81 10.19 8.82 10.29 8.79 10.4C8.7 10.78 8.5 11.6 8.46 11.76C8.41 11.97 8.3 12.01 8.08 11.91C6.61 11.25 5.69 9.18 5.69 7.47C5.69 4.08 8.16 1 12.82 1C16.61 1 19.56 3.69 19.56 7.29C19.56 11.05 17.19 14.08 13.91 14.08C12.81 14.08 11.78 13.51 11.42 12.83C11.42 12.83 10.87 14.92 10.74 15.43C10.51 16.33 9.89 17.45 9.34 18.17C10.26 18.45 11.23 18.59 12.22 18.59C16.12 18.59 19.22 15.78 19.22 11.99C19.22 8.2 16.12 4.7 12.21 4.7Z"
                       fill="currentColor"
+                      d="M12 4.3c-4.22 0-7.65 3.14-7.65 7 0 2.8 1.69 5.26 4.07 6.19-.06-.52-.1-1.31.02-1.87l1.05-4.41s-.26-.53-.26-1.33c0-1.24.73-2.16 1.63-2.16.77 0 1.14.57 1.14 1.25 0 .76-.49 1.9-.74 2.95-.2.88.46 1.6 1.36 1.6 1.64 0 2.9-1.68 2.9-4.1 0-2.14-1.59-3.64-3.85-3.64-2.63 0-4.17 1.92-4.17 3.9 0 .78.3 1.62.69 2.07.08.1.09.18.07.28l-.25 1c-.04.16-.14.2-.31.12-1.15-.52-1.88-2.14-1.88-3.44 0-2.8 2.08-5.38 5.99-5.38 3.14 0 5.57 2.18 5.57 5.1 0 3.04-1.97 5.49-4.7 5.49-1 0-1.93-.5-2.25-1.09l-.61 2.28c-.22.8-.8 1.8-1.18 2.41.88.26 1.82.4 2.8.4 4.22 0 7.65-3.13 7.65-7 0-3.86-3.43-7-7.65-7Z"
                     />
                   </svg>
                 </span>
@@ -746,7 +732,7 @@
             <div class="story-viewer__header">
               <div class="story-viewer__brand">
                 <span class="story-viewer__brand-mark" aria-hidden="true">
-                  <img src="img/logo.webp" alt="" width="1200" height="1200" decoding="async" />
+                  <img src="img/logo.webp" alt="" width="1200" height="1200" decoding="async" loading="lazy" />
                 </span>
                 <div class="story-viewer__brand-copy">
                   <p class="story-viewer__eyebrow" data-story-eyebrow>Komfi Kat</p>
@@ -813,6 +799,7 @@
                     width="1080"
                     height="1350"
                     decoding="async"
+                    loading="lazy"
                     data-story-image
                     draggable="false"
                   />

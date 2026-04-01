@@ -13,6 +13,7 @@
   const allowStoredPresetOverride = window.KomfiKatThemeConfig?.allowStoredPresetOverride === true;
   const themeSwitchCleanupBufferMs = 90;
   let themeSwitchCleanupTimeout = 0;
+  let themeSwitchRunId = 0;
 
   function isReducedMotionPreferred() {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -76,7 +77,11 @@
     dom.root.style.setProperty("--theme-switch-origin-y", `${rect.top + (rect.height / 2)}px`);
   }
 
-  function clearThemeSwitchState() {
+  function clearThemeSwitchState(expectedRunId = null) {
+    if (expectedRunId !== null && expectedRunId !== themeSwitchRunId) {
+      return;
+    }
+
     window.clearTimeout(themeSwitchCleanupTimeout);
     themeSwitchCleanupTimeout = 0;
     delete dom.root.dataset.themeSwitching;
@@ -84,6 +89,8 @@
   }
 
   function runThemeChange(applyChange) {
+    themeSwitchRunId += 1;
+    const runId = themeSwitchRunId;
     clearThemeSwitchState();
     syncThemeSwitchOrigin();
     dom.root.dataset.themeSwitching = "true";
@@ -91,13 +98,13 @@
     applyChange();
 
     if (isReducedMotionPreferred()) {
-      clearThemeSwitchState();
+      clearThemeSwitchState(runId);
       return;
     }
 
     window.requestAnimationFrame(() => {
       themeSwitchCleanupTimeout = window.setTimeout(() => {
-        clearThemeSwitchState();
+        clearThemeSwitchState(runId);
       }, getThemeBackgroundTransitionMs() + themeSwitchCleanupBufferMs);
     });
   }
