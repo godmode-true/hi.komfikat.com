@@ -152,7 +152,7 @@
   function applyShareDialogClosedState({ restoreFocus = false } = {}) {
     syncShareMenuState(false);
     document.body.classList.remove("share-dialog-is-open");
-    helpers.scheduleIdleTopBarTooltipRestore?.();
+    helpers.scheduleIdleTopBarTooltipRestore();
 
     if (restoreFocus && dom.shareButton instanceof HTMLElement) {
       dom.shareButton.focus({ preventScroll: true });

@@ -35,7 +35,7 @@
         label: "View on Website",
         subtitle: "Coming soon",
         icon: "img/icons/favicon.png",
-        href: "http://komfikat.com/",
+        href: "https://komfikat.com/",
         className: "promo-carousel__shop-button--website",
         disabled: true,
       },
@@ -556,7 +556,7 @@
     }
 
     setActivePromoRedirectUi(null, null);
-    App.helpers.scheduleIdleTopBarTooltipRestore?.();
+    App.helpers.scheduleIdleTopBarTooltipRestore();
   }
 
   App.dismissPromoRedirectToast = dismissPromoRedirectToast;

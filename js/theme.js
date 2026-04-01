@@ -50,9 +50,10 @@
 
     const fallbackX = `${window.innerWidth / 2}px`;
     const fallbackY = `${Math.max(0, Math.min(window.innerHeight * 0.18, 96))}px`;
+    const logoFrame = dom.profileLogo?.closest(".profile__logo-frame");
     const originElement =
-      dom.profileLogo?.closest(".profile__logo-frame") instanceof HTMLElement
-        ? dom.profileLogo.closest(".profile__logo-frame")
+      logoFrame instanceof HTMLElement
+        ? logoFrame
         : dom.profileLogo instanceof HTMLElement
           ? dom.profileLogo
           : dom.themeToggle instanceof HTMLElement

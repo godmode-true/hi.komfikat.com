@@ -411,70 +411,8 @@
     }, 220);
   }
 
-  function createShareHintText(text) {
-    const textElement = document.createElement("span");
-    textElement.className = "share-rail__hint-text";
-    textElement.textContent = text;
-    return textElement;
-  }
-
-  function createShareHintIcon(icon) {
-    const iconElement = document.createElement("span");
-    iconElement.className = "share-rail__hint-icon";
-    iconElement.textContent = icon;
-    return iconElement;
-  }
-
-  function createShareHintStatusIcon() {
-    const iconElement = document.createElement("img");
-    iconElement.className = "share-rail__hint-status-icon";
-    iconElement.src = "img/icons/success.svg";
-    iconElement.alt = "";
-    iconElement.width = 18;
-    iconElement.height = 18;
-    iconElement.decoding = "async";
-    iconElement.setAttribute("aria-hidden", "true");
-    return iconElement;
-  }
-
-  function setShareHintContent({ text, icon = "", success = false }) {
-    if (!App.dom.shareRailHint) {
-      return;
-    }
-
-    const nodes = [];
-
-    if (success) {
-      nodes.push(createShareHintStatusIcon());
-    }
-
-    nodes.push(createShareHintText(text));
-
-    if (icon) {
-      nodes.push(createShareHintIcon(icon));
-    }
-
-    App.dom.shareRailHint.replaceChildren(...nodes);
-  }
-
-  function isPromoRedirectToastVisible() {
-    return App.isPromoRedirectVisible?.() === true;
-  }
-  function dismissStickyMenuPrompts(except = "") {
-    if (isPromoRedirectToastVisible()) {
-      return;
-    }
-
-    if (except !== "share") {
-      App.hideShareStickyUi?.();
-    }
-
-    if (except !== "promo-redirect") {
-      App.dismissPromoRedirectToast?.();
-    }
-  }
-
-  function legacyCopyText(text) {
+  /** Fallback when the Async Clipboard API is unavailable or denied. */
+  function copyTextFallback(text) {
     const textarea = document.createElement("textarea");
     textarea.value = text;
     textarea.setAttribute("readonly", "");
@@ -505,7 +443,7 @@
     }
 
     try {
-      if (legacyCopyText(text)) {
+      if (copyTextFallback(text)) {
         return true;
       }
     } catch {}
@@ -521,15 +459,11 @@
     isDesktopPointerDevice,
     isTouchLikeDevice,
     isDevPreviewHost,
-    createShareHintText,
-    createShareHintIcon,
-    createShareHintStatusIcon,
-    setShareHintContent,
-    dismissStickyMenuPrompts,
-    isPromoRedirectToastVisible,
     copyText,
     lockViewportGestureZoom,
     scheduleStickyHeaderMaskGeometrySync,
+    /** Reserved for future top-bar tooltip restore after dialogs; safe no-op. */
+    scheduleIdleTopBarTooltipRestore() {},
   };
 
   document.addEventListener("DOMContentLoaded", () => {
@@ -619,8 +553,7 @@
     };
 
     const initHashtagFeedback = runOnce(() => {
-      App.dom.socialHashtagLinks?.forEach((link, index) => {
-      const tooltipOwner = `social-hashtag-${index}`;
+      App.dom.socialHashtagLinks?.forEach((link) => {
       const hashtagItem = link.closest(".social-links__hashtag-item");
       const hashtagLabel = link.querySelector(".social-links__hashtag-label");
       const defaultHashtagLabel = hashtagLabel?.textContent?.trim() || "";
@@ -817,10 +750,12 @@
 
     schedulePromoCarouselViewportFitSync();
     window.addEventListener("load", () => scheduleStickyHeaderMaskGeometrySync());
-    window.addEventListener("resize", () => schedulePromoCarouselViewportFitSync({ debounce: true }));
-    window.visualViewport?.addEventListener("resize", () => schedulePromoCarouselViewportFitSync({ debounce: true }));
-    window.addEventListener("resize", () => scheduleStickyHeaderMaskGeometrySync({ debounce: true }));
-    window.visualViewport?.addEventListener("resize", () => scheduleStickyHeaderMaskGeometrySync({ debounce: true }));
+    const onViewportResizeDebounced = () => {
+      schedulePromoCarouselViewportFitSync({ debounce: true });
+      scheduleStickyHeaderMaskGeometrySync({ debounce: true });
+    };
+    window.addEventListener("resize", onViewportResizeDebounced);
+    window.visualViewport?.addEventListener("resize", onViewportResizeDebounced);
     window.addEventListener("orientationchange", () => {
       promoViewportFitStableHeight = 0;
       promoViewportFitStableWidth = 0;
