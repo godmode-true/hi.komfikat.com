@@ -1,7 +1,7 @@
 {
   "name": "hi.komfikat.com",
   "version": "1.0.0",
-  "description": "",
+  "description": "Static landing page for Komfi Kat (hi.komfikat.com).",
   "scripts": {
     "update:fonts": "node scripts/update-fonts.mjs",
     "update:images": "node scripts/run-update-site-images.mjs",

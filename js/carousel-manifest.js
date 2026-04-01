@@ -37,7 +37,7 @@ window.KomfiKatCarouselManifest = {
 
   // Main asset pipeline: run .\scripts\update-site-images.ps1 after dropping files into img/carousel.
   // Images: numbered PNG/JPG (1.png, …); the script builds 768w and 1152w WebP and sets srcset on each slide.
-  // Videos: numbered sources (e.g. 3.mp4); the script encodes 768 and 1152 MP4, adds a poster WebP, and writes type: "video" entries.
+  // Videos: numbered sources (e.g. 3.mp4); the script encodes 768 and 1152 MP4 at 60 fps (see update-site-images.ps1), poster WebP, type: "video" entries.
   // Recommended source size for square carousel art: about 1152x1152 px.
   slides: {
     files: [

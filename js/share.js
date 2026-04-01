@@ -200,6 +200,7 @@
       return;
     }
 
+    clearShareTransientState();
     applyShareDialogClosedState({ restoreFocus });
   }
 
@@ -220,7 +221,6 @@
 
     shareCopyFeedbackTimeout = window.setTimeout(() => {
       hideShareCopyFeedback();
-      closeShareMenu({ restoreFocus: false });
     }, shareCopyFeedbackDurationMs);
   }
 
@@ -316,6 +316,7 @@
       });
 
       dom.shareDialog.addEventListener("close", () => {
+        clearShareTransientState();
         const restoreFocus = restoreShareButtonFocusOnClose;
         restoreShareButtonFocusOnClose = false;
         applyShareDialogClosedState({ restoreFocus });
