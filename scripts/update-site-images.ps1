@@ -5,6 +5,8 @@ param(
   [int]$CarouselDesktopDimension = 1152,
   [int]$CarouselMobileDimension = 768,
   [int]$CarouselVideoCrf = 26,
+  # Constant output frame rate for carousel MP4 (e.g. 60). Uses ffmpeg fps filter after scale (duplicates/drops as needed).
+  [int]$CarouselVideoFps = 60,
   [switch]$RebuildWebp
 )
 
@@ -102,6 +104,7 @@ function Convert-CarouselVideo {
     [Parameter(Mandatory = $true)]
     [string]$ScaleFilter,
     [int]$Crf = 26,
+    [int]$Fps = 60,
     [bool]$ForceRebuild = $false
   )
 
@@ -121,18 +124,25 @@ function Convert-CarouselVideo {
     return $false
   }
 
+  if ($Fps -lt 1) {
+    $Fps = 60
+  }
+
+  $videoFilter = "$ScaleFilter,fps=$Fps"
+
   $ffmpeg = Get-FfmpegCommand
   $ffmpegArgs = @(
     "-y",
     "-loglevel", "error",
     "-i", $SourcePath,
-    "-vf", $ScaleFilter,
+    "-vf", $videoFilter,
     "-an",
     "-c:v", "libx264",
     "-profile:v", "main",
     "-pix_fmt", "yuv420p",
     "-crf", "$Crf",
     "-preset", "medium",
+    "-g", ([string]([math]::Max($Fps * 2, 60))),
     "-movflags", "+faststart",
     $OutputPath
   )
@@ -466,6 +476,7 @@ foreach ($slideNumber in ($carouselVideoSources | ForEach-Object { [int]$_.BaseN
     -OutputPath $desktopVideoOut `
     -ScaleFilter $desktopVideoScale `
     -Crf $CarouselVideoCrf `
+    -Fps $CarouselVideoFps `
     -ForceRebuild:$RebuildWebp
 
   $didMobile = Convert-CarouselVideo `
@@ -473,6 +484,7 @@ foreach ($slideNumber in ($carouselVideoSources | ForEach-Object { [int]$_.BaseN
     -OutputPath $mobileVideoOut `
     -ScaleFilter $mobileVideoScale `
     -Crf $CarouselVideoCrf `
+    -Fps $CarouselVideoFps `
     -ForceRebuild:$RebuildWebp
 
   $didPoster = Convert-CarouselVideoPoster `
@@ -541,7 +553,7 @@ Write-Host "Optimized automatically:"
 Write-Host " - img/logo.png -> img/logo.webp (max 1200 px)"
 Write-Host " - img/stories/*.png/jpg -> .webp (max 1080x1350)"
 Write-Host " - img/carousel/*.png/jpg -> responsive WebP files ($CarouselMobileDimension px and $CarouselDesktopDimension px)"
-Write-Host " - img/carousel/*.mp4/mov/webm/mkv -> H.264 MP4 ($CarouselMobileDimension px and $CarouselDesktopDimension px) + poster WebP"
+Write-Host " - img/carousel/*.mp4/mov/webm/mkv -> H.264 MP4 ($CarouselMobileDimension px and $CarouselDesktopDimension px, ${CarouselVideoFps} fps) + poster WebP"
 Write-Host ""
 Write-Host "Kept as original formats:"
 Write-Host " - SVG icons"

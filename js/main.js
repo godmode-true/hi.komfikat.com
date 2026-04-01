@@ -564,17 +564,16 @@
 
       panel.style.setProperty("--social-hashtag-toast-scale", "1");
 
-      const rect = panel.getBoundingClientRect();
-      if (!(rect.width > 0)) {
+      const innerRect = inner.getBoundingClientRect();
+      if (!(innerRect.width > 0)) {
         return;
       }
 
-      const styles = window.getComputedStyle(panel);
-      const padLeft = Number.parseFloat(styles.paddingLeft || "0") || 0;
-      const padRight = Number.parseFloat(styles.paddingRight || "0") || 0;
-      const availableWidth = Math.max(1, rect.width - padLeft - padRight);
       const innerStyles = window.getComputedStyle(inner);
-      const gap = Number.parseFloat(innerStyles.columnGap || innerStyles.gap || "0") || 0;
+      const padLeft = Number.parseFloat(innerStyles.paddingLeft || "0") || 0;
+      const padRight = Number.parseFloat(innerStyles.paddingRight || "0") || 0;
+      const gap = Number.parseFloat(innerStyles.gap || innerStyles.columnGap || "0") || 0;
+      const availableWidth = Math.max(1, innerRect.width - padLeft - padRight);
       const availableToastWidth = Math.max(1, availableWidth - nav.scrollWidth - gap);
       const naturalToastWidth = Math.max(1, toast.scrollWidth);
       const scale = Math.min(1, availableToastWidth / naturalToastWidth);
@@ -790,6 +789,9 @@
     const onViewportResizeDebounced = () => {
       schedulePromoCarouselViewportFitSync({ debounce: true });
       scheduleStickyHeaderMaskGeometrySync({ debounce: true });
+      document.querySelectorAll(".social-hashtag.is-open").forEach((root) => {
+        syncSocialHashtagToastScale(root);
+      });
     };
     window.addEventListener("resize", onViewportResizeDebounced);
     window.visualViewport?.addEventListener("resize", onViewportResizeDebounced);

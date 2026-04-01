@@ -1,14 +1,14 @@
 <!doctype html>
-<html lang="en" data-default-preset="default-rose">
+<html lang="en" data-default-preset="default-rose-2">
   <head>
     <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
     <title>Komfi Kat • Cozy &amp; Relaxing Coloring Books</title>
-    <meta name="description" content="Cozy hand-drawn coloring books by Komfi Kat." />
+    <meta
+      name="description"
+      content="Hand-drawn cozy coloring books by Komfi Kat — digital and print-friendly pages to relax and unwind."
+    />
     <meta name="robots" content="index,follow" />
     <meta name="author" content="Komfi Kat" />
     <link rel="canonical" href="https://hi.komfikat.com" />
@@ -16,14 +16,24 @@
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Komfi Kat" />
     <meta property="og:title" content="Komfi Kat | Cozy &amp; Relaxing Coloring Books" />
-    <meta property="og:description" content="Start your cozy coloring journey!" />
+    <meta
+      property="og:description"
+      content="Hand-drawn cozy coloring books by Komfi Kat — digital and print-friendly pages to relax and unwind."
+    />
     <meta property="og:url" content="https://hi.komfikat.com" />
+    <meta property="og:image" content="https://hi.komfikat.com/img/logo.webp?v=20260401b" />
+    <meta property="og:image:type" content="image/webp" />
+    <meta property="og:locale" content="en_US" />
 
     <meta name="twitter:card" content="summary" />
+    <meta name="twitter:image" content="https://hi.komfikat.com/img/logo.webp?v=20260401b" />
     <meta name="twitter:title" content="Komfi Kat | Cozy &amp; Relaxing Coloring Books" />
-    <meta name="twitter:description" content="Start your cozy coloring journey!" />
+    <meta
+      name="twitter:description"
+      content="Hand-drawn cozy coloring books by Komfi Kat — digital and print-friendly pages to relax and unwind."
+    />
 
-    <meta name="theme-color" content="#fffcfe" />
+    <meta name="theme-color" content="#fde7ef" />
     <!-- Bump this cache token whenever theme/style/script visuals change, so browsers do not mix old and new theme assets. -->
     <link rel="icon" href="favicon.ico?v=20260401b" sizes="any" />
     <link rel="shortcut icon" href="favicon.ico?v=20260401b" />
@@ -36,14 +46,14 @@
         window.KomfiKatAssetVersion = "20260401b";
       })();
     </script>
-    <script src="themes/theme-presets.js?v=20260401b"></script>
+    <script src="themes/theme-presets.js?v=20260402l"></script>
     <script>
       try {
         const root = document.documentElement;
         const themeColorMeta = document.querySelector('meta[name="theme-color"]');
         const savedTheme = localStorage.getItem("komfi-theme");
         const initialTheme = savedTheme === "dark" ? "dark" : "light";
-        const defaultPreset = window.KomfiKatThemeConfig?.defaultPreset || root.dataset.defaultPreset || "default-rose";
+        const defaultPreset = window.KomfiKatThemeConfig?.defaultPreset || root.dataset.defaultPreset || "default-rose-2";
         const preset = window.KomfiKatThemePresets?.[defaultPreset];
         const initialThemeTokens = preset?.[initialTheme];
         const initialThemeColor =
@@ -73,14 +83,25 @@
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap" />
     </noscript>
 
-    <link rel="stylesheet" href="css/style.css?v=20260401f" />
-    <script src="js/main.js?v=20260401e" defer></script>
-    <script src="js/theme.js?v=20260401e" defer></script>
-    <script src="js/share.js?v=20260401e" defer></script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Komfi Kat",
+        "url": "https://hi.komfikat.com",
+        "description": "Hand-drawn cozy coloring books by Komfi Kat.",
+        "publisher": { "@type": "Organization", "name": "Komfi Kat" }
+      }
+    </script>
+
+    <link rel="stylesheet" href="css/style.css?v=20260402g" />
+    <script src="js/main.js?v=20260401f" defer></script>
+    <script src="js/theme.js?v=20260402k" defer></script>
+    <script src="js/share.js?v=20260401n" defer></script>
     <script src="js/stories-manifest.js?v=20260401e" defer></script>
-    <script src="js/stories.js?v=20260401e" defer></script>
+    <script src="js/stories.js?v=20260401h" defer></script>
     <script src="js/carousel-manifest.js?v=20260401e" defer></script>
-    <script src="js/carousel.js?v=20260401e" defer></script>
+    <script src="js/carousel.js?v=20260402c" defer></script>
   </head>
 
   <body>
@@ -91,7 +112,7 @@
             <span class="action-button__label">SUBSCRIBE</span>
           </button>
           <div class="top-bar__center" aria-hidden="true">
-            <span class="top-bar__center-label">WELCOME</span>
+            <span class="top-bar__center-label"><span class="top-bar__center-label-text">WELCOME</span></span>
           </div>
           <div class="top-bar__actions cluster">
             <div class="top-bar__share" data-share-menu>

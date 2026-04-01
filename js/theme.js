@@ -111,6 +111,10 @@
     });
   }
 
+  /**
+   * Theme colors live in injected `#komfi-theme-presets` (see `themes/theme-presets.js`), selected by
+   * `data-theme` + `data-theme-preset`. `clearManagedTokenOverrides` only clears legacy inline `--*` on `:root`.
+   */
   function applyPresetTokens(theme, presetName) {
     const resolvedTheme = theme === "dark" ? "dark" : "light";
     const resolvedPresetName = resolvePresetName(presetName);

@@ -25,17 +25,20 @@ By default, the active theme for all users comes from `defaultPreset` in [theme-
 
 ## Current presets
 
-- `default-rose`
-- `burgundy-blush`
-- `mocha-petal`
-- `holiday-spruce`
+Rose: `default-rose`, `default-rose-2` (both pastel; Rose 2 is a softer blush tint).
+
+Green: `default-green`, `default-green-2`.
+
+Yellow: `default-yellow`, `default-yellow-2`.
+
+Beige: `default-beige`, `default-beige-2`.
 
 ## How to switch presets
 
 Temporary preview in the current browser session:
 
 ```js
-window.KomfiKatApp.theme.setThemePreset("burgundy-blush");
+window.KomfiKatApp.theme.setThemePreset("default-green-2");
 ```
 
 This does not override the site-wide default permanently.

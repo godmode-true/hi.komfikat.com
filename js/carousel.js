@@ -327,6 +327,10 @@
         return "Threads";
       }
 
+      if (host === "wa.me" || host.includes("whatsapp")) {
+        return "WhatsApp";
+      }
+
       if (host.includes("komfikat")) {
         return "Komfi Kat";
       }
@@ -335,19 +339,25 @@
     return "";
   }
 
-  function getRedirectTextPrefix(config = {}) {
-    const redirectLabel = inferRedirectLabel(config);
-    return redirectLabel ? `Redirecting to ${redirectLabel} in ` : "Redirecting in ";
-  }
-
   function getRedirectAriaLabel(config = {}, countdownSeconds = 5) {
-    const redirectLine = `${getRedirectTextPrefix(config)}${countdownSeconds} seconds.`;
+    const redirectLabel = inferRedirectLabel(config);
+    const redirectLine = redirectLabel
+      ? `Redirecting to ${redirectLabel} in ${countdownSeconds} seconds.`
+      : `Redirecting in ${countdownSeconds} seconds.`;
 
     if (isNonEmptyString(config.promoCode)) {
       return `Save 10% with code ${config.promoCode}. ${redirectLine}`;
     }
 
     return redirectLine;
+  }
+
+  /** Visible second line for link-card redirect (share dialog): "to … in…" — seconds only in the badge. */
+  function getRedirectVisibleSubline(redirectLabel) {
+    if (redirectLabel) {
+      return `to ${redirectLabel} in…`;
+    }
+    return `in…`;
   }
 
   function getPromoRedirectDelayMs() {
@@ -592,6 +602,11 @@
       ui.redirectCountdown.dataset.value = String(countdownSeconds);
     }
 
+    if (ui.redirectSubline instanceof HTMLElement) {
+      const label = inferRedirectLabel(action || {});
+      ui.redirectSubline.textContent = getRedirectVisibleSubline(label);
+    }
+
     if (ui.control instanceof HTMLElement) {
       const fallbackLabel = isNonEmptyString(action?.ariaLabel) ? action.ariaLabel.trim() : action?.label;
 
@@ -669,6 +684,10 @@
       if (ui.redirectCountdown instanceof HTMLElement) {
         ui.redirectCountdown.textContent = String(countdownSeconds);
         ui.redirectCountdown.dataset.value = String(countdownSeconds);
+      }
+      if (ui.redirectSubline instanceof HTMLElement) {
+        const label = inferRedirectLabel(action || {});
+        ui.redirectSubline.textContent = getRedirectVisibleSubline(label);
       }
       ui.control.setAttribute("aria-label", getRedirectAriaLabel(action || { href, promoCode }, countdownSeconds));
       schedulePromoRedirectOverlayFit(ui);
@@ -749,11 +768,21 @@
     redirectTextLead.className = "promo-redirect-toast__text-line promo-redirect-toast__text-line--lead";
     redirectTextLead.textContent = "Redirecting";
 
-    const redirectTextTail = document.createElement("span");
-    redirectTextTail.className = "promo-redirect-toast__text-line promo-redirect-toast__text-line--tail";
-    redirectTextTail.textContent = redirectLabel ? `to ${redirectLabel} in…` : "in…";
+    /** @type {HTMLElement | null} */
+    let redirectSubline = null;
 
-    redirectTextPrefix.append(redirectTextLead, redirectTextTail);
+    if (isLinkCardRedirectHost) {
+      redirectSubline = document.createElement("span");
+      redirectSubline.className = "promo-redirect-toast__text-line promo-redirect-toast__text-line--sub";
+      redirectSubline.textContent = getRedirectVisibleSubline(redirectLabel);
+      redirectTextPrefix.classList.add("promo-redirect-toast__text-prefix--stacked");
+      redirectTextPrefix.append(redirectTextLead, redirectSubline);
+    } else {
+      const redirectTextTail = document.createElement("span");
+      redirectTextTail.className = "promo-redirect-toast__text-line promo-redirect-toast__text-line--tail";
+      redirectTextTail.textContent = redirectLabel ? ` to ${redirectLabel}` : "";
+      redirectTextPrefix.append(redirectTextLead, redirectTextTail);
+    }
     redirectText.append(redirectTextPrefix);
 
     const redirectCountdownBadge = document.createElement("span");
@@ -846,6 +875,7 @@
       redirectActions,
       redirectCode,
       redirectCountdown,
+      redirectSubline,
       openNow,
       openNowMobile,
       cancelDesktop,
@@ -1047,6 +1077,76 @@
     }
   }
 
+  /** Long-press pauses until release (then resumes); short tap toggles. Blocks native save/context UI. */
+  function wireCarouselVideoInteractions(video, card) {
+    video.disablePictureInPicture = true;
+    video.setAttribute("disablePictureInPicture", "");
+    video.setAttribute("controlsList", "nodownload noplaybackrate noremoteplayback");
+    video.setAttribute("disableRemotePlayback", "");
+
+    const blockNativeChrome = (event) => {
+      event.preventDefault();
+    };
+    video.addEventListener("contextmenu", blockNativeChrome);
+    card.addEventListener("contextmenu", blockNativeChrome);
+
+    let longPressTimer = 0;
+    let longPressPauseFired = false;
+    let suppressClick = false;
+    const LONG_PRESS_MS = 420;
+
+    const clearLongPressTimer = () => {
+      if (longPressTimer) {
+        window.clearTimeout(longPressTimer);
+        longPressTimer = 0;
+      }
+    };
+
+    const resumeAfterLongPressHold = () => {
+      if (!longPressPauseFired) {
+        return;
+      }
+      longPressPauseFired = false;
+      delete video.dataset.carouselUserPaused;
+      video.play().catch(() => {});
+    };
+
+    video.addEventListener("pointerdown", (event) => {
+      if (event.pointerType === "mouse" && event.button !== 0) {
+        return;
+      }
+      clearLongPressTimer();
+      longPressPauseFired = false;
+      suppressClick = false;
+      longPressTimer = window.setTimeout(() => {
+        longPressTimer = 0;
+        longPressPauseFired = true;
+        suppressClick = true;
+        video.dataset.carouselUserPaused = "true";
+        video.pause();
+      }, LONG_PRESS_MS);
+    });
+
+    const onPointerEnd = () => {
+      clearLongPressTimer();
+      resumeAfterLongPressHold();
+    };
+
+    video.addEventListener("pointerup", onPointerEnd);
+    video.addEventListener("pointercancel", onPointerEnd);
+    video.addEventListener("lostpointercapture", onPointerEnd);
+
+    video.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (suppressClick) {
+        suppressClick = false;
+        event.preventDefault();
+        return;
+      }
+      togglePromoCarouselVideo(video);
+    });
+  }
+
   function createCarouselCtaCard(item) {
     const card = document.createElement("article");
     card.className = "promo-carousel__card promo-carousel__card--cta";
@@ -1156,12 +1256,8 @@
       revealVideo();
     }
 
-    video.addEventListener("click", (event) => {
-      event.stopPropagation();
-      togglePromoCarouselVideo(video);
-    });
-
     card.append(video);
+    wireCarouselVideoInteractions(video, card);
     return card;
   }
 
