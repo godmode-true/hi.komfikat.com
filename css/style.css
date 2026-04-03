@@ -139,11 +139,18 @@
   --sticky-center-content-scale: 1.06;
   --sticky-header-mask-pad-block: max(0.12rem, calc(var(--sticky-bar-pad) - 0.08rem));
   --sticky-header-mask-half-height: calc((var(--top-control-height) + (var(--sticky-header-mask-pad-block) * 2)) / 2);
-  --sticky-header-mask-rect-height: calc(env(safe-area-inset-top) + 0.35rem + var(--sticky-header-mask-half-height));
-  /* Soft fade at the mask edge to avoid a hard seam over shadows/blur. */
+  /* Approximate viewport-top → bottom of sticky bar before JS measures (see main.js). */
+  --sticky-header-mask-rect-height: calc(
+    env(safe-area-inset-top) + var(--page-space-block) + var(--top-control-height) +
+      (var(--sticky-header-mask-pad-block) * 2)
+  );
+  /* Soft fade under the bar center (kept inside the pill contour). */
   --sticky-header-mask-fade: 26px;
-  --sticky-header-mask-height: calc(var(--sticky-header-mask-rect-height) + var(--sticky-header-mask-fade));
   --sticky-header-mask-top: calc(env(safe-area-inset-top) + 0.35rem);
+  --sticky-header-mask-bottom: calc(var(--sticky-header-mask-top) + (var(--top-control-height) + (var(--sticky-header-mask-pad-block) * 2)));
+  --sticky-header-mask-left: 0px;
+  --sticky-header-mask-width: 100vw;
+  --sticky-header-mask-ready: 0;
   --sticky-header-mask-shell-width: calc(
     min(
         calc(100vw - max(env(safe-area-inset-left), var(--page-gutter)) - max(env(safe-area-inset-right), var(--page-gutter))),
@@ -157,13 +164,14 @@
   --surface-shadow-soft: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 10px 24px rgba(122, 103, 89, 0.08);
   --surface-shadow-hover: inset 0 1px 0 rgba(255, 255, 255, 0.78), 0 14px 28px rgba(122, 103, 89, 0.14);
   --surface-shadow-pressed: inset 0 1px 1px rgba(86, 72, 61, 0.1);
-  --sticky-bar-surface: rgba(255, 248, 251, 0.58);
+  --sticky-bar-surface: rgba(255, 248, 251, 0.5);
   --chrome-bar-surface: var(--sticky-bar-surface);
   --sticky-bar-border: rgba(247, 188, 200, 0.4);
   --sticky-bar-shadow: 0 12px 28px rgba(122, 103, 89, 0.1);
-  --sticky-bar-blur: 16px;
+  --sticky-bar-blur: 22px;
   /* Softer frosted glass at scrollY≈0; full value when `html[data-top-bar-scrolled]` (see main.js). */
-  --sticky-bar-blur-idle: 6px;
+  --sticky-bar-blur-idle: 10px;
+  --sticky-bar-glass-saturate: 1.22;
   --subscribe-icon-size: 1.05rem;
   --subscribe-button-inline-space: 0.58rem;
   --subscribe-button-text-start-shift: 0.18rem;
@@ -318,7 +326,7 @@
   --surface-shadow-soft: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 10px 24px rgba(0, 0, 0, 0.28);
   --surface-shadow-hover: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 14px 28px rgba(0, 0, 0, 0.34);
   --surface-shadow-pressed: inset 0 1px 2px rgba(0, 0, 0, 0.3);
-  --sticky-bar-surface: rgba(57, 45, 49, 0.6);
+  --sticky-bar-surface: rgba(57, 45, 49, 0.54);
   --chrome-bar-surface: var(--sticky-bar-surface);
   --sticky-bar-border: rgba(247, 188, 200, 0.22);
   --sticky-bar-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
@@ -414,35 +422,51 @@ body {
   transition: background-color var(--theme-bg-transition-duration) var(--theme-bg-transition-easing);
 }
 
+/*
+ * Full-bleed band to the sticky bar’s vertical midline: scrolling content must not peek through in the gutters
+ * (narrow ::before only matched the pill width and let cards crawl to the viewport top at the sides).
+ * The pill-shaped ::after still paints the rounded bar + soft fade on top of this.
+ */
 body::before {
   content: "";
   position: fixed;
   top: 0;
   left: 0;
-  /* Use 100vw to also cover scrollbar gutter on Windows (prevents a vertical seam). */
-  width: 100vw;
-  height: var(--sticky-header-mask-height);
+  right: 0;
+  height: var(--sticky-header-mask-rect-height);
   background-color: var(--page-bg);
+  opacity: var(--sticky-header-mask-ready);
+  pointer-events: none;
+  z-index: 29;
+}
+
+/* Pill under the measured sticky bar (rounded contour). */
+body::after {
+  content: "";
+  position: fixed;
+  top: var(--sticky-header-mask-top);
+  left: var(--sticky-header-mask-left);
+  width: calc(var(--sticky-header-mask-width) + 2px);
+  height: calc(var(--sticky-header-mask-bottom) - var(--sticky-header-mask-top));
+  background-color: transparent;
   background-image: linear-gradient(
     180deg,
-    var(--page-bg) 0%,
-    var(--page-bg) calc(100% - var(--sticky-header-mask-fade)),
+    var(--page-bg) 0,
+    var(--page-bg) calc(var(--sticky-header-mask-rect-height) - var(--sticky-header-mask-top)),
+    rgba(0, 0, 0, 0) calc(var(--sticky-header-mask-rect-height) - var(--sticky-header-mask-top) + var(--sticky-header-mask-fade)),
     rgba(0, 0, 0, 0) 100%
   );
+  border-radius: var(--link-card-radius);
+  opacity: var(--sticky-header-mask-ready);
   pointer-events: none;
   z-index: 29;
 }
 
 /* When the burger drawer opens, avoid revealing content under the sticky mask during the first frame. */
-body.top-bar-drawer-is-open::before {
-  /* Solid, slightly oversized mask avoids a 1px seam during compositing. */
-  height: calc(var(--sticky-header-mask-height) + 2px);
+body.top-bar-drawer-is-open::after {
+  height: calc(var(--sticky-header-mask-bottom) - var(--sticky-header-mask-top) + 2px);
   background-image: none;
   background-color: var(--page-bg);
-}
-
-body::after {
-  content: none;
 }
 
 :root::before,
@@ -719,7 +743,7 @@ input[type="reset"] {
   --top-bar-shadow: var(--sticky-bar-shadow);
   --top-bar-glass-blur: var(--sticky-bar-blur-idle);
   --top-bar-glass-surface: var(--chrome-bar-surface);
-  --top-bar-glass-filter: blur(var(--top-bar-glass-blur)) saturate(1.08);
+  --top-bar-glass-filter: blur(var(--top-bar-glass-blur)) saturate(var(--sticky-bar-glass-saturate));
   --chrome-control-size: calc(var(--top-control-height) * 1.32);
   /* Keep logo button same size as other controls. */
   --top-bar-brand-size: var(--chrome-control-size);
@@ -1225,8 +1249,8 @@ html[data-top-bar-scrolled] .top-bar {
   border-radius: inherit;
   background: var(--chrome-bar-surface);
   box-shadow: var(--sticky-bar-shadow);
-  backdrop-filter: blur(var(--sticky-bar-blur)) saturate(1.08);
-  -webkit-backdrop-filter: blur(var(--sticky-bar-blur)) saturate(1.08);
+  backdrop-filter: blur(var(--sticky-bar-blur)) saturate(var(--sticky-bar-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--sticky-bar-blur)) saturate(var(--sticky-bar-glass-saturate));
   pointer-events: none;
   z-index: 0;
 }
@@ -6668,8 +6692,8 @@ html[data-top-bar-scrolled] .top-bar {
     --link-card-badge-size: clamp(3.34rem, 2.47vw, 3.79rem);
     --link-card-title-size: clamp(1.78rem, 1.33vw, 2.3rem);
     --link-card-subtitle-size: clamp(1.24rem, 0.94vw, 1.52rem);
-    --sticky-bar-blur: 23px;
-    --sticky-bar-blur-idle: 8px;
+    --sticky-bar-blur: 30px;
+    --sticky-bar-blur-idle: 12px;
   }
 
   .profile__title {
@@ -6729,8 +6753,8 @@ html[data-top-bar-scrolled] .top-bar {
     --link-card-badge-size: clamp(3.98rem, 1.85vw, 4.69rem);
     --link-card-title-size: clamp(2.26rem, 1.19vw, 2.81rem);
     --link-card-subtitle-size: clamp(1.46rem, 0.81vw, 1.79rem);
-    --sticky-bar-blur: 28px;
-    --sticky-bar-blur-idle: 10px;
+    --sticky-bar-blur: 36px;
+    --sticky-bar-blur-idle: 14px;
   }
 
   .profile__title {

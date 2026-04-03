@@ -252,12 +252,15 @@
 
     const halfHeight = rect.height / 2;
 
+    /* Hide content down to the vertical center of the sticky bar (original behavior). */
     root.style.setProperty("--sticky-header-mask-rect-height", `${rect.top + halfHeight}px`);
     root.style.setProperty("--sticky-header-mask-half-height", `${halfHeight}px`);
     root.style.setProperty("--sticky-header-mask-top", `${rect.top}px`);
+    root.style.setProperty("--sticky-header-mask-bottom", `${rect.bottom}px`);
     root.style.setProperty("--sticky-header-mask-left", `${rect.left}px`);
     root.style.setProperty("--sticky-header-mask-width", `${rect.width}px`);
     root.style.setProperty("--sticky-header-mask-translate-x", "0px");
+    root.style.setProperty("--sticky-header-mask-ready", "1");
   }
 
   const scheduleStickyHeaderMaskGeometrySync = createRafDebouncedScheduler(syncStickyHeaderMaskGeometry, 180);
