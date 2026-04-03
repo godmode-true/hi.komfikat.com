@@ -262,6 +262,83 @@
 
   const scheduleStickyHeaderMaskGeometrySync = createRafDebouncedScheduler(syncStickyHeaderMaskGeometry, 180);
 
+  function syncTopBarCenterFit() {
+    const topBar = App.dom.topBar;
+    if (!(topBar instanceof HTMLElement)) {
+      return;
+    }
+
+    const center = topBar.querySelector(".top-bar__center");
+    const lines = topBar.querySelector(".top-bar__center-label-lines");
+    if (!(center instanceof HTMLElement) || !(lines instanceof HTMLElement)) {
+      return;
+    }
+
+    const measureAndApply = () => {
+      const available = center.clientWidth;
+      if (!(available > 0)) {
+        return;
+      }
+
+      // Measure intrinsic width at scale=1. `transform: scale()` does not shrink layout width; using
+      // font-size on `.top-bar__center` does. Resolve base font size from current px / current scale.
+      const cs = window.getComputedStyle(center);
+      const centerFontPx = Number.parseFloat(cs.fontSize || "0") || 16;
+      const scaleStr = topBar.style.getPropertyValue("--top-bar-center-fit-scale").trim();
+      const currentScale = scaleStr === "" ? 1 : Number.parseFloat(scaleStr) || 1;
+      const baseFontPx = centerFontPx / Math.max(0.001, currentScale);
+
+      // Clone the lines node offscreen and read intrinsic scrollWidth at base font size.
+      const clone = lines.cloneNode(true);
+      if (!(clone instanceof HTMLElement)) {
+        return;
+      }
+
+      clone.style.position = "absolute";
+      clone.style.visibility = "hidden";
+      clone.style.pointerEvents = "none";
+      clone.style.left = "-99999px";
+      clone.style.top = "0";
+      clone.style.transform = "none";
+      clone.style.maxWidth = "none";
+      clone.style.width = "max-content";
+      clone.style.fontSize = `${baseFontPx}px`;
+      clone.style.fontFamily = cs.fontFamily;
+      clone.style.fontWeight = cs.fontWeight;
+      clone.style.letterSpacing = cs.letterSpacing;
+      clone.style.lineHeight = cs.lineHeight;
+
+      topBar.append(clone);
+      const needed = Math.ceil(clone.scrollWidth);
+      clone.remove();
+
+      if (!(needed > 0)) {
+        return;
+      }
+
+      const safety = 6;
+      const ratio = (available - safety) / needed;
+      const nextScale = Math.max(0.48, Math.min(1, ratio));
+
+      const prev = Number.parseFloat(topBar.style.getPropertyValue("--top-bar-center-fit-scale") || "1") || 1;
+      if (Math.abs(prev - nextScale) < 0.01) {
+        return;
+      }
+
+      topBar.style.setProperty("--top-bar-center-fit-scale", String(nextScale));
+    };
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        measureAndApply();
+      });
+    });
+  }
+
+  const scheduleTopBarCenterFitSync = createRafDebouncedScheduler(syncTopBarCenterFit, 140);
+
+  let topBarCenterResizeObserver = null;
+
   function scrollPageToAbsoluteTop() {
     const scrollingElement = document.scrollingElement;
     const root = document.documentElement;
@@ -393,7 +470,186 @@
     scheduleIdleTopBarTooltipRestore() {},
   };
 
+  function initTopBarDrawer() {
+    const topBar = App.dom.topBar;
+    const burger = document.querySelector("[data-top-bar-burger]");
+    const drawer = document.querySelector("[data-top-bar-drawer]");
+    const drawerClose = document.querySelector("[data-top-bar-drawer-close]");
+    const drawerInner = drawer?.querySelector(".top-bar__drawer-inner");
+    const drawerHint = drawer?.querySelector("[data-top-bar-drawer-hint]");
+
+    if (!(topBar instanceof HTMLElement) || !(burger instanceof HTMLButtonElement) || !(drawer instanceof HTMLElement)) {
+      return;
+    }
+
+    const setOpen = (nextOpen) => {
+      const isOpen = nextOpen === true;
+      topBar.dataset.drawerOpen = String(isOpen);
+      burger.setAttribute("aria-expanded", String(isOpen));
+      burger.setAttribute("aria-label", isOpen ? "Close menu" : "Open menu");
+      drawer.setAttribute("aria-hidden", String(!isOpen));
+    };
+
+    const isOpenNow = () => topBar.dataset.drawerOpen === "true";
+
+    burger.addEventListener("click", () => {
+      setOpen(!isOpenNow());
+    });
+
+    drawerClose?.addEventListener("click", () => {
+      setOpen(false);
+      burger.focus?.();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && isOpenNow()) {
+        setOpen(false);
+        burger.focus();
+      }
+    });
+
+    // Auto-close on "outside click" only for desktop pointers.
+    // On touch devices, `pointerdown` also fires at the start of a scroll gesture,
+    // which would unintentionally close the drawer while scrolling.
+    const canOutsideClickClose = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    if (canOutsideClickClose) {
+      document.addEventListener("pointerdown", (event) => {
+        if (!isOpenNow()) {
+          return;
+        }
+
+        const target = event.target;
+        if (!(target instanceof Element)) {
+          setOpen(false);
+          return;
+        }
+
+        // Close when the click is outside the open drawer and outside the burger toggle.
+        // (Entire `.top-bar` used to count as "inside", so logo/center/padding never closed the menu.)
+        if (target.closest("[data-top-bar-drawer], [data-top-bar-burger]")) {
+          return;
+        }
+
+        setOpen(false);
+      });
+    }
+
+    if (drawerInner instanceof HTMLElement && drawerHint instanceof HTMLElement) {
+      const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+      if (canHover) {
+        let hideTimer = 0;
+
+        const showHint = (text) => {
+          window.clearTimeout(hideTimer);
+          hideTimer = 0;
+          const trimmed = String(text || "").trim();
+          if (!trimmed) {
+            delete drawerHint.dataset.visible;
+            drawerHint.textContent = "";
+            return;
+          }
+          drawerHint.textContent = trimmed;
+          drawerHint.dataset.visible = "true";
+        };
+
+        const scheduleHide = () => {
+          window.clearTimeout(hideTimer);
+          hideTimer = window.setTimeout(() => {
+            delete drawerHint.dataset.visible;
+          }, 160);
+        };
+
+        const resolveLabel = (target) => {
+          const el = target instanceof Element ? target.closest("button, a") : null;
+          if (!(el instanceof HTMLElement) || !drawerInner.contains(el)) {
+            return "";
+          }
+          if (el === burger) {
+            return "";
+          }
+
+          if (el.matches("[data-theme-toggle]")) {
+            const theme = App.dom.root?.dataset?.theme === "dark" ? "dark" : "light";
+            return theme === "dark" ? el.dataset.topBarHintLight || "" : el.dataset.topBarHintDark || "";
+          }
+
+          return el.dataset.topBarHint || el.getAttribute("aria-label") || el.dataset.label || "";
+        };
+
+        drawerInner.addEventListener("pointerover", (event) => {
+          if (!isOpenNow()) {
+            return;
+          }
+          const label = resolveLabel(event.target);
+          if (label) {
+            showHint(label);
+          }
+        });
+
+        drawerInner.addEventListener("pointerout", () => {
+          scheduleHide();
+        });
+
+        drawerInner.addEventListener("focusin", (event) => {
+          if (!isOpenNow()) {
+            return;
+          }
+          const label = resolveLabel(event.target);
+          if (label) {
+            showHint(label);
+          }
+        });
+
+        drawerInner.addEventListener("focusout", () => {
+          scheduleHide();
+        });
+      }
+    }
+  }
+
+  function initTopBarGlassScrollState() {
+    const root = document.documentElement;
+    const thresholdPx = 8;
+
+    const apply = () => {
+      const scrolled = window.scrollY > thresholdPx;
+      if (scrolled) {
+        root.dataset.topBarScrolled = "";
+      } else {
+        delete root.dataset.topBarScrolled;
+      }
+    };
+
+    let raf = 0;
+    const schedule = () => {
+      if (raf) {
+        return;
+      }
+      raf = window.requestAnimationFrame(() => {
+        raf = 0;
+        apply();
+      });
+    };
+
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    window.addEventListener("pageshow", (event) => {
+      if (event.persisted) {
+        schedule();
+      }
+    });
+    window.addEventListener("load", schedule);
+    apply();
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("[data-current-year]").forEach((node) => {
+      if (node instanceof HTMLElement) {
+        node.textContent = String(new Date().getFullYear());
+      }
+    });
+
     const scheduleIdle = (callback, { timeoutMs = 900 } = {}) => {
       if (typeof window.requestIdleCallback === "function") {
         window.requestIdleCallback(
@@ -659,6 +915,9 @@
 
     initSocialIconRowLinks();
 
+    initTopBarDrawer();
+    initTopBarGlassScrollState();
+
     if (App.helpers.isDevPreviewHost()) {
       App.helpers.removeStorageValue(App.storageKeys.storyViewed);
       App.dom.root.dataset.devStoryReset = "true";
@@ -706,10 +965,22 @@
     });
 
     scheduleStickyHeaderMaskGeometrySync();
+    scheduleTopBarCenterFitSync();
+
+    if (typeof ResizeObserver === "function" && App.dom.topBar instanceof HTMLElement) {
+      const center = App.dom.topBar.querySelector(".top-bar__center");
+      if (center instanceof HTMLElement) {
+        topBarCenterResizeObserver = new ResizeObserver(() => {
+          scheduleTopBarCenterFitSync({ debounce: true });
+        });
+        topBarCenterResizeObserver.observe(center);
+      }
+    }
 
     window.addEventListener("load", () => scheduleStickyHeaderMaskGeometrySync());
     const onViewportResizeDebounced = () => {
       scheduleStickyHeaderMaskGeometrySync({ debounce: true });
+      scheduleTopBarCenterFitSync({ debounce: true });
       document.querySelectorAll(".social-hashtag.is-open").forEach((root) => {
         syncSocialHashtagToastScale(root);
       });
@@ -718,7 +989,13 @@
     window.visualViewport?.addEventListener("resize", onViewportResizeDebounced);
     window.addEventListener("orientationchange", () => {
       scheduleStickyHeaderMaskGeometrySync();
+      scheduleTopBarCenterFitSync();
     });
-    document.fonts?.ready.then(() => scheduleStickyHeaderMaskGeometrySync()).catch(() => {});
+    document.fonts?.ready
+      .then(() => {
+        scheduleStickyHeaderMaskGeometrySync();
+        scheduleTopBarCenterFitSync();
+      })
+      .catch(() => {});
   });
 })();

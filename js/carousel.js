@@ -1601,6 +1601,7 @@
             return;
           }
 
+          pauseCarouselVideos();
           activeIndex = index;
           renderedIndex = cloneCount + (pageStarts[activeIndex] ?? 0);
           isAnimating = true;
@@ -1700,6 +1701,21 @@
       syncCarouselSectionBottomSpace();
     }
 
+    function pauseCarouselVideos({ resetTime = false } = {}) {
+      track.querySelectorAll("video.promo-carousel__video").forEach((video) => {
+        if (!(video instanceof HTMLVideoElement)) {
+          return;
+        }
+
+        try {
+          video.pause();
+          if (resetTime) {
+            video.currentTime = 0;
+          }
+        } catch (_) {}
+      });
+    }
+
     function recoverFromInterruptedAnimation() {
       if (!isAnimating) {
         return;
@@ -1786,6 +1802,8 @@
         return;
       }
 
+      pauseCarouselVideos();
+
       if (activeIndex >= maxIndex) {
         if (!shouldLoop) {
           return;
@@ -1813,6 +1831,8 @@
       if (maxIndex <= 0) {
         return;
       }
+
+      pauseCarouselVideos();
 
       if (activeIndex <= 0) {
         if (!shouldLoop) {
@@ -1919,11 +1939,13 @@
       dragInputMode = "";
 
       if (dragOffset > threshold) {
+        pauseCarouselVideos();
         goToPrevious();
         return;
       }
 
       if (dragOffset < -threshold) {
+        pauseCarouselVideos();
         goToNext();
         return;
       }

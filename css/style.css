@@ -61,7 +61,9 @@
   --button-padding-bottom: 0.34rem;
   --top-control-height: 2.05rem;
   /* Icon-only circular controls (share, theme, footer, share-dialog close): ~76% of button diameter */
-  --chrome-circle-icon-size: calc(var(--top-control-height) * 0.76);
+  --chrome-control-size: var(--top-control-height);
+  /* Icon glyph size inside circular controls */
+  --chrome-circle-icon-size: calc(var(--chrome-control-size) * 0.92);
   --button-radius: 999px;
   --button-border-color: #1f1f1f;
   --button-bg: #fff8fb;
@@ -129,6 +131,12 @@
   --link-card-badge-size: 2.65rem;
   --link-card-title-size: clamp(1.35rem, 5vw, 1.7rem);
   --link-card-subtitle-size: clamp(1rem, 3.8vw, 1.2rem);
+  /* Sticky header: title-to-subtitle ratio (≈ 1.7 / 1.2). */
+  --sticky-center-title-scale: 1.42;
+  /* Second line ("Cozy & Relaxing…") vs base; nudge up without touching title row. */
+  --sticky-center-subtext-scale: 1.12;
+  /* Slight boost before JS width-fit; keeps proportions vs link cards. */
+  --sticky-center-content-scale: 1.06;
   --sticky-header-mask-pad-block: max(0.12rem, calc(var(--sticky-bar-pad) - 0.08rem));
   --sticky-header-mask-half-height: calc((var(--top-control-height) + (var(--sticky-header-mask-pad-block) * 2)) / 2);
   --sticky-header-mask-rect-height: calc(env(safe-area-inset-top) + 0.35rem + var(--sticky-header-mask-half-height));
@@ -151,6 +159,8 @@
   --sticky-bar-border: rgba(247, 188, 200, 0.4);
   --sticky-bar-shadow: 0 12px 28px rgba(122, 103, 89, 0.1);
   --sticky-bar-blur: 16px;
+  /* Softer frosted glass at scrollY≈0; full value when `html[data-top-bar-scrolled]` (see main.js). */
+  --sticky-bar-blur-idle: 6px;
   --subscribe-icon-size: 1.05rem;
   --subscribe-button-inline-space: 0.58rem;
   --subscribe-button-text-start-shift: 0.18rem;
@@ -167,6 +177,57 @@
     --button-padding-inline: 1rem;
     --button-padding-top: 0.42rem;
     --button-padding-bottom: 0.42rem;
+  }
+
+  /* Phone: align sticky chrome inset with link-card inset (Etsy/Amazon rows). */
+  .top-bar,
+  .footer-bar {
+    padding-inline: var(--link-card-padding-inline) !important;
+  }
+
+  /* Phone: logo left inset should match vertical inset. */
+  .top-bar {
+    padding-left: var(--top-bar-pad-block) !important;
+  }
+
+  /* Phone: align burger overlay inset with link-card inset too. */
+  .top-bar__drawer {
+    padding-inline: var(--link-card-padding-inline) !important;
+  }
+
+  /* Phone: half the drawer horizontal inset — tighter gaps between overlay icons. */
+  .top-bar__drawer-inner {
+    gap: calc(var(--link-card-padding-inline) / 2) !important;
+  }
+
+  /* Phone: story ring + logo match other chrome (burger); same thick ring as desktop reads clearly here. */
+  .top-bar {
+    --top-bar-brand-size: var(--link-card-badge-size);
+    --top-bar-story-ring: 0.15rem;
+  }
+
+  /* Phone: make chrome icon-only buttons match link-card badge size (Etsy/Amazon row). */
+  .top-bar__brand.action-button,
+  .top-bar__burger.action-button,
+  .footer-bar__side-action.action-button,
+  .footer-bar__back-to-top.action-button {
+    flex: 0 0 var(--link-card-badge-size);
+    width: var(--link-card-badge-size);
+    min-width: var(--link-card-badge-size);
+    height: var(--link-card-badge-size);
+    min-height: var(--link-card-badge-size);
+    --chrome-circle-icon-size: calc(var(--link-card-badge-size) * 0.92);
+  }
+
+  /* Phone: top-bar overlay buttons (subscribe/share/theme/close) match burger size too. */
+  .top-bar__drawer-inner .action-button--icon-only,
+  .top-bar__drawer-inner .theme-toggle {
+    flex: 0 0 var(--link-card-badge-size) !important;
+    width: var(--link-card-badge-size) !important;
+    min-width: var(--link-card-badge-size) !important;
+    height: var(--link-card-badge-size) !important;
+    min-height: var(--link-card-badge-size) !important;
+    --chrome-circle-icon-size: calc(var(--link-card-badge-size) * 0.92);
   }
 }
 
@@ -266,6 +327,11 @@
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+/* Utilities */
+.u-hidden {
+  display: none !important;
 }
 
 html {
@@ -622,76 +688,194 @@ input[type="reset"] {
   --top-bar-actions-gap: 0.45rem;
   --top-bar-sticky-offset: calc(env(safe-area-inset-top) + var(--page-space-block));
   --top-bar-pad-block: var(--sticky-header-mask-pad-block);
-  --top-bar-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  --top-bar-glass-blur: calc(var(--sticky-bar-blur) + 12px);
+  --top-bar-shadow: var(--sticky-bar-shadow);
+  --top-bar-glass-blur: var(--sticky-bar-blur-idle);
+  --top-bar-glass-surface: var(--chrome-bar-surface);
+  --top-bar-glass-filter: blur(var(--top-bar-glass-blur)) saturate(1.08);
+  --chrome-control-size: calc(var(--top-control-height) * 1.32);
+  /* Keep logo button same size as other controls. */
+  --top-bar-brand-size: var(--chrome-control-size);
+  /* Thinner ring => bigger inner logo, minimal gap. */
+  --top-bar-story-ring: 0.15rem;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: row;
   align-items: center;
-  justify-content: space-between;
   gap: 0.75rem;
   position: sticky;
   top: var(--top-bar-sticky-offset);
   z-index: 30;
   padding: var(--top-bar-pad-block) var(--sticky-bar-pad);
-  border: 1px solid var(--sticky-bar-border);
   border-radius: var(--link-card-radius);
-  background: var(--chrome-bar-surface);
-  box-shadow: var(--top-bar-shadow);
-  backdrop-filter: blur(var(--top-bar-glass-blur)) saturate(1.14);
-  -webkit-backdrop-filter: blur(var(--top-bar-glass-blur)) saturate(1.14);
   isolation: isolate;
+  overflow: hidden;
+}
+
+html[data-top-bar-scrolled] .top-bar {
+  --top-bar-glass-blur: var(--sticky-bar-blur);
+}
+
+.top-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--sticky-bar-border);
+  border-radius: inherit;
+  background: var(--top-bar-glass-surface);
+  box-shadow: var(--top-bar-shadow);
+  backdrop-filter: var(--top-bar-glass-filter);
+  -webkit-backdrop-filter: var(--top-bar-glass-filter);
+  pointer-events: none;
+  z-index: 0;
+  transition:
+    opacity 180ms ease,
+    backdrop-filter 240ms ease,
+    -webkit-backdrop-filter 240ms ease;
+}
+
+.top-bar > * {
+  position: relative;
+  z-index: 1;
 }
 
 .top-bar__center {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
+  /* Grow between fixed logo and actions so title fit + centering get equal side margins. */
+  flex: 1 1 auto;
   min-width: 0;
-  max-width: calc(100% - (var(--sticky-bar-pad) * 2) - (var(--top-control-height) * 2) - 0.9rem);
-  height: var(--top-control-height);
+  width: 100%;
+  max-width: 100%;
+  height: auto;
   color: var(--profile-text);
-  font-size: var(--sticky-menu-hint-font-size);
-  line-height: 1;
+  /* Base matches "Digital Version" subtitle; fit scale affects layout width (unlike transform: scale). */
+  font-size: calc(
+    var(--link-card-subtitle-size) * var(--sticky-center-content-scale) * var(--top-bar-center-fit-scale, 1)
+  );
+  line-height: 1.02;
   font-weight: 700;
   letter-spacing: 0.02em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
   pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
+  text-align: center;
+  padding-inline: clamp(0.12rem, 1vw, 0.42rem);
+}
+
+.top-bar__center-label-lines > * {
+  /* Prefer fitting by responsive sizing over ellipsis on narrow widths. */
+  text-overflow: clip;
 }
 
 .top-bar__center-label {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.34rem;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+/* Hearts + title: flex row so gap is identical left/right (symmetric vs absolute + padding). */
+.top-bar__center-label-text {
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  --sticky-heart-gap: clamp(0.28rem, 1.35vw, 0.52rem);
+  gap: var(--sticky-heart-gap);
+  padding-inline: 0;
+  transform: none;
+  line-height: 1;
+  font-size: 1em;
+  text-align: center;
+  max-width: 100%;
+  min-width: 0;
+  overflow: visible;
+  text-overflow: clip;
   white-space: nowrap;
 }
 
-/* Uppercase label sits optically high vs mask icons; nudge text down to match heart optical center. */
-.top-bar__center-label-text {
+.top-bar__center-label-lines {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.14em;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  white-space: normal;
+  box-sizing: border-box;
+}
+
+/* Do not set display:block on .top-bar__center-label-text — it must stay flex row for side hearts. */
+.top-bar__center-label-lines > * {
+  min-width: 0;
+  max-width: 100%;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.top-bar__center-label-lines > .top-bar__center-label-subtext {
+  display: block;
+}
+
+.top-bar__center-title-text {
   display: inline-block;
-  transform: translateY(0.07em);
+  min-width: 0;
+  max-width: 100%;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+  /* Match "Etsy Shop" title sizing while keeping base at subtitle size. */
+  font-size: calc(1em * var(--sticky-center-title-scale));
   line-height: 1;
 }
 
-.top-bar__center-label::before,
-.top-bar__center-label::after {
+/* Mobile: last glyph (!) sits tighter than first (W) — nudge so heart–text gaps match visually. */
+@media (max-width: 48rem) {
+  .top-bar__center-title-text {
+    padding-inline-end: 0.14em;
+  }
+
+  .top-bar__center-label-text::after {
+    margin-inline-start: 0.08em;
+  }
+}
+
+.top-bar__center-label-subtext {
+  display: inline-block;
+  font-size: calc(1em * var(--sticky-center-subtext-scale));
+  font-weight: 600;
+  opacity: 0.82;
+  text-align: center;
+  line-height: 0.92;
+  margin-top: 0;
+  transform: none;
+}
+
+.top-bar__center-label-text::before,
+.top-bar__center-label-text::after {
   content: "";
-  width: 1.08rem;
-  height: 0.98rem;
+  position: relative;
+  display: inline-block;
   flex: 0 0 auto;
-  align-self: center;
+  /* Scale with the title like the text does (mobile-friendly). */
+  width: clamp(0.72em, 2.1vw, 0.92em);
+  height: clamp(0.66em, 1.9vw, 0.84em);
+  /* Match active carousel heart bullet (color + shadow). */
   background-color: var(--accent-ui-solid);
+  filter: drop-shadow(0 5px 10px var(--accent-ui-shadow));
   -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21s-6.716-4.352-9.192-8.04C.43 9.413 1.127 5.2 4.73 3.92 7.1 3.078 9.39 4.02 12 6.54c2.61-2.52 4.9-3.462 7.27-2.62 3.603 1.28 4.3 5.493 1.922 9.04C18.716 16.648 12 21 12 21z'/%3E%3C/svg%3E");
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21s-6.716-4.352-9.192-8.04C.43 9.413 1.127 5.2 4.73 3.92 7.1 3.078 9.39 4.02 12 6.54c2.61-2.52 4.9-3.462 7.27-2.62 3.603 1.28 4.3 5.493 1.922 9.04C18.716 16.648 12 21 12 21z'/%3E%3C/svg%3E");
   -webkit-mask-repeat: no-repeat;
@@ -700,29 +884,323 @@ input[type="reset"] {
   mask-position: center;
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
-  transform: translateY(0.02em);
+  transform: translateY(-0.06em);
+}
+
+@media (max-width: 30rem) {
+  .top-bar__center-label-text::before,
+  .top-bar__center-label-text::after {
+    transform: translateY(-0.08em);
+  }
+}
+
+/* ≤320px: drop side hearts so the title fits cleanly. */
+@media (max-width: 20rem) {
+  .top-bar__center-label-text::before,
+  .top-bar__center-label-text::after {
+    content: none;
+    display: none;
+  }
+
+  .top-bar__center-title-text {
+    padding-inline-end: 0;
+  }
+}
+
+.top-bar__drawer {
+  position: absolute;
+  inset: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: var(--top-bar-pad-block) var(--sticky-bar-pad);
+  padding-right: var(--sticky-bar-pad);
+  background: var(--top-bar-glass-surface);
+  border: 1px solid var(--sticky-bar-border);
+  border-radius: calc(var(--link-card-radius) - 1px);
+  box-shadow: var(--sticky-bar-shadow);
+  backdrop-filter: var(--top-bar-glass-filter);
+  -webkit-backdrop-filter: var(--top-bar-glass-filter);
+  opacity: 0;
+  transform: translate3d(0, -2px, 0);
+  transform-origin: right center;
+  transition:
+    opacity 180ms ease,
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    backdrop-filter 240ms ease,
+    -webkit-backdrop-filter 240ms ease;
+  pointer-events: none;
+  will-change: opacity, transform;
+  contain: paint;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.top-bar__drawer,
+.top-bar,
+.top-bar__drawer-hint {
+  transition-property: opacity, transform, background, background-color, border-color, box-shadow, filter,
+    backdrop-filter, -webkit-backdrop-filter;
+}
+
+/* No `transform` transition: conflicts with story-ring spin animation on mobile/desktop. */
+.top-bar__brand::before {
+  transition-property: opacity, background, background-color, border-color, box-shadow, filter, backdrop-filter,
+    -webkit-backdrop-filter;
+}
+
+:root[data-theme-switching="true"] .top-bar,
+:root[data-theme-switching="true"] .top-bar__drawer,
+:root[data-theme-switching="true"] .top-bar__drawer-hint,
+:root[data-theme-switching="true"] .top-bar__brand::before {
+  transition: none !important;
+}
+
+.top-bar__drawer {
+  backface-visibility: hidden;
+}
+
+.top-bar__drawer-inner {
+  flex-wrap: nowrap;
+  width: 100%;
+  justify-content: flex-end;
+  /* Half of drawer horizontal inset (matches right padding to Close). */
+  gap: calc(var(--sticky-bar-pad) / 2);
+}
+
+.top-bar__drawer-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  padding: 0;
+  border: 1.5px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--panel-text);
+  /* Match sticky-center subtext (Cozy & Relaxing...) sizing. */
+  font-size: var(--sticky-menu-hint-font-size);
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  /* Optical vertical centering in the pill (font metrics sit slightly high). */
+  transform: translateY(0.12em);
+  transition:
+    max-width 160ms ease,
+    opacity 120ms ease,
+    padding 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease;
+  pointer-events: none;
+  white-space: normal;
+  text-wrap: balance;
+}
+
+.top-bar__drawer-hint[data-visible="true"] {
+  max-width: min(100%, 34rem);
+  opacity: 1;
+  padding: 0.32rem 0.9rem;
+  border-color: var(--surface-border-soft);
+  background: var(--hint-surface);
+  overflow: visible;
+}
+
+:root[data-theme="dark"] .top-bar__drawer-hint[data-visible="true"] {
+  background: var(--hint-surface-dark);
+  color: var(--profile-text);
+}
+
+@media (hover: none) or (pointer: coarse) {
+  .top-bar__drawer-hint {
+    display: none;
+  }
+}
+
+.top-bar[data-drawer-open="true"] .top-bar__drawer {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  pointer-events: auto;
+}
+
+.top-bar[data-drawer-open="true"] .top-bar__center {
+  opacity: 0;
+}
+
+.top-bar[data-drawer-open="true"]::before {
+  opacity: 0;
+}
+
+.top-bar__burger {
+  position: relative;
+  z-index: 3;
+}
+
+.top-bar__burger.action-button--icon-only {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  padding: 0;
+}
+
+.top-bar__burger-icon {
+  width: 100%;
+  height: 100%;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.top-bar__burger-icon-burger,
+.top-bar__burger-icon-close {
+  transition: opacity 180ms ease;
+  will-change: opacity;
+}
+
+.top-bar__burger-icon-close {
+  opacity: 0;
+}
+
+.top-bar[data-drawer-open="true"] .top-bar__burger-icon-burger {
+  opacity: 0;
+}
+
+.top-bar[data-drawer-open="true"] .top-bar__burger-icon-close {
+  opacity: 1;
+}
+
+.top-bar__brand-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  filter: var(--profile-logo-image-filter);
+  /* Optical zoom: makes the mark fill the circle like Instagram. */
+  transform: scale(1.22);
+}
+
+:root[data-theme="dark"] .top-bar__brand-logo {
+  filter: var(--profile-logo-image-filter-hover);
+}
+
+.top-bar__brand {
+  position: relative;
+  z-index: 3;
+  flex-shrink: 0;
+}
+
+.top-bar__brand.action-button {
+  width: var(--top-bar-brand-size);
+  min-width: var(--top-bar-brand-size);
+  height: var(--top-bar-brand-size);
+  min-height: var(--top-bar-brand-size);
+  align-self: center;
+  padding: 0;
+  border-width: 1px;
+  border-color: color-mix(in srgb, var(--surface-border-soft) 62%, transparent 38%);
+  background: transparent;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.top-bar__brand .action-button__icon {
+  --top-bar-logo-gap: 2px;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  /* Reduce inner gap so logo sits closer to the ring. */
+  padding: max(0px, calc(var(--top-bar-story-ring) - var(--top-bar-logo-gap)));
+  background: var(--surface-panel-muted);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--surface-border-soft) 48%, transparent 52%);
+}
+
+.top-bar__brand::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-sizing: border-box;
+  padding: var(--top-bar-story-ring);
+  /* Default: viewed ring (theme-muted). */
+  background: conic-gradient(
+    from 210deg,
+    var(--story-viewed-ring-start),
+    var(--story-viewed-ring-end),
+    var(--story-viewed-ring-start)
+  );
+  /* Smoother than radial-gradient stroke: cut a perfect donut via content-box mask. */
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 0;
+  transition: filter 140ms ease;
+}
+
+.top-bar__brand[data-story-state="new"]::before {
+  /* New/unread ring: saturated theme accents (distinct from viewed ring). */
+  background: conic-gradient(
+    from 210deg,
+    var(--story-new-ring-start),
+    var(--accent-ui-mid),
+    var(--accent-ui-end),
+    var(--story-viewed-ring-end),
+    var(--story-new-ring-start)
+  );
+  animation: profile-story-ring-spin 11s linear infinite;
+  will-change: transform;
+}
+
+.top-bar {
+  --top-bar-story-ring-a: var(--accent-ui-start);
+  --top-bar-story-ring-b: var(--accent-ui-mid);
+  --top-bar-story-ring-c: var(--accent-ui-end);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .top-bar__brand:hover::before,
+  .top-bar__brand:focus-visible::before {
+    filter: saturate(1.22) brightness(1.05);
+  }
 }
 
 
 .top-bar__actions {
   align-items: center;
   gap: var(--top-bar-actions-gap);
-  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .footer-bar {
+  --chrome-control-size: calc(var(--top-control-height) * 1.32);
   display: grid;
-  grid-template-columns: var(--top-control-height) minmax(0, 1fr) var(--top-control-height);
+  grid-template-columns: var(--chrome-control-size) minmax(0, 1fr) var(--chrome-control-size);
   align-items: center;
   gap: 0.75rem;
   padding: max(0.12rem, calc(var(--sticky-bar-pad) - 0.08rem)) var(--sticky-bar-pad);
-  border: 1px solid var(--sticky-bar-border);
   border-radius: var(--link-card-radius);
+  isolation: isolate;
+  overflow: hidden;
+  position: relative;
+}
+
+.footer-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--sticky-bar-border);
+  border-radius: inherit;
   background: var(--chrome-bar-surface);
   box-shadow: var(--sticky-bar-shadow);
   backdrop-filter: blur(var(--sticky-bar-blur)) saturate(1.08);
   -webkit-backdrop-filter: blur(var(--sticky-bar-blur)) saturate(1.08);
-  isolation: isolate;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.footer-bar > * {
+  position: relative;
+  z-index: 1;
 }
 
 .footer-bar__side-action {
@@ -733,7 +1211,8 @@ input[type="reset"] {
   margin: 0;
   min-width: 0;
   color: var(--profile-text);
-  font-size: var(--sticky-menu-hint-font-size);
+  /* Same default size as "Etsy Shop". */
+  font-size: var(--link-card-title-size);
   line-height: 0.96;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -1304,7 +1783,7 @@ input[type="reset"] {
 
 /* Slightly wider band than the passive (viewed) ring */
 .profile__story-trigger[data-story-state="new"] .profile__story-core {
-  width: calc(100% - 0.58rem);
+  width: calc(100% - 0.72rem);
 }
 
 .profile__story-trigger[data-story-state="viewed"] .profile__story-ring {
@@ -1317,7 +1796,7 @@ input[type="reset"] {
   z-index: 1;
   display: grid;
   place-items: center;
-  width: calc(100% - 0.44rem);
+  width: calc(100% - 0.56rem);
   aspect-ratio: 1;
   border-radius: 50%;
   background-color: var(--page-bg);
@@ -1335,7 +1814,7 @@ input[type="reset"] {
   border-radius: 50%;
   background:
     radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 34%), var(--profile-logo-bg);
-  padding: 0.34rem;
+  padding: clamp(0.1rem, 0.9vw, 0.16rem);
   overflow: hidden;
   box-shadow: var(--surface-shadow-soft);
   transition:
@@ -1671,23 +2150,33 @@ input[type="reset"] {
 }
 
 .promo-carousel__shell {
-  --promo-shell-pad-top: clamp(1rem, 3vw, 1.18rem);
-  --promo-shell-pad-inline: clamp(1rem, 3vw, 1.18rem);
-  --promo-shell-pad-bottom: clamp(1rem, 3vw, 1.18rem);
+  --promo-shell-pad-top: clamp(0.78rem, 2.4vw, 0.96rem);
+  --promo-shell-pad-inline: clamp(0.78rem, 2.4vw, 0.96rem);
+  --promo-shell-pad-bottom: clamp(0.78rem, 2.4vw, 0.96rem);
   --promo-gap: clamp(0.55rem, 2vw, 0.85rem);
   --promo-card-radius: clamp(1.04rem, 3vw, 1.26rem);
   --promo-shell-radius: clamp(1.46rem, 3.8vw, 1.9rem);
   --promo-content-radius: clamp(1.12rem, 3.1vw, 1.48rem);
   --promo-dot-size: 0.5rem;
   --promo-outline-width: 1.5px;
+  /* Smaller viewport => smaller square cards => shorter carousel (no distortion). */
+  --promo-viewport-width-mult: 0.72;
   position: relative;
   width: 100%;
   margin-inline: auto;
   padding: var(--promo-shell-pad-top) var(--promo-shell-pad-inline) var(--promo-shell-pad-bottom);
   border: var(--promo-outline-width) solid var(--surface-border-soft);
   border-radius: var(--promo-shell-radius);
-  background: var(--surface-panel);
-  box-shadow: var(--surface-shadow-soft);
+  background: var(--top-bar-glass-surface);
+  /* Soft layered elevation: diffuse accent bloom + wide ambient; inset hairline reads “glass” without harsh drop. */
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 42%, transparent),
+    0 7px 26px color-mix(in srgb, var(--accent-ui-shadow) 46%, transparent),
+    0 22px 56px color-mix(in srgb, var(--accent-ui-shadow) 22%, transparent),
+    var(--top-bar-shadow, var(--sticky-bar-shadow));
+  backdrop-filter: var(--top-bar-glass-filter);
+  -webkit-backdrop-filter: var(--top-bar-glass-filter);
+  isolation: isolate;
 }
 
 .promo-carousel__badge {
@@ -1747,7 +2236,7 @@ input[type="reset"] {
 }
 
 .promo-carousel__viewport {
-  width: min(100%, calc(100% - clamp(0.28rem, 1.4vw, 0.6rem)));
+  width: min(100%, calc((100% - clamp(0.28rem, 1.4vw, 0.6rem)) * var(--promo-viewport-width-mult)));
   margin-inline: auto;
   padding-inline-start: 2px;
   padding-inline-end: 1px;
@@ -2023,9 +2512,12 @@ input[type="reset"] {
   padding: 0.42rem var(--link-card-padding-inline);
   border-radius: var(--promo-content-radius);
   border: 1.5px solid var(--surface-border-soft);
-  background: transparent;
-  color: var(--profile-text);
+  background: var(--sticky-bar-surface);
+  color: var(--panel-text);
   box-shadow: none;
+  backdrop-filter: blur(var(--sticky-bar-blur)) saturate(1.08);
+  -webkit-backdrop-filter: blur(var(--sticky-bar-blur)) saturate(1.08);
+  isolation: isolate;
   touch-action: pan-y;
   -webkit-user-drag: none;
   transition:
@@ -2517,7 +3009,7 @@ input[type="reset"] {
 
 .promo-carousel__shop-button--website,
 .promo-carousel__shop-button--website:visited {
-  background: transparent;
+  background: var(--sticky-bar-surface);
   color: var(--panel-text);
 }
 
@@ -2531,7 +3023,7 @@ input[type="reset"] {
 
 .promo-carousel__shop-button--etsy,
 .promo-carousel__shop-button--etsy:visited {
-  background: transparent;
+  background: var(--sticky-bar-surface);
   color: var(--panel-text);
 }
 
@@ -2549,7 +3041,7 @@ input[type="reset"] {
 
 .promo-carousel__shop-button--amazon,
 .promo-carousel__shop-button--amazon:visited {
-  background: transparent;
+  background: var(--sticky-bar-surface);
   color: var(--panel-text);
 }
 
@@ -2917,20 +3409,20 @@ input[type="reset"] {
 :root[data-theme="dark"] .promo-carousel__shop-button,
 :root[data-theme="dark"] .promo-carousel__shop-button:visited {
   border-color: var(--surface-border-soft);
-  background: transparent;
-  color: var(--profile-text);
+  background: var(--sticky-bar-surface);
+  color: var(--panel-text);
   box-shadow: none;
 }
 
 :root[data-theme="dark"] .promo-carousel__shop-button--website,
 :root[data-theme="dark"] .promo-carousel__shop-button--website:visited {
-  background: transparent;
-  color: var(--profile-text);
+  background: var(--sticky-bar-surface);
+  color: var(--panel-text);
   box-shadow: none;
 }
 
 :root[data-theme="dark"] .promo-carousel__shop-button--website .promo-carousel__shop-button-title {
-  color: var(--profile-text);
+  color: var(--panel-text);
 }
 
 :root[data-theme="dark"] .promo-carousel__shop-button-badge {
@@ -4133,13 +4625,14 @@ input[type="reset"] {
   flex: 0 0 auto;
   overflow: hidden;
   border-radius: 50%;
-  background-color: var(--story-viewer-brand-mark-bg);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid color-mix(in srgb, var(--surface-border-soft) 62%, transparent 38%);
+  background: color-mix(in srgb, var(--surface-panel) 82%, transparent 18%);
+  box-shadow: none;
 }
 
 .story-viewer__brand-mark img {
-  width: 100%;
-  height: 100%;
+  width: calc(100% - 0.32rem);
+  height: calc(100% - 0.32rem);
   border-radius: 50%;
   object-fit: cover;
   filter: var(--profile-logo-image-filter);
@@ -4400,8 +4893,8 @@ input[type="reset"] {
   position: relative;
   display: inline-grid;
   place-items: center;
-  width: var(--top-control-height);
-  height: var(--top-control-height);
+  width: var(--chrome-control-size);
+  height: var(--chrome-control-size);
   padding: 0;
   border: 1.5px solid var(--surface-border-soft);
   border-radius: 50%;
@@ -4433,8 +4926,8 @@ input[type="reset"] {
 
 .theme-toggle__icon--moon {
   display: none;
-  width: calc(var(--chrome-circle-icon-size) * 0.83);
-  height: calc(var(--chrome-circle-icon-size) * 0.83);
+  width: var(--chrome-circle-icon-size);
+  height: var(--chrome-circle-icon-size);
 }
 
 :root[data-theme="dark"] .theme-toggle {
@@ -4875,22 +5368,17 @@ input[type="reset"] {
 
   .promo-carousel__shop-button:not([aria-disabled="true"]):hover,
   .promo-carousel__shop-button:not([aria-disabled="true"]):focus-visible {
+    background: var(--surface-panel-hover);
+    border-color: var(--accent-ui-outline);
+    color: var(--panel-text);
     box-shadow: none;
   }
 
-  .promo-carousel__shop-button--website:not([aria-disabled="true"]):hover,
-  .promo-carousel__shop-button--website:not([aria-disabled="true"]):focus-visible {
-    background: var(--surface-panel-hover);
-  }
-
-  .promo-carousel__shop-button--amazon:not([aria-disabled="true"]):hover,
-  .promo-carousel__shop-button--amazon:not([aria-disabled="true"]):focus-visible {
-    background: var(--surface-panel-hover);
-  }
-
-  .promo-carousel__shop-button--etsy:not([aria-disabled="true"]):hover,
-  .promo-carousel__shop-button--etsy:not([aria-disabled="true"]):focus-visible {
-    background: var(--surface-panel-hover);
+  .promo-carousel__shop-button:not([aria-disabled="true"]):hover .promo-carousel__shop-button-title,
+  .promo-carousel__shop-button:not([aria-disabled="true"]):hover .promo-carousel__shop-button-subtitle,
+  .promo-carousel__shop-button:not([aria-disabled="true"]):focus-visible .promo-carousel__shop-button-title,
+  .promo-carousel__shop-button:not([aria-disabled="true"]):focus-visible .promo-carousel__shop-button-subtitle {
+    color: var(--panel-text);
   }
 
   .promo-carousel__shop-button:not([aria-disabled="true"]):hover .promo-carousel__shop-button-badge,
@@ -4954,21 +5442,11 @@ input[type="reset"] {
     color: var(--accent-ui-mid);
   }
 
-  :root[data-theme="dark"] .promo-carousel__shop-button--website:not([aria-disabled="true"]):hover,
-  :root[data-theme="dark"] .promo-carousel__shop-button--website:not([aria-disabled="true"]):focus-visible {
+  :root[data-theme="dark"] .promo-carousel__shop-button:not([aria-disabled="true"]):hover,
+  :root[data-theme="dark"] .promo-carousel__shop-button:not([aria-disabled="true"]):focus-visible {
     background: var(--surface-panel-dark-hover);
-    box-shadow: none;
-  }
-
-  :root[data-theme="dark"] .promo-carousel__shop-button--amazon:not([aria-disabled="true"]):hover,
-  :root[data-theme="dark"] .promo-carousel__shop-button--amazon:not([aria-disabled="true"]):focus-visible {
-    background: var(--surface-panel-dark-hover);
-    box-shadow: none;
-  }
-
-  :root[data-theme="dark"] .promo-carousel__shop-button--etsy:not([aria-disabled="true"]):hover,
-  :root[data-theme="dark"] .promo-carousel__shop-button--etsy:not([aria-disabled="true"]):focus-visible {
-    background: var(--surface-panel-dark-hover);
+    border-color: var(--accent-ui-outline);
+    color: var(--profile-text);
     box-shadow: none;
   }
 
@@ -5049,13 +5527,20 @@ input[type="reset"] {
   }
 
   .top-bar__actions {
-    width: 100%;
-    justify-content: space-between;
-    margin-left: 0;
+    justify-content: flex-end;
   }
 
   .top-bar {
     --top-bar-sticky-offset: calc(env(safe-area-inset-top) + var(--page-space-block));
+    /* Make icon button inset equal on all sides (top/bottom = left/right). */
+    --top-bar-pad-block: var(--sticky-bar-pad);
+    padding-inline: var(--sticky-bar-pad);
+  }
+
+  /* Match footer container height to the sticky menu container on mobile. */
+  .footer-bar {
+    min-height: calc(var(--chrome-control-size) + (var(--sticky-bar-pad) * 2));
+    padding: var(--top-bar-pad-block) var(--sticky-bar-pad);
   }
 
   .promo-redirect-toast {
@@ -5184,10 +5669,10 @@ input[type="reset"] {
 
 .action-button--icon-only {
   position: relative;
-  flex: 0 0 var(--top-control-height);
-  width: var(--top-control-height);
-  min-width: var(--top-control-height);
-  height: var(--top-control-height);
+  flex: 0 0 var(--chrome-control-size);
+  width: var(--chrome-control-size);
+  min-width: var(--chrome-control-size);
+  height: var(--chrome-control-size);
   padding-inline: 0;
   border-radius: 50%;
 }
@@ -5253,11 +5738,63 @@ input[type="reset"] {
 .action-button__icon svg {
   width: 100%;
   height: 100%;
+  transform: scale(var(--chrome-icon-optical-scale, 1));
+  transform-origin: 50% 50%;
 }
 
 .action-button--icon-only .action-button__icon {
   width: var(--chrome-circle-icon-size);
   height: var(--chrome-circle-icon-size);
+}
+
+/* Top-bar drawer: optical-size equalization across differing SVG viewBoxes. */
+.top-bar__drawer-inner .action-button {
+  --chrome-icon-optical-scale: 1;
+}
+
+.top-bar__drawer-inner .action-button__icon svg {
+  transform: scale(var(--chrome-icon-optical-scale, 1)) !important;
+  transform-origin: 50% 50% !important;
+}
+
+.top-bar__drawer-inner .theme-toggle svg {
+  transform: scale(var(--chrome-icon-optical-scale, 1)) !important;
+  transform-origin: 50% 50% !important;
+}
+
+.top-bar__drawer-inner [aria-label="Subscribe"].action-button {
+  --chrome-icon-optical-scale: 0.78;
+}
+
+.top-bar__drawer-inner [aria-label="Share"].action-button {
+  --chrome-icon-optical-scale: 0.76;
+}
+
+.top-bar__drawer-inner .theme-toggle {
+  --chrome-icon-optical-scale: 0.76;
+}
+
+.top-bar__drawer-inner [aria-label="Close menu"].action-button {
+  /* Close (X) viewBox reads smaller optically; bump a bit. */
+  --chrome-icon-optical-scale: 1;
+}
+
+/* Match the same optical icon sizing for always-visible chrome buttons. */
+.top-bar__burger.action-button {
+  --chrome-icon-optical-scale: 1.08;
+}
+
+@media (hover: none) or (pointer: coarse) {
+  /* Mobile burger overlay: keep all chrome buttons exactly burger-sized. */
+  .top-bar__drawer-inner .action-button--icon-only,
+  .top-bar__drawer-inner .theme-toggle {
+    /* Sizing is handled in the phone breakpoint (max-width: 48rem). */
+  }
+}
+
+.footer-bar__side-action.action-button,
+.footer-bar__back-to-top.action-button {
+  --chrome-icon-optical-scale: 1.08;
 }
 
 .action-button:focus-visible {
@@ -6099,6 +6636,7 @@ input[type="reset"] {
     --link-card-title-size: clamp(1.78rem, 1.33vw, 2.3rem);
     --link-card-subtitle-size: clamp(1.24rem, 0.94vw, 1.52rem);
     --sticky-bar-blur: 23px;
+    --sticky-bar-blur-idle: 8px;
   }
 
   .profile__title {
@@ -6159,6 +6697,7 @@ input[type="reset"] {
     --link-card-title-size: clamp(2.26rem, 1.19vw, 2.81rem);
     --link-card-subtitle-size: clamp(1.46rem, 0.81vw, 1.79rem);
     --sticky-bar-blur: 28px;
+    --sticky-bar-blur-idle: 10px;
   }
 
   .profile__title {
@@ -6595,6 +7134,10 @@ input[type="reset"] {
   }
 
   .profile__story-trigger[data-story-state="new"] .profile__story-ring::before {
+    animation: none;
+  }
+
+  .top-bar__brand[data-story-state="new"]::before {
     animation: none;
   }
 
