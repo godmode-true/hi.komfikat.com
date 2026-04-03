@@ -942,6 +942,7 @@ html[data-top-bar-scrolled] .top-bar {
   background: var(--top-bar-glass-surface);
   border: 1px solid var(--sticky-bar-border);
   border-radius: calc(var(--link-card-radius) - 1px);
+  background-clip: padding-box;
   box-shadow: var(--sticky-bar-shadow);
   backdrop-filter: var(--top-bar-glass-filter);
   -webkit-backdrop-filter: var(--top-bar-glass-filter);
@@ -955,7 +956,8 @@ html[data-top-bar-scrolled] .top-bar {
     -webkit-backdrop-filter 240ms ease;
   pointer-events: none;
   will-change: opacity, transform;
-  contain: paint;
+  /* Avoid compositing edge artifacts on some GPUs (drawer + blur + radius). */
+  isolation: isolate;
   overflow: hidden;
   z-index: 1;
 }
