@@ -25,6 +25,8 @@
   --theme-switch-origin-x: 50vw;
   --theme-switch-origin-y: 4.25rem;
   --page-bg: #fffcfe;
+  /* Hairline borders for cards, sticky chrome, etc. */
+  --chrome-outline-width: min(1.5px, 0.1rem);
   --selection-bg: #f6eaf0;
   --selection-text: #5f3442;
   --surface-panel: #fff8fb;
@@ -124,7 +126,7 @@
   --social-hashtag-font-size: var(--sticky-menu-hint-font-size);
   --social-link-bg: #fff8fb;
   --section-stack-gap: clamp(1rem, 4vw, 1.35rem);
-  --link-list-gap: 0.58rem;
+  --link-list-gap: calc(var(--section-stack-gap) / 2);
   --link-card-radius: 999px;
   --link-card-padding-inline: clamp(1rem, 4vw, 1.25rem);
   --link-card-min-height: 4.1rem;
@@ -716,7 +718,9 @@ input[type="reset"] {
 
 .link-section {
   content-visibility: auto;
-  contain-intrinsic-size: auto 400px;
+  /* Placeholder height for link-card stack before paint (`content-visibility: auto`). */
+  contain-intrinsic-size: 900px;
+  width: 100%;
 }
 
 .footer-bar {
@@ -772,7 +776,7 @@ html[data-top-bar-scrolled] .top-bar {
   content: "";
   position: absolute;
   inset: 0;
-  border: 1px solid var(--sticky-bar-border);
+  border: var(--chrome-outline-width) solid var(--sticky-bar-border);
   border-radius: inherit;
   background: var(--top-bar-glass-surface);
   box-shadow: var(--top-bar-shadow);
@@ -969,8 +973,8 @@ html[data-top-bar-scrolled] .top-bar {
   padding: var(--top-bar-pad-block) var(--sticky-bar-pad);
   padding-right: var(--sticky-bar-pad);
   background: var(--top-bar-glass-surface);
-  border: 1px solid var(--sticky-bar-border);
-  border-radius: calc(var(--link-card-radius) - 1px);
+  border: var(--chrome-outline-width) solid var(--sticky-bar-border);
+  border-radius: calc(var(--link-card-radius) - var(--chrome-outline-width));
   background-clip: padding-box;
   box-shadow: var(--sticky-bar-shadow);
   backdrop-filter: var(--top-bar-glass-filter);
@@ -1031,7 +1035,7 @@ html[data-top-bar-scrolled] .top-bar {
   opacity: 0;
   overflow: hidden;
   padding: 0;
-  border: 1.5px solid transparent;
+  border: var(--chrome-outline-width) solid transparent;
   border-radius: 999px;
   background: transparent;
   color: var(--panel-text);
@@ -1154,7 +1158,8 @@ html[data-top-bar-scrolled] .top-bar {
   min-height: var(--top-bar-brand-size);
   align-self: center;
   padding: 0;
-  border-width: 1px;
+  border-width: var(--chrome-outline-width);
+  border-style: solid;
   border-color: color-mix(in srgb, var(--surface-border-soft) 62%, transparent 38%);
   background: transparent;
   box-shadow: none;
@@ -1246,7 +1251,7 @@ html[data-top-bar-scrolled] .top-bar {
   content: "";
   position: absolute;
   inset: 0;
-  border: 1px solid var(--sticky-bar-border);
+  border: var(--chrome-outline-width) solid var(--sticky-bar-border);
   border-radius: inherit;
   background: var(--chrome-bar-surface);
   box-shadow: var(--sticky-bar-shadow);
@@ -1315,7 +1320,7 @@ html[data-top-bar-scrolled] .top-bar {
   width: var(--promo-redirect-collapsed-width);
   height: var(--promo-redirect-height);
   padding: 0.34rem 0.38rem 0.34rem 0.62rem;
-  border: 1.5px solid var(--accent-ui-outline);
+  border: var(--chrome-outline-width) solid var(--accent-ui-outline);
   border-radius: calc(var(--promo-content-radius) - 0.18rem);
   background: var(--hint-surface-accent);
   color: var(--profile-text);
@@ -2216,7 +2221,7 @@ html[data-top-bar-scrolled] .top-bar {
   --promo-shell-radius: clamp(1.46rem, 3.8vw, 1.9rem);
   --promo-content-radius: clamp(1.12rem, 3.1vw, 1.48rem);
   --promo-dot-size: 0.5rem;
-  --promo-outline-width: 1.5px;
+  --promo-outline-width: var(--chrome-outline-width);
   /* Smaller viewport => smaller square cards => shorter carousel (no distortion). */
   --promo-viewport-width-mult: 0.72;
   position: relative;
@@ -2225,15 +2230,12 @@ html[data-top-bar-scrolled] .top-bar {
   padding: var(--promo-shell-pad-top) var(--promo-shell-pad-inline) var(--promo-shell-pad-bottom);
   border: var(--promo-outline-width) solid var(--surface-border-soft);
   border-radius: var(--promo-shell-radius);
-  background: var(--top-bar-glass-surface);
-  /* Soft layered elevation: diffuse accent bloom + wide ambient; inset hairline reads “glass” without harsh drop. */
+  background: var(--promo-shell-surface);
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, #ffffff 42%, transparent),
     0 7px 26px color-mix(in srgb, var(--accent-ui-shadow) 46%, transparent),
     0 22px 56px color-mix(in srgb, var(--accent-ui-shadow) 22%, transparent),
     var(--top-bar-shadow, var(--sticky-bar-shadow));
-  backdrop-filter: var(--top-bar-glass-filter);
-  -webkit-backdrop-filter: var(--top-bar-glass-filter);
   isolation: isolate;
 }
 
@@ -2365,7 +2367,7 @@ html[data-top-bar-scrolled] .top-bar {
   position: absolute;
   inset: 0;
   box-sizing: border-box;
-  border: 1.5px solid var(--promo-card-border);
+  border: var(--chrome-outline-width) solid var(--promo-card-border);
   border-radius: inherit;
   pointer-events: none;
   z-index: 2;
@@ -2569,12 +2571,10 @@ html[data-top-bar-scrolled] .top-bar {
   min-height: 0;
   padding: 0.42rem var(--link-card-padding-inline);
   border-radius: var(--promo-content-radius);
-  border: 1.5px solid var(--surface-border-soft);
-  background: var(--sticky-bar-surface);
+  border: var(--chrome-outline-width) solid var(--surface-border-soft);
+  background: var(--surface-panel);
   color: var(--panel-text);
   box-shadow: none;
-  backdrop-filter: blur(var(--sticky-bar-blur)) saturate(1.08);
-  -webkit-backdrop-filter: blur(var(--sticky-bar-blur)) saturate(1.08);
   isolation: isolate;
   touch-action: pan-y;
   -webkit-user-drag: none;
@@ -2632,7 +2632,7 @@ html[data-top-bar-scrolled] .top-bar {
   display: grid;
   place-items: center;
   padding: var(--promo-redirect-overlay-pad-y, 0.3rem) 0;
-  border: 1.5px solid var(--accent-ui-outline);
+  border: var(--chrome-outline-width) solid var(--accent-ui-outline);
   border-radius: var(--promo-redirect-host-radius, var(--promo-content-radius));
   background: var(--surface-panel-hover);
   color: var(--profile-text);
@@ -2695,7 +2695,7 @@ html[data-top-bar-scrolled] .top-bar {
   width: var(--promo-redirect-collapsed-width);
   height: var(--promo-redirect-height);
   padding: 0.28rem 0.36rem 0.22rem;
-  border: 1.5px solid var(--surface-border-strong);
+  border: var(--chrome-outline-width) solid var(--surface-border-strong);
   border-radius: calc(var(--promo-content-radius) - 0.18rem);
   background: linear-gradient(180deg, var(--surface-panel) 0%, var(--surface-panel-hover-solid) 100%);
   box-shadow: none;
@@ -2917,7 +2917,7 @@ html[data-top-bar-scrolled] .top-bar {
   display: grid;
   place-items: center;
   box-sizing: border-box;
-  border: 1.5px solid var(--surface-border-soft);
+  border: var(--chrome-outline-width) solid var(--surface-border-soft);
   border-radius: 50%;
   background-color: var(--surface-panel-muted);
   pointer-events: none;
@@ -3067,7 +3067,7 @@ html[data-top-bar-scrolled] .top-bar {
 
 .promo-carousel__shop-button--website,
 .promo-carousel__shop-button--website:visited {
-  background: var(--sticky-bar-surface);
+  background: var(--surface-panel);
   color: var(--panel-text);
 }
 
@@ -3081,7 +3081,7 @@ html[data-top-bar-scrolled] .top-bar {
 
 .promo-carousel__shop-button--etsy,
 .promo-carousel__shop-button--etsy:visited {
-  background: var(--sticky-bar-surface);
+  background: var(--surface-panel);
   color: var(--panel-text);
 }
 
@@ -3099,7 +3099,7 @@ html[data-top-bar-scrolled] .top-bar {
 
 .promo-carousel__shop-button--amazon,
 .promo-carousel__shop-button--amazon:visited {
-  background: var(--sticky-bar-surface);
+  background: var(--surface-panel);
   color: var(--panel-text);
 }
 
@@ -3467,14 +3467,14 @@ html[data-top-bar-scrolled] .top-bar {
 :root[data-theme="dark"] .promo-carousel__shop-button,
 :root[data-theme="dark"] .promo-carousel__shop-button:visited {
   border-color: var(--surface-border-soft);
-  background: var(--sticky-bar-surface);
+  background: var(--surface-panel-dark-solid);
   color: var(--panel-text);
   box-shadow: none;
 }
 
 :root[data-theme="dark"] .promo-carousel__shop-button--website,
 :root[data-theme="dark"] .promo-carousel__shop-button--website:visited {
-  background: var(--sticky-bar-surface);
+  background: var(--surface-panel-dark-solid);
   color: var(--panel-text);
   box-shadow: none;
 }
@@ -3648,12 +3648,6 @@ html[data-top-bar-scrolled] .top-bar {
 }
 
 /* Link Cards */
-.link-section {
-  content-visibility: auto;
-  contain-intrinsic-size: 900px;
-  width: 100%;
-}
-
 .link-card--social-follow {
   background: var(--surface-panel);
   color: var(--panel-text);
@@ -3682,7 +3676,7 @@ html[data-top-bar-scrolled] .top-bar {
   width: 100%;
   margin-inline: auto;
   padding: 0.42rem var(--link-card-padding-inline);
-  border: 1.5px solid var(--surface-border-soft);
+  border: var(--chrome-outline-width) solid var(--surface-border-soft);
   border-radius: var(--link-card-radius);
   background: var(--surface-panel);
   color: var(--panel-text);
@@ -3714,7 +3708,7 @@ html[data-top-bar-scrolled] .top-bar {
   width: var(--link-card-section-badge-size);
   height: var(--link-card-section-badge-size);
   box-sizing: border-box;
-  border: 1.5px solid var(--surface-border-soft);
+  border: var(--chrome-outline-width) solid var(--surface-border-soft);
   border-radius: 50%;
   background-color: var(--surface-panel-muted);
 }
@@ -4731,7 +4725,6 @@ html[data-top-bar-scrolled] .top-bar {
   border-radius: 50%;
   background-color: var(--button-bg);
   color: var(--button-text);
-  box-shadow: var(--surface-shadow-soft);
   transition:
     background-color 130ms ease,
     border-color 130ms ease,
@@ -4741,6 +4734,15 @@ html[data-top-bar-scrolled] .top-bar {
 
 .story-viewer__control {
   position: relative;
+  box-shadow: var(--surface-shadow-soft);
+}
+
+.story-viewer__close {
+  box-shadow: none;
+  transition:
+    background-color 130ms ease,
+    border-color 130ms ease,
+    transform 130ms ease;
 }
 
 .story-viewer__control-icon {
@@ -4955,7 +4957,7 @@ html[data-top-bar-scrolled] .top-bar {
   width: var(--chrome-control-size);
   height: var(--chrome-control-size);
   padding: 0;
-  border: 1.5px solid var(--surface-border-soft);
+  border: var(--chrome-outline-width) solid var(--surface-border-soft);
   border-radius: 50%;
   background: var(--surface-panel);
   box-shadow: none;
@@ -5124,7 +5126,7 @@ html[data-top-bar-scrolled] .top-bar {
     min-width: var(--share-rail-button-size);
     height: var(--share-rail-button-size);
     padding: 0;
-    border: 1.5px solid var(--surface-border-soft);
+    border: var(--chrome-outline-width) solid var(--surface-border-soft);
     border-radius: 50%;
     background-color: var(--social-link-bg);
     box-shadow: none;
@@ -5353,12 +5355,17 @@ html[data-top-bar-scrolled] .top-bar {
   }
 
   .story-viewer__control:hover,
-  .story-viewer__control:focus-visible,
+  .story-viewer__control:focus-visible {
+    background-color: var(--top-control-bg-hover);
+    border-color: var(--accent-ui-outline);
+    box-shadow: var(--top-control-shadow-hover);
+  }
+
   .story-viewer__close:hover,
   .story-viewer__close:focus-visible {
     background-color: var(--top-control-bg-hover);
     border-color: var(--accent-ui-outline);
-    box-shadow: var(--top-control-shadow-hover);
+    box-shadow: none;
   }
 
   .story-viewer__cta:hover,
@@ -5484,12 +5491,17 @@ html[data-top-bar-scrolled] .top-bar {
   }
 
   :root[data-theme="dark"] .story-viewer__control:hover,
-  :root[data-theme="dark"] .story-viewer__control:focus-visible,
+  :root[data-theme="dark"] .story-viewer__control:focus-visible {
+    background-color: var(--top-control-bg-hover);
+    border-color: var(--accent-ui-outline);
+    box-shadow: var(--top-control-shadow-hover);
+  }
+
   :root[data-theme="dark"] .story-viewer__close:hover,
   :root[data-theme="dark"] .story-viewer__close:focus-visible {
     background-color: var(--top-control-bg-hover);
     border-color: var(--accent-ui-outline);
-    box-shadow: var(--top-control-shadow-hover);
+    box-shadow: none;
   }
 
   :root[data-theme="dark"] .story-viewer__cta:hover,
@@ -5711,7 +5723,7 @@ html[data-top-bar-scrolled] .top-bar {
   width: fit-content;
   min-height: var(--top-control-height);
   padding: var(--button-padding-top) var(--button-padding-inline) var(--button-padding-bottom);
-  border: 1.5px solid var(--surface-border-soft);
+  border: var(--chrome-outline-width) solid var(--surface-border-soft);
   border-radius: var(--button-radius);
   background: var(--surface-panel);
   appearance: none;
@@ -5844,14 +5856,6 @@ html[data-top-bar-scrolled] .top-bar {
 /* Match the same optical icon sizing for always-visible chrome buttons. */
 .top-bar__burger.action-button {
   --chrome-icon-optical-scale: 1.08;
-}
-
-@media (hover: none) or (pointer: coarse) {
-  /* Mobile burger overlay: keep all chrome buttons exactly burger-sized. */
-  .top-bar__drawer-inner .action-button--icon-only,
-  .top-bar__drawer-inner .theme-toggle {
-    /* Sizing is handled in the phone breakpoint (max-width: 48rem). */
-  }
 }
 
 .footer-bar__side-action.action-button,
@@ -6031,10 +6035,14 @@ html[data-top-bar-scrolled] .top-bar {
 }
 
 .story-viewer__control:active,
-.story-viewer__close:active,
 .story-viewer__cta:active {
   transform: translateY(1px);
   box-shadow: var(--surface-shadow-pressed);
+}
+
+.story-viewer__close:active {
+  transform: translateY(1px);
+  box-shadow: none;
 }
 
 /* Tablet compaction + link-card redirect layout (same breakpoint) */
@@ -6351,7 +6359,7 @@ html[data-top-bar-scrolled] .top-bar {
     border-radius: 1.18rem;
     object-fit: cover;
     object-position: center;
-    border: 1.5px solid var(--surface-border-soft);
+    border: var(--chrome-outline-width) solid var(--surface-border-soft);
     background: rgba(255, 255, 255, 0.55);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.8),
@@ -6691,7 +6699,6 @@ html[data-top-bar-scrolled] .top-bar {
     --sticky-menu-hint-font-size: clamp(1.36rem, 1.06vw, 1.58rem);
     --profile-tagline-font-size: clamp(1.67rem, 1.36vw, 2.3rem);
     --section-stack-gap: clamp(1.44rem, 1.29vw, 2.07rem);
-    --link-list-gap: clamp(0.69rem, 0.64vw, 0.94rem);
     --link-card-padding-inline: clamp(1.44rem, 1.21vw, 2.01rem);
     --link-card-min-height: clamp(5.23rem, 4.95vw, 6.04rem);
     --link-card-badge-size: clamp(3.34rem, 2.47vw, 3.79rem);
@@ -6752,7 +6759,6 @@ html[data-top-bar-scrolled] .top-bar {
     --sticky-menu-hint-font-size: clamp(1.62rem, 0.96vw, 1.93rem);
     --profile-tagline-font-size: clamp(2.02rem, 1.27vw, 2.85rem);
     --section-stack-gap: clamp(1.84rem, 1.21vw, 2.72rem);
-    --link-list-gap: clamp(0.91rem, 0.61vw, 1.21rem);
     --link-card-padding-inline: clamp(1.84rem, 1.11vw, 2.46rem);
     --link-card-min-height: clamp(6.33rem, 4.81vw, 7.27rem);
     --link-card-badge-size: clamp(3.98rem, 1.85vw, 4.69rem);
