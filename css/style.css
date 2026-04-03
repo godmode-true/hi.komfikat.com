@@ -418,11 +418,9 @@ body::before {
   content: "";
   position: fixed;
   top: 0;
-  left: var(--sticky-header-mask-left, 0px);
-  width: var(--sticky-header-mask-width, 100vw);
+  left: 0;
+  right: 0;
   height: var(--sticky-header-mask-height);
-  border-radius: calc(var(--link-card-radius) - 1px);
-  transform: translate3d(var(--sticky-header-mask-translate-x, 0px), 0, 0);
   background:
     linear-gradient(
       180deg,
@@ -436,8 +434,7 @@ body::before {
 
 /* When the burger drawer opens, avoid revealing content under the sticky mask during the first frame. */
 body.top-bar-drawer-is-open::before {
-  background: var(--page-bg);
-  /* Ensure the solid mask matches the same rounded geometry. */
+  background: linear-gradient(180deg, var(--page-bg) 0%, var(--page-bg) 100%);
 }
 
 body::after {
