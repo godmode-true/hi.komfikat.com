@@ -1201,11 +1201,10 @@
     return card;
   }
 
-  function createCarouselVideoCard(item, index) {
+  function createCarouselVideoCard(item, index, { posterOnly = false } = {}) {
     const card = document.createElement("article");
     card.className = "promo-carousel__card promo-carousel__card--video";
     card.setAttribute("aria-label", item.alt || `Carousel preview ${index + 1}`);
-    card.dataset.imageState = "loading";
 
     const video = document.createElement("video");
     video.className = "promo-carousel__video";
@@ -1216,12 +1215,30 @@
     video.loop = true;
     video.playsInline = true;
     video.setAttribute("playsinline", "");
-    video.preload = item.preload ? "auto" : "metadata";
     video.draggable = false;
 
     if (item.poster) {
       video.poster = item.poster;
     }
+
+    /*
+     * Infinite-loop track triples items (prefix + body + suffix). Real <video>+sources on each clone
+     * forces the same MP4 to download multiple times (Lighthouse / PageSpeed). Clones show poster only.
+     */
+    if (posterOnly) {
+      card.dataset.imageState = "ready";
+      video.preload = "none";
+      video.setAttribute("preload", "none");
+      video.dataset.carouselPosterOnly = "true";
+      video.setAttribute("aria-hidden", "true");
+      video.tabIndex = -1;
+      video.classList.add("promo-carousel__video--ready");
+      card.append(video);
+      return card;
+    }
+
+    card.dataset.imageState = "loading";
+    video.preload = item.preload ? "auto" : "metadata";
 
     const mobileSrc = item.mobileSrc && item.mobileSrc !== item.src ? item.mobileSrc : "";
     if (mobileSrc) {
@@ -1334,12 +1351,12 @@
     return card;
   }
 
-  function createCard(item, index) {
+  function createCard(item, index, { isLoopClone = false } = {}) {
     if (item.type === "cta") {
       return createCarouselCtaCard(item);
     }
     if (item.type === "video") {
-      return createCarouselVideoCard(item, index);
+      return createCarouselVideoCard(item, index, { posterOnly: isLoopClone });
     }
     return createCarouselImageCard(item, index);
   }
@@ -1587,7 +1604,14 @@
         ? getInitialActiveIndexForViewport(currentVisibleCards, carouselItems)
         : Math.min(activeIndex, maxIndex);
       renderedIndex = cloneCount + (pageStarts[activeIndex] ?? 0);
-      track.replaceChildren(...renderedItems.map(createCard));
+      const itemCount = carouselItems.length;
+      track.replaceChildren(
+        ...renderedItems.map((item, renderIndex) => {
+          const isLoopClone =
+            shouldLoop && (renderIndex < cloneCount || renderIndex >= cloneCount + itemCount);
+          return createCard(item, renderIndex, { isLoopClone });
+        }),
+      );
       syncShopButtonAlignment(track);
       syncCarouselSectionBottomSpace();
 
@@ -1659,6 +1683,9 @@
 
         const video = card.querySelector("video.promo-carousel__video");
         if (video instanceof HTMLVideoElement) {
+          if (video.dataset.carouselPosterOnly === "true") {
+            return;
+          }
           if (isActiveCard) {
             if (video.dataset.carouselUserPaused === "true") {
               video.pause();
