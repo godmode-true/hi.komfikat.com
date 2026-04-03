@@ -131,12 +131,14 @@
   --link-card-badge-size: 2.65rem;
   --link-card-title-size: clamp(1.35rem, 5vw, 1.7rem);
   --link-card-subtitle-size: clamp(1rem, 3.8vw, 1.2rem);
-  /* Sticky header: title-to-subtitle ratio (≈ 1.7 / 1.2). */
-  --sticky-center-title-scale: 1.42;
   /* Second line ("Cozy & Relaxing…") vs base; nudge up without touching title row. */
   --sticky-center-subtext-scale: 1.12;
   /* Slight boost before JS width-fit; keeps proportions vs link cards. */
   --sticky-center-content-scale: 1.06;
+  /* Welcome line matches `--link-card-title-size` when fit scale is 1 (same as footer © line); em keeps `main.js` width-fit math valid. */
+  --sticky-welcome-vs-center-ratio: calc(
+    var(--link-card-title-size) / (var(--link-card-subtitle-size) * var(--sticky-center-content-scale))
+  );
   --sticky-header-mask-pad-block: max(0.12rem, calc(var(--sticky-bar-pad) - 0.08rem));
   --sticky-header-mask-half-height: calc((var(--top-control-height) + (var(--sticky-header-mask-pad-block) * 2)) / 2);
   /* Approximate viewport-top → bottom of sticky bar before JS measures (see main.js). */
@@ -889,8 +891,7 @@ html[data-top-bar-scrolled] .top-bar {
   overflow: visible;
   text-overflow: clip;
   white-space: nowrap;
-  /* Match "Etsy Shop" title sizing while keeping base at subtitle size. */
-  font-size: calc(1em * var(--sticky-center-title-scale));
+  font-size: calc(1em * var(--sticky-welcome-vs-center-ratio));
   line-height: 1;
 }
 
