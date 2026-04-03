@@ -140,6 +140,8 @@
   --sticky-header-mask-pad-block: max(0.12rem, calc(var(--sticky-bar-pad) - 0.08rem));
   --sticky-header-mask-half-height: calc((var(--top-control-height) + (var(--sticky-header-mask-pad-block) * 2)) / 2);
   --sticky-header-mask-rect-height: calc(env(safe-area-inset-top) + 0.35rem + var(--sticky-header-mask-half-height));
+  /* Soft fade at the mask edge to avoid a hard seam over shadows/blur. */
+  --sticky-header-mask-fade: 18px;
   --sticky-header-mask-top: calc(env(safe-area-inset-top) + 0.35rem);
   --sticky-header-mask-shell-width: calc(
     min(
@@ -418,7 +420,13 @@ body::before {
   left: 0;
   right: 0;
   height: var(--sticky-header-mask-rect-height);
-  background-color: inherit;
+  background:
+    linear-gradient(
+      180deg,
+      var(--page-bg) 0%,
+      var(--page-bg) calc(100% - var(--sticky-header-mask-fade)),
+      rgba(0, 0, 0, 0) 100%
+    );
   pointer-events: none;
   z-index: 29;
 }
