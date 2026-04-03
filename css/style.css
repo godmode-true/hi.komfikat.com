@@ -141,7 +141,8 @@
   --sticky-header-mask-half-height: calc((var(--top-control-height) + (var(--sticky-header-mask-pad-block) * 2)) / 2);
   --sticky-header-mask-rect-height: calc(env(safe-area-inset-top) + 0.35rem + var(--sticky-header-mask-half-height));
   /* Soft fade at the mask edge to avoid a hard seam over shadows/blur. */
-  --sticky-header-mask-fade: 18px;
+  --sticky-header-mask-fade: 26px;
+  --sticky-header-mask-height: calc(var(--sticky-header-mask-rect-height) + var(--sticky-header-mask-fade));
   --sticky-header-mask-top: calc(env(safe-area-inset-top) + 0.35rem);
   --sticky-header-mask-shell-width: calc(
     min(
@@ -419,7 +420,7 @@ body::before {
   top: 0;
   left: 0;
   right: 0;
-  height: var(--sticky-header-mask-rect-height);
+  height: var(--sticky-header-mask-height);
   background:
     linear-gradient(
       180deg,

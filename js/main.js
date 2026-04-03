@@ -493,6 +493,18 @@
 
     const isOpenNow = () => topBar.dataset.drawerOpen === "true";
 
+    // Apply the "drawer open" body class as early as possible (pointerdown),
+    // so the sticky mask never has a frame where underlying content peeks through.
+    burger.addEventListener(
+      "pointerdown",
+      () => {
+        if (!isOpenNow()) {
+          document.body.classList.add("top-bar-drawer-is-open");
+        }
+      },
+      { capture: true },
+    );
+
     burger.addEventListener("click", () => {
       setOpen(!isOpenNow());
     });
