@@ -1051,6 +1051,9 @@ html[data-top-bar-scrolled] .top-bar {
   opacity: 1;
   transform: translate3d(0, 0, 0);
   pointer-events: auto;
+  /* Avoid 1px gaps showing behind the rounded chrome when drawer is open. */
+  inset: 0;
+  border-radius: inherit;
 }
 
 .top-bar[data-drawer-open="true"] .top-bar__center {
