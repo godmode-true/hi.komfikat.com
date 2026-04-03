@@ -431,6 +431,11 @@ body::before {
   z-index: 29;
 }
 
+/* When the burger drawer opens, avoid revealing content under the sticky mask during the first frame. */
+body.top-bar-drawer-is-open::before {
+  background: var(--page-bg);
+}
+
 body::after {
   content: none;
 }

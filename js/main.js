@@ -485,6 +485,7 @@
     const setOpen = (nextOpen) => {
       const isOpen = nextOpen === true;
       topBar.dataset.drawerOpen = String(isOpen);
+      document.body.classList.toggle("top-bar-drawer-is-open", isOpen);
       burger.setAttribute("aria-expanded", String(isOpen));
       burger.setAttribute("aria-label", isOpen ? "Close menu" : "Open menu");
       drawer.setAttribute("aria-hidden", String(!isOpen));
