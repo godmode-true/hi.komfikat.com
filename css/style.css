@@ -4680,13 +4680,14 @@ html[data-top-bar-scrolled] .top-bar {
   width: 2.35rem;
   height: 2.35rem;
   flex: 0 0 auto;
-  border: 0;
+  border: 1.5px solid var(--surface-border-soft);
   border-radius: 50%;
   background-color: var(--button-bg);
   color: var(--button-text);
   box-shadow: var(--surface-shadow-soft);
   transition:
     background-color 130ms ease,
+    border-color 130ms ease,
     box-shadow 130ms ease,
     transform 130ms ease;
 }
@@ -5309,6 +5310,7 @@ html[data-top-bar-scrolled] .top-bar {
   .story-viewer__close:hover,
   .story-viewer__close:focus-visible {
     background-color: var(--top-control-bg-hover);
+    border-color: var(--accent-ui-outline);
     box-shadow: var(--top-control-shadow-hover);
   }
 
@@ -5439,6 +5441,7 @@ html[data-top-bar-scrolled] .top-bar {
   :root[data-theme="dark"] .story-viewer__close:hover,
   :root[data-theme="dark"] .story-viewer__close:focus-visible {
     background-color: var(--top-control-bg-hover);
+    border-color: var(--accent-ui-outline);
     box-shadow: var(--top-control-shadow-hover);
   }
 
@@ -5758,9 +5761,9 @@ html[data-top-bar-scrolled] .top-bar {
   height: var(--chrome-circle-icon-size);
 }
 
-/* Top-bar drawer: optical-size equalization across differing SVG viewBoxes. */
+/* Top-bar drawer: stroke 2 like burger; optical height matched to the close (X) glyph at 1.08. */
 .top-bar__drawer-inner .action-button {
-  --chrome-icon-optical-scale: 1;
+  --chrome-icon-optical-scale: 1.08;
 }
 
 .top-bar__drawer-inner .action-button__icon svg {
@@ -5773,21 +5776,22 @@ html[data-top-bar-scrolled] .top-bar {
   transform-origin: 50% 50% !important;
 }
 
-.top-bar__drawer-inner [aria-label="Subscribe"].action-button {
-  --chrome-icon-optical-scale: 0.78;
+.top-bar__drawer-inner [aria-label="Subscribe"].action-button .action-button__icon svg {
+  transform: scale(0.9) translateY(-4%) !important;
 }
 
 .top-bar__drawer-inner [aria-label="Share"].action-button {
-  --chrome-icon-optical-scale: 0.76;
+  /* Arrow peak sits high in the viewBox — pull below X cap height. */
+  --chrome-icon-optical-scale: 0.89;
 }
 
 .top-bar__drawer-inner .theme-toggle {
-  --chrome-icon-optical-scale: 0.76;
+  /* Moon/sun use almost the full 24×24 box. */
+  --chrome-icon-optical-scale: 0.72;
 }
 
 .top-bar__drawer-inner [aria-label="Close menu"].action-button {
-  /* Close (X) viewBox reads smaller optically; bump a bit. */
-  --chrome-icon-optical-scale: 1;
+  --chrome-icon-optical-scale: 1.08;
 }
 
 /* Match the same optical icon sizing for always-visible chrome buttons. */
