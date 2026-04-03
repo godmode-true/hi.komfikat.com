@@ -670,12 +670,6 @@ input[type="reset"] {
   margin-inline: auto;
 }
 
-/* Mobile PSI: skip layout/paint for off-screen sections until needed (no effect when open/share dialog is sibling). */
-.promo-carousel {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 520px;
-}
-
 .link-section {
   content-visibility: auto;
   contain-intrinsic-size: auto 400px;

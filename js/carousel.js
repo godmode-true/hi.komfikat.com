@@ -742,7 +742,8 @@
 
     updatePromoRedirectCountdown();
 
-    promoRedirectInterval = window.setInterval(updatePromoRedirectCountdown, 50);
+    // Countdown UI shows whole seconds; updating at 50ms wastes CPU without improving UX.
+    promoRedirectInterval = window.setInterval(updatePromoRedirectCountdown, 200);
     promoRedirectTimeout = window.setTimeout(() => {
       const targetHref = promoRedirectHref;
       hidePromoRedirectToast();
