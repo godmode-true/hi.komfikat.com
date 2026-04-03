@@ -419,7 +419,8 @@ body::before {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
+  /* Use 100vw to also cover scrollbar gutter on Windows (prevents a vertical seam). */
+  width: 100vw;
   height: var(--sticky-header-mask-height);
   background-color: var(--page-bg);
   background-image: linear-gradient(
