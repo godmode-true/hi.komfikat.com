@@ -124,10 +124,32 @@ function formatReduction(before, after) {
   return `${(((before - after) / before) * 100).toFixed(1)}%`;
 }
 
+const LONG_CACHE_HEADERS = `# Long-lived caching for fingerprintable static assets (Netlify / Cloudflare Pages).
+# GitHub Pages ignores this file; use a CDN in front or host rules there — default Pages TTL is ~10 minutes.
+/img/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/css/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/js/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/themes/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/favicon.ico
+  Cache-Control: public, max-age=604800, immutable
+`;
+
 async function main() {
   await fs.rm(distRoot, { recursive: true, force: true });
   await ensureDir(distRoot);
   await fs.writeFile(path.join(distRoot, ".nojekyll"), "");
+  await fs.writeFile(path.join(distRoot, "_headers"), LONG_CACHE_HEADERS, "utf8");
 
   await Promise.all(
     rootFilesToCopy.map((relativePath) =>
@@ -157,6 +179,7 @@ async function main() {
 
   console.log("");
   console.log("Deploy the contents of ./dist to production.");
+  console.log("Wrote dist/_headers for hosts that honor it (not GitHub Pages). For Pages + PageSpeed cache audit, add Cloudflare (or similar) cache rules for /img, /js, /css, /fonts, /themes.");
 }
 
 main().catch((error) => {
