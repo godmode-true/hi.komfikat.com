@@ -418,9 +418,11 @@ body::before {
   content: "";
   position: fixed;
   top: 0;
-  left: 0;
-  right: 0;
+  left: 50%;
+  width: min(100vw, var(--sticky-header-mask-shell-width));
+  transform: translate3d(-50%, 0, 0);
   height: var(--sticky-header-mask-height);
+  border-radius: var(--link-card-radius);
   background:
     linear-gradient(
       180deg,
