@@ -945,7 +945,23 @@
       });
     });
 
-    App.helpers.lockViewportGestureZoom();
+    /* Defer pinch-zoom / double-tap guards to idle time — cuts main-thread work during first paint (mobile PSI). */
+    const scheduleGestureLock = () => {
+      if (typeof window.requestIdleCallback === "function") {
+        window.requestIdleCallback(
+          () => {
+            App.helpers.lockViewportGestureZoom();
+          },
+          { timeout: 2500 },
+        );
+        return;
+      }
+
+      window.setTimeout(() => {
+        App.helpers.lockViewportGestureZoom();
+      }, 400);
+    };
+    scheduleGestureLock();
     App.initTheme?.();
 
     const initShareOnce = runOnce(() => App.initShare?.());

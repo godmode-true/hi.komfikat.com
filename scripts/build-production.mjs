@@ -12,16 +12,7 @@ const distRoot = path.join(projectRoot, "dist");
 
 const rootFilesToCopy = ["favicon.ico"];
 const directoriesToCopy = ["fonts", "img"];
-const jsFiles = [
-  "js/main.js",
-  "js/theme.js",
-  "js/share.js",
-  "js/stories-manifest.js",
-  "js/stories.js",
-  "js/carousel-manifest.js",
-  "js/carousel.js",
-  "themes/theme-presets.js",
-];
+const jsFiles = ["themes/theme-presets.js", "js/site.bundle.js"];
 const cssFiles = ["css/style.css"];
 
 async function ensureDir(targetPath) {

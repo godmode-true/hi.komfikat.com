@@ -46,26 +46,8 @@
         window.KomfiKatAssetVersion = "20260401b";
       })();
     </script>
+    <!-- Sync: theme tokens injected before paint; defer bundle keeps TBT lower than 8 separate scripts. -->
     <script src="themes/theme-presets.js?v=20260402l"></script>
-    <script>
-      try {
-        const root = document.documentElement;
-        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-        const savedTheme = localStorage.getItem("komfi-theme");
-        const initialTheme = savedTheme === "dark" ? "dark" : "light";
-        const defaultPreset =
-          window.KomfiKatThemeConfig?.defaultPreset || root.dataset.defaultPreset || "default-rose-2";
-        const preset = window.KomfiKatThemePresets?.[defaultPreset];
-        const initialThemeTokens = preset?.[initialTheme];
-        const initialThemeColor =
-          initialThemeTokens?.["--browser-chrome-color"] || (initialTheme === "dark" ? "#4a3b40" : "#fde7ef");
-        root.dataset.theme = initialTheme;
-        root.dataset.themePreset = defaultPreset;
-        if (themeColorMeta) {
-          themeColorMeta.setAttribute("content", initialThemeColor);
-        }
-      } catch {}
-    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -95,14 +77,9 @@
       }
     </script>
 
-    <link rel="stylesheet" href="css/style.css?v=20260404br" />
-    <script src="js/main.js?v=20260404bm" defer></script>
-    <script src="js/theme.js?v=20260402k" defer></script>
-    <script src="js/share.js?v=20260401n" defer></script>
-    <script src="js/stories-manifest.js?v=20260401e" defer></script>
-    <script src="js/stories.js?v=20260401h" defer></script>
-    <script src="js/carousel-manifest.js?v=20260401e" defer></script>
-    <script src="js/carousel.js?v=20260402n" defer></script>
+    <link rel="stylesheet" href="css/style.css?v=20260405perf" />
+    <link rel="preload" href="js/site.bundle.js?v=20260405perf" as="script" />
+    <script src="js/site.bundle.js?v=20260405perf" defer></script>
   </head>
 
   <body>
@@ -123,6 +100,7 @@
                 width="1200"
                 height="1200"
                 decoding="async"
+                fetchpriority="high"
                 draggable="false"
               />
             </span>

@@ -5,7 +5,8 @@
   "scripts": {
     "update:fonts": "node scripts/update-fonts.mjs",
     "update:images": "node scripts/run-update-site-images.mjs",
-    "build": "npm run update:fonts && npm run update:images && node scripts/sync-default-theme-preset.mjs && node scripts/build-production.mjs",
+    "build:js": "node scripts/build-js-bundle.mjs",
+    "build": "npm run update:fonts && npm run update:images && node scripts/sync-default-theme-preset.mjs && npm run build:js && node scripts/build-production.mjs",
     "sync:theme-preset": "node scripts/sync-default-theme-preset.mjs"
   },
   "repository": {
